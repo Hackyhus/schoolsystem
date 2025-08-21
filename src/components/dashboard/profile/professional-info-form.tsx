@@ -92,19 +92,23 @@ export function ProfessionalInfoForm({
   return (
     <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-        <div className="grid grid-cols-1 gap-6 pt-6 sm:grid-cols-2">
-            <div>
-              <p className="text-sm font-medium text-muted-foreground">
-                Staff ID
-              </p>
-              <p className="text-base font-semibold">{userData.staffId}</p>
+        <div className="space-y-4 border-b border-border pb-4">
+            <div className="grid grid-cols-1 gap-x-4 gap-y-6 sm:grid-cols-2">
+                 <div>
+                    <p className="text-sm font-medium text-muted-foreground">
+                        Staff ID
+                    </p>
+                    <p className="text-base font-semibold">{userData.staffId}</p>
+                 </div>
+                 <div>
+                    <p className="text-sm font-medium text-muted-foreground">
+                        Email
+                    </p>
+                    <p className="text-base font-semibold">{userData.email}</p>
+                 </div>
             </div>
-             <div>
-              <p className="text-sm font-medium text-muted-foreground">
-                Email
-              </p>
-              <p className="text-base font-semibold">{userData.email}</p>
-            </div>
+        </div>
+        <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
             <FormField
               control={form.control}
               name="role"
@@ -203,7 +207,7 @@ export function ProfessionalInfoForm({
               )}
             />
         </div>
-        <div className="flex justify-end">
+        <div className="flex justify-end pt-4">
           <Button type="submit" disabled={form.formState.isSubmitting}>
             {form.formState.isSubmitting
               ? 'Saving...'
