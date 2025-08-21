@@ -25,8 +25,18 @@ const formSchema = z.object({
   firstName: z.string().min(1, { message: 'First name is required.' }),
   lastName: z.string().min(1, { message: 'Last name is required.' }),
   email: z.string().email({ message: 'Please enter a valid email.' }),
-  password: z.string().min(6, { message: 'Password must be at least 6 characters.' }),
 });
+
+// Function to generate a random password
+const generatePassword = () => {
+    const length = 8;
+    const charset = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
+    let retVal = "";
+    for (let i = 0, n = charset.length; i < length; ++i) {
+        retVal += charset.charAt(Math.floor(Math.random() * n));
+    }
+    return retVal;
+};
 
 export function AddStudentForm({ onStudentAdded }: { onStudentAdded: () => void }) {
   const { toast } = useToast();
@@ -37,7 +47,6 @@ export function AddStudentForm({ onStudentAdded }: { onStudentAdded: () => void 
       firstName: '',
       lastName: '',
       email: '',
-      password: '',
     },
   });
 
@@ -56,7 +65,7 @@ export function AddStudentForm({ onStudentAdded }: { onStudentAdded: () => void 
 
   async function onSubmit(values: z.infer<typeof formSchema>) {
     try {
-      const { email, password } = values;
+      const { email } = values;
 
       const emailQuery = query(collection(db, 'users'), where('email', '==', email));
       const emailSnapshot = await getDocs(emailQuery);
@@ -67,6 +76,7 @@ export function AddStudentForm({ onStudentAdded }: { onStudentAdded: () => void 
       }
       
       const studentId = await generateStudentId();
+      const password = generatePassword();
 
       const userCredential = await createUserWithEmailAndPassword(auth, email, password);
       const user = userCredential.user;
@@ -83,8 +93,8 @@ export function AddStudentForm({ onStudentAdded }: { onStudentAdded: () => void 
 
       toast({
         title: 'Student Added Successfully',
-        description: `Student ID: ${studentId}`,
-        duration: 9000,
+        description: `Student ID: ${studentId} | Password: ${password}`,
+        duration: 20000,
       });
       form.reset();
       onStudentAdded();
@@ -133,7 +143,7 @@ export function AddStudentForm({ onStudentAdded }: { onStudentAdded: () => void 
           name="email"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Parent's Email</FormLabel>
+              <FormLabel>Parent's or Student's Email</FormLabel>
               <FormControl>
                 <Input placeholder="parent@example.com" {...field} />
               </FormControl>
@@ -144,19 +154,9 @@ export function AddStudentForm({ onStudentAdded }: { onStudentAdded: () => void 
             </FormItem>
           )}
         />
-         <FormField
-          control={form.control}
-          name="password"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Default Password</FormLabel>
-              <FormControl>
-                <Input type="password" {...field} />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
+         <FormDescription>
+            A random, secure password will be generated and displayed upon creation.
+         </FormDescription>
        
         <Button type="submit" className="w-full" disabled={form.formState.isSubmitting}>
            {form.formState.isSubmitting ? 'Adding...' : <> <PlusCircle className="mr-2 h-4 w-4" /> Add Student</>}
