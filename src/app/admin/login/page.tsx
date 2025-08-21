@@ -18,7 +18,7 @@ export default function AdminLoginPage() {
         className="absolute inset-0 bg-cover bg-center"
         style={{ backgroundImage: "url('/school-background.jpg')" }}
       ></div>
-      <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-black/20 backdrop-blur-sm"></div>
+      <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent backdrop-blur-sm"></div>
        <main className="relative z-10 flex min-h-screen flex-col items-center justify-center bg-transparent p-4 font-body">
         <Card className="w-full max-w-sm shadow-2xl">
           <CardHeader className="text-center">
