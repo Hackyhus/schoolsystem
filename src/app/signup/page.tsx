@@ -1,5 +1,5 @@
 import { School } from 'lucide-react';
-import { LoginForm } from '@/components/auth/login-form';
+import { SignUpForm } from '@/components/auth/signup-form';
 import {
   Card,
   CardContent,
@@ -8,33 +8,33 @@ import {
   CardHeader,
   CardTitle,
 } from '@/components/ui/card';
-import Link from 'next/link';
 import { Button } from '@/components/ui/button';
+import Link from 'next/link';
 
-export default function Home() {
+export default function SignUpPage() {
   return (
     <main className="flex min-h-screen items-center justify-center bg-background p-4 font-body">
       <Card className="w-full max-w-sm shadow-2xl">
         <CardHeader className="text-center">
-          <div className="mx-auto mb-4 inline-block rounded-full bg-primary p-4 text-primary-foreground">
+           <div className="mx-auto mb-4 inline-block rounded-full bg-primary p-4 text-primary-foreground">
             <School className="h-8 w-8" />
           </div>
           <CardTitle className="font-headline text-3xl text-primary">
-            InsightConnect
+            Create an Account
           </CardTitle>
           <CardDescription>
-            Great Insight International Academy Portal
+            Enter your details to get started.
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <LoginForm />
+          <SignUpForm />
         </CardContent>
-        <CardFooter className="flex-col gap-4">
-          <div className="text-center text-sm text-muted-foreground">
-            Don't have an account?{' '}
+        <CardFooter>
+           <div className="text-center text-sm text-muted-foreground">
+            Already have an account?{' '}
             <Button variant="link" asChild className="p-0">
-              <Link href="/signup">
-                Create one
+              <Link href="/">
+                Sign In
               </Link>
             </Button>
           </div>
