@@ -35,15 +35,13 @@ export default function Home() {
                 Forgot Password?
               </Link>
             </Button>
+            <Button variant="link" asChild className="text-xs text-muted-foreground">
+              <Link href="/admin/login">
+                Admin Login
+              </Link>
+            </Button>
         </CardFooter>
       </Card>
-        <div className="mt-4 text-center">
-        <Button variant="link" asChild className="text-xs text-muted-foreground">
-          <Link href="/admin/login">
-            Admin Login
-          </Link>
-        </Button>
-      </div>
     </main>
   );
 }
