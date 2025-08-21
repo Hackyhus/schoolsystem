@@ -133,97 +133,97 @@ export function AdminProfileView({ userId }: { userId: string }) {
                 </div>
             </div>
 
-            <Card>
-                <CardHeader className="flex flex-row items-center justify-between">
-                    <div>
-                        <CardTitle>Professional Information</CardTitle>
-                        <CardDescription>
-                            {isAdminViewing ? 'Official staff details and role.' : 'This information is managed by the administrator.'}
-                        </CardDescription>
-                    </div>
-                     {isAdminViewing && (
-                        <Dialog open={isProfessionalInfoOpen} onOpenChange={setProfessionalInfoOpen}>
+            <div className="grid gap-8">
+                <Card>
+                    <CardHeader className="flex flex-row items-center justify-between">
+                        <div>
+                            <CardTitle>Professional Information</CardTitle>
+                            <CardDescription>
+                                {isAdminViewing ? 'Official staff details and role.' : 'This information is managed by the administrator.'}
+                            </CardDescription>
+                        </div>
+                        {isAdminViewing && (
+                            <Dialog open={isProfessionalInfoOpen} onOpenChange={setProfessionalInfoOpen}>
+                                <DialogTrigger asChild>
+                                <Button variant="outline" size="sm"><Edit className="mr-2 h-4 w-4" /> Edit</Button>
+                                </DialogTrigger>
+                                <DialogContent>
+                                    <DialogHeader>
+                                        <DialogTitle>Edit Professional Information</DialogTitle>
+                                    </DialogHeader>
+                                    <ProfessionalInfoForm userData={userData} onUpdate={handleProfileUpdate} />
+                                </DialogContent>
+                            </Dialog>
+                        )}
+                    </CardHeader>
+                    <CardContent>
+                        <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
+                            <InfoItem label="Staff ID" value={userData.staffId} />
+                            <InfoItem label="Date of Employment" value={formattedEmploymentDate} />
+                            <InfoItem label="Status" value={userData.status} />
+                            <InfoItem label="State of Origin" value={userData.stateOfOrigin} />
+                        </div>
+                    </CardContent>
+                </Card>
+
+                <Card>
+                    <CardHeader className="flex flex-row items-center justify-between">
+                        <div>
+                            <CardTitle>Personal Information</CardTitle>
+                            <CardDescription>Contact and personal staff details.</CardDescription>
+                        </div>
+                        <Dialog open={isPersonalInfoOpen} onOpenChange={setPersonalInfoOpen}>
                             <DialogTrigger asChild>
                             <Button variant="outline" size="sm"><Edit className="mr-2 h-4 w-4" /> Edit</Button>
                             </DialogTrigger>
                             <DialogContent>
                                 <DialogHeader>
-                                    <DialogTitle>Edit Professional Information</DialogTitle>
+                                    <DialogTitle>Edit Personal Information</DialogTitle>
                                 </DialogHeader>
-                                <ProfessionalInfoForm userData={userData} onUpdate={handleProfileUpdate} />
+                                <PersonalInfoForm userData={userData} onUpdate={handleProfileUpdate} />
                             </DialogContent>
                         </Dialog>
-                    )}
-                </CardHeader>
-                <CardContent>
-                     <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
-                         <InfoItem label="Staff ID" value={userData.staffId} />
-                         <InfoItem label="Date of Employment" value={formattedEmploymentDate} />
-                         <InfoItem label="Status" value={userData.status} />
-                         <InfoItem label="State of Origin" value={userData.stateOfOrigin} />
-                     </div>
-                </CardContent>
-            </Card>
-
-             <Card>
-                <CardHeader className="flex flex-row items-center justify-between">
-                    <div>
-                        <CardTitle>Personal Information</CardTitle>
-                        <CardDescription>Contact and personal staff details.</CardDescription>
-                    </div>
-                     <Dialog open={isPersonalInfoOpen} onOpenChange={setPersonalInfoOpen}>
-                        <DialogTrigger asChild>
-                           <Button variant="outline" size="sm"><Edit className="mr-2 h-4 w-4" /> Edit</Button>
-                        </DialogTrigger>
-                        <DialogContent>
-                            <DialogHeader>
-                                <DialogTitle>Edit Personal Information</DialogTitle>
-                            </DialogHeader>
-                            <PersonalInfoForm userData={userData} onUpdate={handleProfileUpdate} />
-                        </DialogContent>
-                    </Dialog>
-                </CardHeader>
-                <CardContent>
-                    <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
-                        <InfoItem label="Phone Number" value={userData.phone} />
-                        <InfoItem label="Date of Birth" value={formattedDob} />
-                        <InfoItem label="Gender" value={userData.personalInfo?.gender} />
-                        <InfoItem label="Next of Kin" value={userData.personalInfo?.nextOfKin} />
-                        <div className="col-span-full">
-                           <InfoItem label="Address" value={userData.personalInfo?.address} />
+                    </CardHeader>
+                    <CardContent>
+                        <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
+                            <InfoItem label="Phone Number" value={userData.phone} />
+                            <InfoItem label="Date of Birth" value={formattedDob} />
+                            <InfoItem label="Gender" value={userData.personalInfo?.gender} />
+                            <InfoItem label="Next of Kin" value={userData.personalInfo?.nextOfKin} />
+                            <div className="col-span-full">
+                            <InfoItem label="Address" value={userData.personalInfo?.address} />
+                            </div>
                         </div>
-                    </div>
-                </CardContent>
-            </Card>
+                    </CardContent>
+                </Card>
 
-             <Card>
-                <CardHeader className="flex flex-row items-center justify-between">
-                    <div>
-                        <CardTitle>Bank & Salary Details</CardTitle>
-                        <CardDescription>Financial information for salary payment.</CardDescription>
-                    </div>
-                    <Dialog open={isBankDetailsOpen} onOpenChange={setBankDetailsOpen}>
-                        <DialogTrigger asChild>
-                           <Button variant="outline" size="sm"><Edit className="mr-2 h-4 w-4" /> Edit</Button>
-                        </DialogTrigger>
-                        <DialogContent>
-                            <DialogHeader>
-                                <DialogTitle>Edit Bank & Salary</DialogTitle>
-                            </DialogHeader>
-                            <BankDetailsForm userData={userData} onUpdate={handleProfileUpdate} />
-                        </DialogContent>
-                    </Dialog>
-                </CardHeader>
-                <CardContent>
-                     <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
-                         <InfoItem label="Salary" value={userData.salary?.amount} isCurrency />
-                         <InfoItem label="Bank Details" value={userData.salary?.bankAccount} />
-                         <InfoItem label="Payment Status" value={userData.salary?.paymentStatus} />
-                     </div>
-                </CardContent>
-            </Card>
+                <Card>
+                    <CardHeader className="flex flex-row items-center justify-between">
+                        <div>
+                            <CardTitle>Bank & Salary Details</CardTitle>
+                            <CardDescription>Financial information for salary payment.</CardDescription>
+                        </div>
+                        <Dialog open={isBankDetailsOpen} onOpenChange={setBankDetailsOpen}>
+                            <DialogTrigger asChild>
+                            <Button variant="outline" size="sm"><Edit className="mr-2 h-4 w-4" /> Edit</Button>
+                            </DialogTrigger>
+                            <DialogContent>
+                                <DialogHeader>
+                                    <DialogTitle>Edit Bank & Salary</DialogTitle>
+                                </DialogHeader>
+                                <BankDetailsForm userData={userData} onUpdate={handleProfileUpdate} />
+                            </DialogContent>
+                        </Dialog>
+                    </CardHeader>
+                    <CardContent>
+                        <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
+                            <InfoItem label="Salary" value={userData.salary?.amount} isCurrency />
+                            <InfoItem label="Bank Details" value={userData.salary?.bankAccount} />
+                            <InfoItem label="Payment Status" value={userData.salary?.paymentStatus} />
+                        </div>
+                    </CardContent>
+                </Card>
+            </div>
         </div>
     )
 }
-
-    
