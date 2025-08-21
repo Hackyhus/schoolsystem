@@ -28,27 +28,9 @@ import { Input } from '@/components/ui/input';
 import { useToast } from '@/hooks/use-toast';
 import { auth, db } from '@/lib/firebase';
 import { PlusCircle } from 'lucide-react';
-import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
-import { CalendarIcon } from 'lucide-react';
-import { Calendar } from '@/components/ui/calendar';
-import { cn } from '@/lib/utils';
-import { format } from 'date-fns';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
+import { format } from 'date-fns';
 
-const formSchema = z.object({
-  firstName: z.string().min(1, { message: 'First name is required.' }),
-  lastName: z.string().min(1, { message: 'Last name is required.' }),
-  email: z.string().email({ message: 'Please enter a valid email.' }),
-  phone: z.string().min(1, { message: 'Phone number is required.' }),
-  stateOfOrigin: z.string().min(1, { message: 'State of Origin is required.' }),
-  department: z.string().min(1, { message: 'Department is required.' }),
-  employmentDate: z.date({ required_error: "Employment date is required."}),
-  role: z.enum(['Teacher', 'HOD', 'Bursar', 'Principal', 'Support Staff', 'Staff']),
-  address: z.string().min(1, { message: "Address is required."}),
-  gender: z.enum(['Male', 'Female'], { required_error: 'Gender is required.'}),
-  dob: z.date({ required_error: "Date of birth is required."}),
-  salaryAmount: z.coerce.number().min(1, { message: "Initial salary is required." }),
-});
 
 // A simple in-memory cache for department codes
 const departmentCodes: { [key: string]: string } = {
@@ -62,6 +44,34 @@ const departmentCodes: { [key: string]: string } = {
     'Bursar': 'BUR'
 };
 
+
+const dateRegex = /^(0[1-9]|[12][0-9]|3[01])\/(0[1-9]|1[0-2])\/\d{4}$/;
+
+const formSchema = z.object({
+  firstName: z.string().min(1, { message: 'First name is required.' }),
+  lastName: z.string().min(1, { message: 'Last name is required.' }),
+  email: z.string().email({ message: 'Please enter a valid email.' }),
+  phone: z.string().min(1, { message: 'Phone number is required.' }),
+  stateOfOrigin: z.string().min(1, { message: 'State of Origin is required.' }),
+  department: z.string().min(1, { message: 'Department is required.' }),
+  employmentDate: z.string().refine((val) => dateRegex.test(val), {
+    message: "Invalid date format. Please use DD/MM/YYYY.",
+  }),
+  role: z.enum(['Teacher', 'HOD', 'Bursar', 'Principal', 'Support Staff', 'Staff']),
+  address: z.string().min(1, { message: "Address is required."}),
+  gender: z.enum(['Male', 'Female'], { required_error: 'Gender is required.'}),
+  dob: z.string().refine((val) => dateRegex.test(val), {
+    message: "Invalid date format. Please use DD/MM/YYYY.",
+  }),
+  salaryAmount: z.string().min(1, { message: "Initial salary is required." }),
+});
+
+// Function to parse DD/MM/YYYY string to Date
+const parseDateString = (dateString: string): Date => {
+  const [day, month, year] = dateString.split('/').map(Number);
+  // Month is 0-indexed in JavaScript Date objects
+  return new Date(year, month - 1, day);
+};
 
 export function AddUserForm({ onUserAdded }: { onUserAdded: () => void }) {
   const { toast } = useToast();
@@ -77,7 +87,9 @@ export function AddUserForm({ onUserAdded }: { onUserAdded: () => void }) {
       department: 'Science',
       role: 'Staff',
       address: '',
-      salaryAmount: 0,
+      salaryAmount: '',
+      dob: '',
+      employmentDate: '',
     },
   });
 
@@ -99,9 +111,24 @@ export function AddUserForm({ onUserAdded }: { onUserAdded: () => void }) {
     return `${prefix}${year}${deptCode}${serialNumber}`;
   }
 
+  const handleSalaryChange = (e: React.ChangeEvent<HTMLInputElement>, field: any) => {
+      const rawValue = e.target.value.replace(/,/g, '');
+      if (!isNaN(Number(rawValue))) {
+        const formattedValue = new Intl.NumberFormat('en-NG').format(Number(rawValue));
+        field.onChange(formattedValue);
+      } else if (rawValue === '') {
+        field.onChange('');
+      }
+  };
+
+
   async function onSubmit(values: z.infer<typeof formSchema>) {
     try {
-      const { email, stateOfOrigin, department, employmentDate } = values;
+      const { email, stateOfOrigin, department } = values;
+      const employmentDate = parseDateString(values.employmentDate);
+      const dob = parseDateString(values.dob);
+      const salaryAmount = Number(values.salaryAmount.replace(/,/g, ''));
+
 
       // Check for uniqueness
       const emailQuery = query(collection(db, 'users'), where('email', '==', email));
@@ -136,17 +163,17 @@ export function AddUserForm({ onUserAdded }: { onUserAdded: () => void }) {
         stateOfOrigin: values.stateOfOrigin,
         department: values.department,
         role: values.role,
-        employmentDate: values.employmentDate,
-        employmentYear: values.employmentDate.getFullYear(),
+        employmentDate: employmentDate,
+        employmentYear: employmentDate.getFullYear(),
         salary: {
-            amount: values.salaryAmount,
+            amount: salaryAmount,
             bankAccount: null,
             paymentStatus: "Active"
         },
         personalInfo: {
             address: values.address,
             gender: values.gender,
-            dob: values.dob,
+            dob: dob,
             nextOfKin: null,
             profilePicture: null
         },
@@ -295,39 +322,11 @@ export function AddUserForm({ onUserAdded }: { onUserAdded: () => void }) {
           control={form.control}
           name="dob"
           render={({ field }) => (
-            <FormItem className="flex flex-col">
+            <FormItem>
               <FormLabel>Date of Birth</FormLabel>
-              <Popover>
-                <PopoverTrigger asChild>
-                  <FormControl>
-                    <Button
-                      variant={"outline"}
-                      className={cn(
-                        "w-full pl-3 text-left font-normal",
-                        !field.value && "text-muted-foreground"
-                      )}
-                    >
-                      {field.value ? (
-                        format(field.value, "PPP")
-                      ) : (
-                        <span>Pick a date</span>
-                      )}
-                      <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
-                    </Button>
-                  </FormControl>
-                </PopoverTrigger>
-                <PopoverContent className="w-auto p-0" align="start">
-                  <Calendar
-                    mode="single"
-                    selected={field.value}
-                    onSelect={field.onChange}
-                    disabled={(date) =>
-                      date > new Date() || date < new Date("1950-01-01")
-                    }
-                    initialFocus
-                  />
-                </PopoverContent>
-              </Popover>
+              <FormControl>
+                <Input placeholder="DD/MM/YYYY" {...field} />
+              </FormControl>
               <FormMessage />
             </FormItem>
           )}
@@ -359,39 +358,11 @@ export function AddUserForm({ onUserAdded }: { onUserAdded: () => void }) {
           control={form.control}
           name="employmentDate"
           render={({ field }) => (
-            <FormItem className="flex flex-col">
+            <FormItem>
               <FormLabel>Employment Date</FormLabel>
-              <Popover>
-                <PopoverTrigger asChild>
-                  <FormControl>
-                    <Button
-                      variant={"outline"}
-                      className={cn(
-                        "w-full pl-3 text-left font-normal",
-                        !field.value && "text-muted-foreground"
-                      )}
-                    >
-                      {field.value ? (
-                        format(field.value, "PPP")
-                      ) : (
-                        <span>Pick a date</span>
-                      )}
-                      <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
-                    </Button>
-                  </FormControl>
-                </PopoverTrigger>
-                <PopoverContent className="w-auto p-0" align="start">
-                  <Calendar
-                    mode="single"
-                    selected={field.value}
-                    onSelect={field.onChange}
-                    disabled={(date) =>
-                      date > new Date() || date < new Date("1990-01-01")
-                    }
-                    initialFocus
-                  />
-                </PopoverContent>
-              </Popover>
+              <FormControl>
+                <Input placeholder="DD/MM/YYYY" {...field} />
+              </FormControl>
               <FormMessage />
             </FormItem>
           )}
@@ -428,7 +399,12 @@ export function AddUserForm({ onUserAdded }: { onUserAdded: () => void }) {
                 <FormItem>
                 <FormLabel>Initial Salary (NGN)</FormLabel>
                 <FormControl>
-                    <Input type="number" placeholder="e.g. 150000" {...field} />
+                  <Input 
+                    type="text" 
+                    placeholder="e.g. 150,000"
+                    {...field}
+                    onChange={(e) => handleSalaryChange(e, field)}
+                  />
                 </FormControl>
                 <FormMessage />
                 </FormItem>
@@ -441,3 +417,4 @@ export function AddUserForm({ onUserAdded }: { onUserAdded: () => void }) {
     </Form>
   );
 }
+
