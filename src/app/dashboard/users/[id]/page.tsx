@@ -19,7 +19,6 @@ import {
 } from '@/components/ui/card';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { PersonalInfoForm } from '@/components/dashboard/profile/personal-info-form';
 import { ProfessionalInfoForm } from '@/components/dashboard/profile/professional-info-form';
 import { BankDetailsForm } from '@/components/dashboard/profile/bank-details-form';
@@ -135,62 +134,54 @@ export default function UserProfilePage() {
               )}
             </div>
         </CardHeader>
-        <CardContent>
-            <Tabs defaultValue="professional">
-                <TabsList className="grid w-full grid-cols-3">
-                    <TabsTrigger value="professional">Professional Info</TabsTrigger>
-                    <TabsTrigger value="bank">Bank & Salary</TabsTrigger>
-                    <TabsTrigger value="personal">Personal Details</TabsTrigger>
-                </TabsList>
-                <TabsContent value="professional">
-                    <Card>
-                        <CardHeader>
-                           <CardTitle>Professional Information</CardTitle>
-                           <CardDescription>Role, department, and employment details.</CardDescription>
-                        </CardHeader>
-                        <CardContent>
-                           {currentUserRole === 'Admin' ? (
-                             <ProfessionalInfoForm user={user} onUpdate={handleUpdate} />
-                           ) : (
-                             <div className="space-y-4">
-                                <p><strong>Role:</strong> {user.role}</p>
-                                <p><strong>Department:</strong> {user.department}</p>
-                                <p><strong>Employment Date:</strong> {user.employmentDate ? new Date(user.employmentDate.seconds * 1000).toLocaleDateString() : 'N/A'}</p>
-                             </div>
-                           )}
-                        </CardContent>
-                    </Card>
-                </TabsContent>
-                <TabsContent value="bank">
-                     <Card>
-                        <CardHeader>
-                           <CardTitle>Bank & Salary</CardTitle>
-                           <CardDescription>Financial details for salary payment.</CardDescription>
-                        </CardHeader>
-                        <CardContent>
-                            <BankDetailsForm user={user} onUpdate={handleUpdate} />
-                        </CardContent>
-                    </Card>
-                </TabsContent>
-                <TabsContent value="personal">
-                     <Card>
-                        <CardHeader>
-                           <CardTitle>Personal Details</CardTitle>
-                           <CardDescription>Contact and demographic information.</CardDescription>
-                        </CardHeader>
-                        <CardContent className="space-y-2">
-                           <p><strong>Phone:</strong> {user.phone}</p>
-                           <p><strong>Address:</strong> {user.personalInfo?.address}</p>
-                           <p><strong>Date of Birth:</strong> {user.personalInfo?.dob ? new Date(user.personalInfo.dob.seconds * 1000).toLocaleDateString() : 'N/A'}</p>
-                           <p><strong>Gender:</strong> {user.personalInfo?.gender}</p>
-                           <p><strong>Next of Kin:</strong> {user.personalInfo?.nextOfKin || 'N/A'}</p>
-                           <p><strong>State of Origin:</strong> {user.stateOfOrigin}</p>
-                        </CardContent>
-                    </Card>
-                </TabsContent>
-            </Tabs>
-        </CardContent>
       </Card>
+      
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <div className="space-y-6">
+            <Card>
+                <CardHeader>
+                   <CardTitle>Professional Information</CardTitle>
+                   <CardDescription>Role, department, and employment details.</CardDescription>
+                </CardHeader>
+                <CardContent>
+                   {currentUserRole === 'Admin' ? (
+                     <ProfessionalInfoForm user={user} onUpdate={handleUpdate} />
+                   ) : (
+                     <div className="space-y-4 text-sm">
+                        <p><strong>Role:</strong> {user.role}</p>
+                        <p><strong>Department:</strong> {user.department}</p>
+                        <p><strong>Employment Date:</strong> {user.employmentDate ? new Date(user.employmentDate.seconds * 1000).toLocaleDateString() : 'N/A'}</p>
+                     </div>
+                   )}
+                </CardContent>
+            </Card>
+             <Card>
+                <CardHeader>
+                   <CardTitle>Personal Details</CardTitle>
+                   <CardDescription>Contact and demographic information.</CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-2 text-sm">
+                   <p><strong>Phone:</strong> {user.phone}</p>
+                   <p><strong>Address:</strong> {user.personalInfo?.address}</p>
+                   <p><strong>Date of Birth:</strong> {user.personalInfo?.dob ? new Date(user.personalInfo.dob.seconds * 1000).toLocaleDateString() : 'N/A'}</p>
+                   <p><strong>Gender:</strong> {user.personalInfo?.gender}</p>
+                   <p><strong>Next of Kin:</strong> {user.personalInfo?.nextOfKin || 'N/A'}</p>
+                   <p><strong>State of Origin:</strong> {user.stateOfOrigin}</p>
+                </CardContent>
+            </Card>
+        </div>
+
+         <Card className="lg:col-span-1">
+            <CardHeader>
+               <CardTitle>Bank & Salary</CardTitle>
+               <CardDescription>Financial details for salary payment.</CardDescription>
+            </CardHeader>
+            <CardContent>
+                <BankDetailsForm user={user} onUpdate={handleUpdate} />
+            </CardContent>
+        </Card>
+      </div>
+
     </div>
   );
 }
