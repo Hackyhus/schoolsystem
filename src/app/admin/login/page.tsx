@@ -51,7 +51,7 @@ export default function AdminLoginPage() {
           <Button
             variant="link"
             asChild
-            className="text-xs text-primary-foreground/80 hover:text-primary-foreground"
+            className="text-xs text-primary-foreground hover:text-primary-foreground/80"
           >
             <Link href="/">Return to Staff Login</Link>
           </Button>

@@ -45,7 +45,7 @@ export default function Home() {
             <Button
               variant="link"
               asChild
-              className="text-xs text-primary-foreground/80 hover:text-primary-foreground"
+              className="text-xs text-primary-foreground hover:text-primary-foreground/80"
             >
               <Link href="/admin/login">Admin Login</Link>
             </Button>
