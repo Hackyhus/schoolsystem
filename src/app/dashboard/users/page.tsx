@@ -155,7 +155,7 @@ export default function UsersPage() {
               <DialogHeader>
                 <DialogTitle>Add New Staff</DialogTitle>
                 <DialogDescription>
-                  Create a new account for a staff member. Default password is their State of Origin.
+                  Create a new account for a staff member. A secure, random password will be generated.
                 </DialogDescription>
               </DialogHeader>
               <AddUserForm onUserAdded={handleUserAdded} />

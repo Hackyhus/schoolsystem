@@ -28,53 +28,48 @@ import { Input } from '@/components/ui/input';
 import { useToast } from '@/hooks/use-toast';
 import { auth, db } from '@/lib/firebase';
 import { PlusCircle } from 'lucide-react';
-import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
-import { format } from 'date-fns';
+import { useState } from 'react';
 
-
-// A simple in-memory cache for department codes
-const departmentCodes: { [key: string]: string } = {
-    'Science': 'SCI',
-    'Arts': 'ART',
-    'Commercial': 'COM',
-    'Administration': 'ADM',
-    'English': 'ENG',
-    'Accounts': 'ACC',
-    'Principal': 'PRN',
-    'Bursar': 'BUR'
-};
-
-
-const dateRegex = /^(0[1-9]|[12][0-9]|3[01])\/(0[1-9]|1[0-2])\/\d{4}$/;
+const availableRoles = [
+  'Teacher',
+  'HeadOfDepartment',
+  'Principal',
+  'Director',
+  'ExamOfficer',
+  'Accountant',
+  'Parent',
+  'Student',
+  'Admin',
+];
 
 const formSchema = z.object({
   firstName: z.string().min(1, { message: 'First name is required.' }),
   lastName: z.string().min(1, { message: 'Last name is required.' }),
   email: z.string().email({ message: 'Please enter a valid email.' }),
-  phone: z.string().min(1, { message: 'Phone number is required.' }),
-  stateOfOrigin: z.string().min(1, { message: 'State of Origin is required.' }),
-  department: z.string().min(1, { message: 'Department is required.' }),
-  employmentDate: z.string().refine((val) => dateRegex.test(val), {
-    message: "Invalid date format. Please use DD/MM/YYYY.",
-  }),
   role: z.enum(['Teacher', 'HeadOfDepartment', 'Principal', 'Director', 'ExamOfficer', 'Accountant', 'Parent', 'Student', 'Admin']),
-  address: z.string().min(1, { message: "Address is required."}),
-  gender: z.enum(['Male', 'Female'], { required_error: 'Gender is required.'}),
-  dob: z.string().refine((val) => dateRegex.test(val), {
-    message: "Invalid date format. Please use DD/MM/YYYY.",
-  }),
-  salaryAmount: z.string().min(1, { message: "Initial salary is required." }),
 });
 
-// Function to parse DD/MM/YYYY string to Date
-const parseDateString = (dateString: string): Date => {
-  const [day, month, year] = dateString.split('/').map(Number);
-  // Month is 0-indexed in JavaScript Date objects
-  return new Date(year, month - 1, day);
+// Function to generate a random password
+const generatePassword = () => {
+    const length = 8;
+    const charset = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
+    let retVal = "";
+    for (let i = 0, n = charset.length; i < length; ++i) {
+        retVal += charset.charAt(Math.floor(Math.random() * n));
+    }
+    return retVal;
 };
+
+// Function to generate a simple random Staff ID
+const generateStaffId = () => {
+    const prefix = "GIIA";
+    const randomNumber = Math.floor(10000 + Math.random() * 90000);
+    return `${prefix}-${randomNumber}`;
+}
 
 export function AddUserForm({ onUserAdded }: { onUserAdded: () => void }) {
   const { toast } = useToast();
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -82,126 +77,50 @@ export function AddUserForm({ onUserAdded }: { onUserAdded: () => void }) {
       firstName: '',
       lastName: '',
       email: '',
-      phone: '',
-      stateOfOrigin: '',
-      department: 'Science',
       role: 'Teacher',
-      address: '',
-      salaryAmount: '',
-      dob: '',
-      employmentDate: '',
     },
   });
 
-  async function generateStaffId(department: string, employmentDate: Date) {
-    const year = format(employmentDate, 'yy');
-    const deptCode = departmentCodes[department] || 'GEN';
-    const prefix = "GIIA";
-
-    // Get the count of staff in the same department and year
-    const usersRef = collection(db, 'users');
-    const q = query(
-      usersRef,
-      where('department', '==', department),
-      where('employmentYear', '==', employmentDate.getFullYear())
-    );
-    const querySnapshot = await getDocs(q);
-    const serialNumber = (querySnapshot.size + 1).toString().padStart(4, '0');
-
-    return `${prefix}${year}${deptCode}${serialNumber}`;
-  }
-
-  const handleSalaryChange = (e: React.ChangeEvent<HTMLInputElement>, field: any) => {
-      const rawValue = e.target.value.replace(/,/g, '');
-      if (!isNaN(Number(rawValue))) {
-        const formattedValue = new Intl.NumberFormat('en-NG').format(Number(rawValue));
-        field.onChange(formattedValue);
-      } else if (rawValue === '') {
-        field.onChange('');
-      }
-  };
-
-  const handleDateInputChange = (e: React.ChangeEvent<HTMLInputElement>, field: any) => {
-    let value = e.target.value.replace(/\D/g, ''); // Remove non-digit characters
-    if (value.length > 2) {
-      value = `${value.slice(0, 2)}/${value.slice(2)}`;
-    }
-    if (value.length > 5) {
-      value = `${value.slice(0, 5)}/${value.slice(5, 9)}`;
-    }
-    field.onChange(value);
-  };
-
-
   async function onSubmit(values: z.infer<typeof formSchema>) {
+    setIsSubmitting(true);
     try {
-      const { email, department } = values;
-      const employmentDate = parseDateString(values.employmentDate);
-      const dob = parseDateString(values.dob);
-      const salaryAmount = Number(values.salaryAmount.replace(/,/g, ''));
-      const stateOfOrigin = values.stateOfOrigin.toLowerCase(); // Enforce lowercase
+      const { email, role, firstName, lastName } = values;
 
-
-      // Check for uniqueness
+      // Check if email already exists
       const emailQuery = query(collection(db, 'users'), where('email', '==', email));
-      const phoneQuery = query(collection(db, 'users'), where('phone', '==', values.phone));
-      const [emailSnapshot, phoneSnapshot] = await Promise.all([getDocs(emailQuery), getDocs(phoneQuery)]);
-
+      const emailSnapshot = await getDocs(emailQuery);
       if (!emailSnapshot.empty) {
         toast({ variant: 'destructive', title: 'Error', description: 'Email already exists.' });
-        return;
-      }
-      if (!phoneSnapshot.empty) {
-        toast({ variant: 'destructive', title: 'Error', description: 'Phone number already exists.' });
+        setIsSubmitting(false);
         return;
       }
       
-      const staffId = await generateStaffId(department, employmentDate);
-      const defaultPassword = stateOfOrigin; // Already lowercased
+      const staffId = generateStaffId();
+      const password = generatePassword();
 
       // Create user in Firebase Auth
-      const userCredential = await createUserWithEmailAndPassword(auth, email, defaultPassword);
+      // IMPORTANT: This temporarily signs in as the new user. The RoleContext handles this.
+      const userCredential = await createUserWithEmailAndPassword(auth, email, password);
       const user = userCredential.user;
 
       // Create user record in Firestore
       await setDoc(doc(db, "users", user.uid), {
         uid: user.uid,
         staffId: staffId,
-        firstName: values.firstName,
-        lastName: values.lastName,
-        name: `${values.firstName} ${values.lastName}`,
-        email: values.email,
-        phone: values.phone,
-        stateOfOrigin: values.stateOfOrigin, // Store original casing in DB
-        department: values.department,
-        role: values.role,
-        employmentDate: employmentDate,
-        employmentYear: employmentDate.getFullYear(),
-        salary: {
-            amount: salaryAmount,
-            bankAccount: null,
-            paymentStatus: "Active"
-        },
-        personalInfo: {
-            address: values.address,
-            gender: values.gender,
-            dob: dob,
-            nextOfKin: null,
-            profilePicture: null
-        },
-        permissions: {
-            canUploadLessonNotes: true,
-            canViewSalary: true,
-            canAccessPortal: true
-        },
+        name: `${firstName} ${lastName}`,
+        email: email,
+        role: role,
         status: "Active",
-        createdAt: new Date()
+        createdAt: new Date(),
+        department: null,
+        phone: null,
+        stateOfOrigin: null,
       });
 
       toast({
         title: 'Staff Added Successfully',
-        description: `Staff ID: ${staffId} | Default Password: ${defaultPassword}`,
-        duration: 9000,
+        description: `Staff ID: ${staffId} | Password: ${password}`,
+        duration: 20000, // Keep toast on screen longer
       });
       form.reset();
       onUserAdded();
@@ -213,6 +132,8 @@ export function AddUserForm({ onUserAdded }: { onUserAdded: () => void }) {
         title: 'Error',
         description: e.code === 'auth/weak-password' ? 'Password must be at least 6 characters.' : (e.message || 'There was a problem adding the user.'),
       });
+    } finally {
+        setIsSubmitting(false);
     }
   }
 
@@ -258,137 +179,6 @@ export function AddUserForm({ onUserAdded }: { onUserAdded: () => void }) {
             </FormItem>
           )}
         />
-         <FormField
-          control={form.control}
-          name="phone"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Phone Number</FormLabel>
-              <FormControl>
-                <Input placeholder="08012345678" {...field} />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-         <FormField
-          control={form.control}
-          name="stateOfOrigin"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>State of Origin</FormLabel>
-               <FormControl>
-                <Input placeholder="e.g. Kaduna" {...field} />
-              </FormControl>
-              <FormDescription>
-                This will be used as the staff's default password (case-insensitive).
-              </FormDescription>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-        <FormField
-            control={form.control}
-            name="address"
-            render={({ field }) => (
-                <FormItem>
-                <FormLabel>Address</FormLabel>
-                <FormControl>
-                    <Input placeholder="123 Main St, Kaduna" {...field} />
-                </FormControl>
-                <FormMessage />
-                </FormItem>
-            )}
-        />
-        <FormField
-            control={form.control}
-            name="gender"
-            render={({ field }) => (
-                <FormItem className="space-y-3">
-                <FormLabel>Gender</FormLabel>
-                <FormControl>
-                    <RadioGroup
-                    onValueChange={field.onChange}
-                    defaultValue={field.value}
-                    className="flex space-x-4"
-                    >
-                    <FormItem className="flex items-center space-x-2 space-y-0">
-                        <FormControl>
-                        <RadioGroupItem value="Male" />
-                        </FormControl>
-                        <FormLabel className="font-normal">Male</FormLabel>
-                    </FormItem>
-                    <FormItem className="flex items-center space-x-2 space-y-0">
-                        <FormControl>
-                        <RadioGroupItem value="Female" />
-                        </FormControl>
-                        <FormLabel className="font-normal">Female</FormLabel>
-                    </FormItem>
-                    </RadioGroup>
-                </FormControl>
-                <FormMessage />
-                </FormItem>
-            )}
-        />
-         <FormField
-          control={form.control}
-          name="dob"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Date of Birth</FormLabel>
-              <FormControl>
-                <Input
-                  placeholder="DD/MM/YYYY"
-                  {...field}
-                  onChange={(e) => handleDateInputChange(e, field)}
-                  maxLength={10}
-                />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-
-        <FormField
-          control={form.control}
-          name="department"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Department</FormLabel>
-               <Select onValueChange={field.onChange} defaultValue={field.value}>
-                <FormControl>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select a department" />
-                  </SelectTrigger>
-                </FormControl>
-                <SelectContent>
-                  {Object.keys(departmentCodes).map(dept => (
-                     <SelectItem key={dept} value={dept}>{dept}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-         <FormField
-          control={form.control}
-          name="employmentDate"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Employment Date</FormLabel>
-              <FormControl>
-                 <Input
-                  placeholder="DD/MM/YYYY"
-                  {...field}
-                  onChange={(e) => handleDateInputChange(e, field)}
-                  maxLength={10}
-                />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
         <FormField
           control={form.control}
           name="role"
@@ -402,41 +192,20 @@ export function AddUserForm({ onUserAdded }: { onUserAdded: () => void }) {
                   </SelectTrigger>
                 </FormControl>
                 <SelectContent>
-                  <SelectItem value="Admin">Admin</SelectItem>
-                  <SelectItem value="Principal">Principal</SelectItem>
-                  <SelectItem value="Director">Director</SelectItem>
-                  <SelectItem value="HeadOfDepartment">HOD</SelectItem>
-                  <SelectItem value="Teacher">Teacher</SelectItem>
-                  <SelectItem value="Accountant">Accountant</SelectItem>
-                  <SelectItem value="ExamOfficer">Exam Officer</SelectItem>
-                  <SelectItem value="Parent">Parent</SelectItem>
-                  <SelectItem value="Student">Student</SelectItem>
+                  {availableRoles.map(role => (
+                     <SelectItem key={role} value={role}>{role}</SelectItem>
+                  ))}
                 </SelectContent>
               </Select>
               <FormMessage />
             </FormItem>
           )}
         />
-         <FormField
-            control={form.control}
-            name="salaryAmount"
-            render={({ field }) => (
-                <FormItem>
-                <FormLabel>Initial Salary (NGN)</FormLabel>
-                <FormControl>
-                  <Input 
-                    type="text" 
-                    placeholder="e.g. 150,000"
-                    {...field}
-                    onChange={(e) => handleSalaryChange(e, field)}
-                  />
-                </FormControl>
-                <FormMessage />
-                </FormItem>
-            )}
-        />
-        <Button type="submit" className="w-full" disabled={form.formState.isSubmitting}>
-           {form.formState.isSubmitting ? 'Adding...' : <> <PlusCircle className="mr-2 h-4 w-4" /> Add Staff</>}
+         <FormDescription>
+            A random, secure password will be generated and displayed upon creation.
+         </FormDescription>
+        <Button type="submit" className="w-full" disabled={isSubmitting}>
+           {isSubmitting ? 'Adding...' : <> <PlusCircle className="mr-2 h-4 w-4" /> Add Staff</>}
         </Button>
       </form>
     </Form>
