@@ -59,12 +59,13 @@ export function LoginForm() {
 
       const userDoc = querySnapshot.docs[0];
       const userData = userDoc.data();
+      const passwordToTry = values.password;
 
       // 2. Sign in with the user's email and provided password
       const userCredential = await signInWithEmailAndPassword(
         auth,
         userData.email, // Use email from Firestore to sign in
-        values.password
+        passwordToTry
       );
       
       const user = userCredential.user;
@@ -73,10 +74,12 @@ export function LoginForm() {
         setRole(userData.role);
 
         // 3. Show password change reminder if needed
-        if (values.password.toLowerCase() === userData.stateOfOrigin.toLowerCase()) {
+        // Compare the entered password (lowercase) with the stored state of origin (lowercase)
+        if (passwordToTry.toLowerCase() === userData.stateOfOrigin.toLowerCase()) {
            toast({
               title: 'Welcome!',
               description: 'For your security, please update your password in your profile settings.',
+              duration: 9000,
             });
         } else {
              toast({
@@ -87,7 +90,7 @@ export function LoginForm() {
         router.push('/dashboard');
       }
     } catch (error: any) {
-      toast({
+       toast({
         variant: 'destructive',
         title: 'Login Failed',
         description: 'Invalid Staff ID or Password.',

@@ -22,7 +22,7 @@ export function ProfileForm({ userId }: { userId: string }) {
             const userDocRef = doc(db, 'users', userId);
             const userDocSnap = await getDoc(userDocRef);
             if (userDocSnap.exists()) {
-                setUserData(userDocSnap.data() as MockUser);
+                setUserData({ id: userDocSnap.id, ...userDocSnap.data() } as MockUser);
             }
             setIsLoading(false);
         };
@@ -42,16 +42,23 @@ export function ProfileForm({ userId }: { userId: string }) {
 
     if (isLoading) {
         return (
-            <Card>
-                <CardHeader>
-                    <Skeleton className="h-8 w-48" />
-                    <Skeleton className="h-4 w-64" />
-                </CardHeader>
-                <CardContent className="space-y-4">
-                    <Skeleton className="h-10 w-full" />
-                    <Skeleton className="h-40 w-full" />
-                </CardContent>
-            </Card>
+             <div className="space-y-4">
+                <Skeleton className="h-10 w-1/3" />
+                <Card>
+                    <CardHeader>
+                        <Skeleton className="h-8 w-48" />
+                        <Skeleton className="h-4 w-64" />
+                    </CardHeader>
+                    <CardContent className="space-y-4 pt-6">
+                        <div className="grid grid-cols-2 gap-4">
+                            <Skeleton className="h-10 w-full" />
+                            <Skeleton className="h-10 w-full" />
+                            <Skeleton className="h-10 w-full" />
+                            <Skeleton className="h-10 w-full" />
+                        </div>
+                    </CardContent>
+                </Card>
+            </div>
         )
     }
 

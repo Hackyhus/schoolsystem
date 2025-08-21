@@ -135,10 +135,11 @@ export function AddUserForm({ onUserAdded }: { onUserAdded: () => void }) {
 
   async function onSubmit(values: z.infer<typeof formSchema>) {
     try {
-      const { email, stateOfOrigin, department } = values;
+      const { email, department } = values;
       const employmentDate = parseDateString(values.employmentDate);
       const dob = parseDateString(values.dob);
       const salaryAmount = Number(values.salaryAmount.replace(/,/g, ''));
+      const stateOfOrigin = values.stateOfOrigin.toLowerCase(); // Enforce lowercase
 
 
       // Check for uniqueness
@@ -156,7 +157,7 @@ export function AddUserForm({ onUserAdded }: { onUserAdded: () => void }) {
       }
       
       const staffId = await generateStaffId(department, employmentDate);
-      const defaultPassword = stateOfOrigin; // Plain text as per spec
+      const defaultPassword = stateOfOrigin; // Already lowercased
 
       // Create user in Firebase Auth
       const userCredential = await createUserWithEmailAndPassword(auth, email, defaultPassword);
@@ -171,7 +172,7 @@ export function AddUserForm({ onUserAdded }: { onUserAdded: () => void }) {
         name: `${values.firstName} ${values.lastName}`,
         email: values.email,
         phone: values.phone,
-        stateOfOrigin: values.stateOfOrigin,
+        stateOfOrigin: values.stateOfOrigin, // Store original casing in DB
         department: values.department,
         role: values.role,
         employmentDate: employmentDate,
@@ -280,7 +281,7 @@ export function AddUserForm({ onUserAdded }: { onUserAdded: () => void }) {
                 <Input placeholder="e.g. Kaduna" {...field} />
               </FormControl>
               <FormDescription>
-                This will be used as the staff's default password.
+                This will be used as the staff's default password (case-insensitive).
               </FormDescription>
               <FormMessage />
             </FormItem>

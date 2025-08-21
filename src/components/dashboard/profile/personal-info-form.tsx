@@ -13,6 +13,7 @@ import { Input } from '@/components/ui/input';
 import type { MockUser } from '@/lib/schema';
 import { Textarea } from '@/components/ui/textarea';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { Card, CardContent } from '@/components/ui/card';
 
 const formSchema = z.object({
     address: z.string().min(1, 'Address is required.'),
@@ -64,64 +65,72 @@ export function PersonalInfoForm({ userData, onUpdate }: PersonalInfoFormProps) 
     return (
         <Form {...form}>
             <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-                <div className="flex items-center gap-4">
-                     <Avatar className="h-20 w-20">
-                        <AvatarImage src={form.watch('profilePicture') || userData.personalInfo.profilePicture || ''} alt={userData.name} />
-                        <AvatarFallback>{userInitials}</AvatarFallback>
-                    </Avatar>
-                     <FormField
-                        control={form.control}
-                        name="profilePicture"
-                        render={({ field }) => (
-                            <FormItem className="flex-1">
-                            <FormLabel>Profile Picture URL</FormLabel>
-                            <FormControl>
-                                <Input placeholder="https://example.com/your-image.png" {...field} />
-                            </FormControl>
-                            <FormMessage />
-                            </FormItem>
-                        )}
+                 <Card>
+                    <CardContent className="pt-6">
+                       <div className="flex items-center gap-4">
+                            <Avatar className="h-20 w-20">
+                                <AvatarImage src={form.watch('profilePicture') || userData.personalInfo?.profilePicture || ''} alt={userData.name} />
+                                <AvatarFallback>{userInitials}</AvatarFallback>
+                            </Avatar>
+                            <FormField
+                                control={form.control}
+                                name="profilePicture"
+                                render={({ field }) => (
+                                    <FormItem className="flex-1">
+                                    <FormLabel>Profile Picture URL</FormLabel>
+                                    <FormControl>
+                                        <Input placeholder="https://placehold.co/100x100.png" {...field} />
+                                    </FormControl>
+                                    <FormMessage />
+                                    </FormItem>
+                                )}
+                                />
+                        </div>
+                    </CardContent>
+                </Card>
+                <Card>
+                    <CardContent className="pt-6 grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <FormField
+                            control={form.control}
+                            name="phone"
+                            render={({ field }) => (
+                                <FormItem>
+                                    <FormLabel>Phone Number</FormLabel>
+                                    <FormControl>
+                                        <Input {...field} />
+                                    </FormControl>
+                                    <FormMessage />
+                                </FormItem>
+                            )}
                         />
-                </div>
-                <FormField
-                    control={form.control}
-                    name="phone"
-                    render={({ field }) => (
-                        <FormItem>
-                            <FormLabel>Phone Number</FormLabel>
-                            <FormControl>
-                                <Input {...field} />
-                            </FormControl>
-                            <FormMessage />
-                        </FormItem>
-                    )}
-                />
-                <FormField
-                    control={form.control}
-                    name="address"
-                    render={({ field }) => (
-                        <FormItem>
-                            <FormLabel>Home Address</FormLabel>
-                            <FormControl>
-                                <Textarea {...field} />
-                            </FormControl>
-                            <FormMessage />
-                        </FormItem>
-                    )}
-                />
-                 <FormField
-                    control={form.control}
-                    name="nextOfKin"
-                    render={({ field }) => (
-                        <FormItem>
-                            <FormLabel>Next of Kin</FormLabel>
-                            <FormControl>
-                                <Input placeholder="Full Name, Relationship, Phone Number" {...field} />
-                            </FormControl>
-                            <FormMessage />
-                        </FormItem>
-                    )}
-                />
+                        <FormField
+                            control={form.control}
+                            name="nextOfKin"
+                            render={({ field }) => (
+                                <FormItem>
+                                    <FormLabel>Next of Kin (Full Name, Relationship, Phone)</FormLabel>
+                                    <FormControl>
+                                        <Input placeholder="e.g. Jane Doe, Sister, 080..." {...field} />
+                                    </FormControl>
+                                    <FormMessage />
+                                </FormItem>
+                            )}
+                        />
+                         <FormField
+                            control={form.control}
+                            name="address"
+                            render={({ field }) => (
+                                <FormItem className="md:col-span-2">
+                                    <FormLabel>Home Address</FormLabel>
+                                    <FormControl>
+                                        <Textarea {...field} />
+                                    </FormControl>
+                                    <FormMessage />
+                                </FormItem>
+                            )}
+                        />
+                    </CardContent>
+                </Card>
 
                 <div className="flex justify-end">
                     <Button type="submit" disabled={form.formState.isSubmitting}>

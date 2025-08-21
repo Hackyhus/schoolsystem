@@ -2,13 +2,19 @@
 'use client';
 
 import { format } from 'date-fns';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
 import type { MockUser } from '@/lib/schema';
+import { Card, CardContent } from '@/components/ui/card';
 
 interface ProfessionalInfoFormProps {
     userData: MockUser;
 }
+
+const InfoItem = ({ label, value }: { label: string, value: string | undefined | null }) => (
+    <div>
+        <p className="text-sm font-medium text-muted-foreground">{label}</p>
+        <p className="text-base font-semibold">{value || 'N/A'}</p>
+    </div>
+)
 
 export function ProfessionalInfoForm({ userData }: ProfessionalInfoFormProps) {
 
@@ -21,41 +27,19 @@ export function ProfessionalInfoForm({ userData }: ProfessionalInfoFormProps) {
         : 'N/A';
 
     return (
-        <div className="space-y-4">
-            <div className="grid grid-cols-2 gap-4">
-                 <div className="space-y-2">
-                    <Label>Staff ID</Label>
-                    <Input value={userData.staffId || ''} readOnly disabled />
+        <Card>
+            <CardContent className="pt-6">
+                <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
+                    <InfoItem label="Staff ID" value={userData.staffId} />
+                    <InfoItem label="Email" value={userData.email} />
+                    <InfoItem label="Role" value={userData.role} />
+                    <InfoItem label="Department" value={userData.department} />
+                    <InfoItem label="Date of Employment" value={formattedEmploymentDate} />
+                    <InfoItem label="Date of Birth" value={formattedDob} />
+                    <InfoItem label="Gender" value={userData.personalInfo?.gender} />
+                    <InfoItem label="State of Origin" value={userData.stateOfOrigin} />
                 </div>
-                <div className="space-y-2">
-                    <Label>Email</Label>
-                    <Input value={userData.email || ''} readOnly disabled />
-                </div>
-                 <div className="space-y-2">
-                    <Label>Role</Label>
-                    <Input value={userData.role || ''} readOnly disabled />
-                </div>
-                 <div className="space-y-2">
-                    <Label>Department</Label>
-                    <Input value={userData.department || ''} readOnly disabled />
-                </div>
-                <div className="space-y-2">
-                    <Label>Date of Employment</Label>
-                    <Input value={formattedEmploymentDate} readOnly disabled />
-                </div>
-                <div className="space-y-2">
-                    <Label>Date of Birth</Label>
-                    <Input value={formattedDob} readOnly disabled />
-                </div>
-                 <div className="space-y-2">
-                    <Label>Gender</Label>
-                    <Input value={userData.personalInfo?.gender || ''} readOnly disabled />
-                </div>
-                 <div className="space-y-2">
-                    <Label>State of Origin</Label>
-                    <Input value={userData.stateOfOrigin || ''} readOnly disabled />
-                </div>
-            </div>
-        </div>
+            </CardContent>
+        </Card>
     );
 }
