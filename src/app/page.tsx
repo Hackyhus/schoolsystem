@@ -1,3 +1,7 @@
+'use client';
+
+import { useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 import { LoginForm } from '@/components/auth/login-form';
 import {
   Card,
@@ -10,8 +14,26 @@ import {
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import Image from 'next/image';
+import { useRole } from '@/context/role-context';
 
 export default function Home() {
+  const { role, isLoading } = useRole();
+  const router = useRouter();
+
+  useEffect(() => {
+    if (!isLoading && role) {
+      router.push('/dashboard');
+    }
+  }, [role, isLoading, router]);
+  
+  if (isLoading || role) {
+    return (
+       <div className="flex h-screen w-full flex-col items-center justify-center bg-background">
+         {/* You can add a loader here if you want */}
+       </div>
+    )
+  }
+
   return (
     <div className="relative min-h-screen">
       <div

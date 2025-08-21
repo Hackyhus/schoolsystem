@@ -6,6 +6,7 @@ import * as z from 'zod';
 import { useRouter } from 'next/navigation';
 import { createUserWithEmailAndPassword } from 'firebase/auth';
 import { collection, doc, getDocs, query, setDoc, where } from 'firebase/firestore';
+import { useEffect } from 'react';
 
 import { Button } from '@/components/ui/button';
 import {
@@ -27,6 +28,7 @@ import {
   CardTitle,
 } from '@/components/ui/card';
 import Image from 'next/image';
+import { useRole } from '@/context/role-context';
 
 const formSchema = z.object({
   name: z.string().min(1, { message: 'Name is required.' }),
@@ -39,6 +41,14 @@ const formSchema = z.object({
 export default function SetupAdminPage() {
   const router = useRouter();
   const { toast } = useToast();
+  const { role, isLoading } = useRole();
+
+   useEffect(() => {
+    // Redirect if a user is already logged in
+    if (!isLoading && role) {
+      router.push('/dashboard');
+    }
+  }, [role, isLoading, router]);
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -101,6 +111,14 @@ export default function SetupAdminPage() {
             : error.message,
       });
     }
+  }
+
+  if (isLoading || role) {
+    return (
+      <div className="flex h-screen w-full flex-col items-center justify-center bg-background">
+        {/* You can add a loader here if you want */}
+      </div>
+    );
   }
 
   return (
