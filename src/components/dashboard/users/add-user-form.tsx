@@ -76,9 +76,7 @@ export function AddUserForm({ onUserAdded }: { onUserAdded: () => void }) {
       stateOfOrigin: '',
       department: 'Science',
       role: 'Staff',
-      employmentDate: new Date(),
       address: '',
-      dob: new Date(),
       salaryAmount: 0,
     },
   });
@@ -408,7 +406,7 @@ export function AddUserForm({ onUserAdded }: { onUserAdded: () => void }) {
                 <FormControl>
                   <SelectTrigger>
                     <SelectValue placeholder="Select a role" />
-                  </Trigger>
+                  </SelectTrigger>
                 </FormControl>
                 <SelectContent>
                   <SelectItem value="Staff">Staff</SelectItem>
