@@ -18,6 +18,7 @@ import {
   DollarSign,
   Edit,
   Edit3,
+  FileQuestion,
   FileText,
   Home,
   LayoutDashboard,
@@ -69,80 +70,82 @@ const iconMap: { [key: string]: React.ElementType } = {
   calendar: Calendar,
   bell: Bell,
   MessageSquare: MessageSquare,
+  'file-question': FileQuestion,
 };
 
 
 const navConfig = {
   Admin: { // mapped from developer_admin
     sidebar_extra: [
-      { "icon": "shield", "label": "System Config", "path": "/system" },
+      { "icon": "shield", "label": "System Config", "path": "/dashboard/system" },
       { "icon": "users", "label": "Manage Staff", "path": "/dashboard/users" },
-      { "icon": "users-round", "label": "Manage Students", "path": "/students" },
-      { "icon": "building", "label": "Departments", "path": "/departments" },
-      { "icon": "server", "label": "Database", "path": "/db" },
-      { "icon": "activity", "label": "Logs & Security", "path": "/logs" }
+      { "icon": "users-round", "label": "Manage Students", "path": "/dashboard/students" },
+      { "icon": "building", "label": "Departments", "path": "/dashboard/departments" },
+      { "icon": "server", "label": "Database", "path": "/dashboard/db" },
+      { "icon": "activity", "label": "Logs & Security", "path": "/dashboard/logs" }
     ],
   },
   Principal: {
     sidebar_extra: [
-      { "icon": "users", "label": "Teachers", "path": "/teachers" },
-      { "icon": "book", "label": "Classes", "path": "/classes" },
-      { "icon": "clipboard-list", "label": "Attendance", "path": "/attendance" },
+      { "icon": "users", "label": "Teachers", "path": "/dashboard/teachers" },
+      { "icon": "book", "label": "Classes", "path": "/dashboard/classes" },
+      { "icon": "clipboard-list", "label": "Attendance", "path": "/dashboard/attendance" },
       { "icon": "file-text", "label": "Reports", "path": "/dashboard/reports" }
     ],
   },
   HeadOfDepartment: { // Using Principal for HOD
     sidebar_extra: [
-      { "icon": "users", "label": "Teachers", "path": "/teachers" },
-      { "icon": "book", "label": "Classes", "path": "/classes" },
-      { "icon": "clipboard-list", "label": "Attendance", "path": "/attendance" },
+      { "icon": "users", "label": "Teachers", "path": "/dashboard/teachers" },
+      { "icon": "book", "label": "Classes", "path": "/dashboard/classes" },
+      { "icon": "clipboard-list", "label": "Attendance", "path": "/dashboard/attendance" },
       { "icon": "file-text", "label": "Reports", "path": "/dashboard/reports" }
     ],
   },
   Director: {
     sidebar_extra: [
-      { "icon": "bar-chart", "label": "Analytics", "path": "/analytics" },
-      { "icon": "users", "label": "Staff Overview", "path": "/staff-overview" },
-      { "icon": "file-text", "label": "School Reports", "path": "/school-reports" }
+      { "icon": "bar-chart", "label": "Analytics", "path": "/dashboard/analytics" },
+      { "icon": "users", "label": "Staff Overview", "path": "/dashboard/staff-overview" },
+      { "icon": "file-text", "label": "School Reports", "path": "/dashboard/school-reports" }
     ],
   },
   ExamOfficer: {
     sidebar_extra: [
-      { "icon": "edit", "label": "Enter Results", "path": "/results-entry" },
-      { "icon": "check-square", "label": "Approve Grades", "path": "/grade-approval" },
-      { "icon": "book-open", "label": "Exams", "path": "/exams" }
+      { "icon": "edit", "label": "Enter Results", "path": "/dashboard/results-entry" },
+      { "icon": "check-square", "label": "Approve Grades", "path": "/dashboard/grade-approval" },
+      { "icon": "book-open", "label": "Exams", "path": "/dashboard/exams" }
     ],
   },
   Teacher: {
     sidebar_extra: [
-      { "icon": "clipboard-list", "label": "Attendance", "path": "/teacher-attendance" },
-      { "icon": "book", "label": "Lesson Notes", "path": "/dashboard/lesson-notes" },
-      { "icon": "edit-3", "label": "Enter Scores", "path": "/scores" },
+      { "icon": "book", "label": "Lesson Plans", "path": "/dashboard/lesson-notes" },
+      { "icon": "file-question", "label": "Exam Questions", "path": "/dashboard/exam-questions" },
+      { "icon": "clipboard-list", "label": "Attendance", "path": "/dashboard/teacher-attendance" },
+      { "icon": "edit-3", "label": "Enter Scores", "path": "/dashboard/scores" },
       { "icon": "users", "label": "My Students", "path": "/dashboard/performance" }
     ],
   },
   Accountant: {
     sidebar_extra: [
-      { "icon": "dollar-sign", "label": "Fees", "path": "/fees" },
-      { "icon": "credit-card", "label": "Payments", "path": "/payments" },
-      { "icon": "file-invoice", "label": "Invoices", "path": "/invoices" }
+      { "icon": "dollar-sign", "label": "Fees", "path": "/dashboard/fees" },
+      { "icon": "credit-card", "label": "Payments", "path": "/dashboard/payments" },
+      { "icon": "file-invoice", "label": "Invoices", "path": "/dashboard/invoices" }
     ],
   },
   Parent: {
     sidebar_extra: [
       { "icon": "book-open", "label": "Results", "path": "/dashboard/performance" },
-      { "icon": "calendar", "label": "Timetable", "path": "/timetable" },
-      { "icon": "dollar-sign", "label": "Payments", "path": "/pay" },
-      { "icon": "bell", "label": "Announcements", "path": "/announcements" },
+      { "icon": "calendar", "label": "Timetable", "path": "/dashboard/timetable" },
+      { "icon": "dollar-sign", "label": "Payments", "path": "/dashboard/pay" },
+      { "icon": "bell", "label": "Announcements", "path": "/dashboard/announcements" },
       { "icon": "MessageSquare", "label": "Messaging", "path": "/dashboard/messaging" },
     ],
   },
   Student: {
     sidebar_extra: [
-      { "icon": "book", "label": "Subjects", "path": "/subjects" },
-      { "icon": "file-text", "label": "Results", "path": "/results" },
-      { "icon": "calendar", "label": "Timetable", "path": "/timetable" },
-      { "icon": "bell", "label": "Notices", "path": "/notices" }
+      { "icon": "book", "label": "Subjects", "path": "/dashboard/subjects" },
+      { "icon": "file-text", "label": "Results", "path": "/dashboard/results" },
+      { "icon": "calendar", "label": "Timetable", "path": "/dashboard/timetable" },
+      { "icon": "bell", "label": "Notices", "path": "/dashboard/notices" }
     ],
   }
 };

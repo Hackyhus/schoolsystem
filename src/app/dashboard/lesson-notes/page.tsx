@@ -19,6 +19,14 @@ import { db } from '@/lib/firebase';
 import type { MockLessonNote } from '@/lib/schema';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useToast } from '@/hooks/use-toast';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from '@/components/ui/dialog';
 
 
 export default function LessonNotesPage() {
@@ -26,6 +34,7 @@ export default function LessonNotesPage() {
   const [notes, setNotes] = useState<MockLessonNote[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const { toast } = useToast();
+  const [isModalOpen, setIsModalOpen] = useState(false);
 
   const fetchNotes = useCallback(async () => {
     if (!user && role !== 'Admin' && role !== 'HeadOfDepartment') {
@@ -78,12 +87,17 @@ export default function LessonNotesPage() {
     return 'View';
   }
 
+  const handleNoteAdded = () => {
+    fetchNotes();
+    setIsModalOpen(false);
+  }
+
   return (
     <div className="space-y-8">
       <div>
-        <h1 className="font-headline text-3xl font-bold">Lesson Notes</h1>
+        <h1 className="font-headline text-3xl font-bold">Lesson Plans</h1>
         <p className="text-muted-foreground">
-          {role === 'Teacher' ? 'Manage and track your lesson note submissions.' : 'Review and manage all lesson notes.'}
+          {role === 'Teacher' ? 'Manage and track your lesson plan submissions.' : 'Review and manage all lesson plans.'}
         </p>
       </div>
 
@@ -92,13 +106,28 @@ export default function LessonNotesPage() {
           <div>
             <CardTitle>All Submissions</CardTitle>
             <CardDescription>
-              A complete list of all lesson notes.
+              A complete list of all lesson plans.
             </CardDescription>
           </div>
           {role === 'Teacher' && (
-            <Button>
-              <Upload className="mr-2 h-4 w-4" /> Upload New Note
-            </Button>
+            <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
+              <DialogTrigger asChild>
+                <Button>
+                  <Upload className="mr-2 h-4 w-4" /> Upload New Plan
+                </Button>
+              </DialogTrigger>
+              <DialogContent>
+                 <DialogHeader>
+                    <DialogTitle>Upload Lesson Plan</DialogTitle>
+                    <DialogDescription>
+                      Select the class, subject, and upload your lesson plan file.
+                    </DialogDescription>
+                 </DialogHeader>
+                 {/* Add form component here */}
+                 <p className="text-center text-muted-foreground py-8">Lesson plan upload form will be here.</p>
+              </DialogContent>
+            </Dialog>
+            
           )}
         </CardHeader>
         <CardContent>
