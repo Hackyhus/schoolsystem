@@ -121,7 +121,7 @@ export function BankDetailsForm({ userData, onUpdate }: BankDetailsFormProps) {
                             <FormItem>
                                 <FormLabel>Account Number</FormLabel>
                                 <FormControl>
-                                    <Input type="number" {...field} />
+                                    <Input type="text" {...field} />
                                 </FormControl>
                                 <FormMessage />
                             </FormItem>

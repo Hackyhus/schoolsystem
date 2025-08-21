@@ -25,7 +25,7 @@ const InfoItem = ({ label, value, isCurrency = false }: { label: string; value?:
         : displayValue;
 
     return (
-        <div>
+        <div className="p-2">
             <p className="text-sm font-medium text-muted-foreground">{label}</p>
             <p className="text-base font-semibold">{formattedValue}</p>
         </div>
@@ -156,7 +156,7 @@ export function AdminProfileView({ userId }: { userId: string }) {
                             </Dialog>
                         )}
                     </CardHeader>
-                    <CardContent className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
+                    <CardContent className="grid grid-cols-1 gap-x-2 gap-y-4 sm:grid-cols-2 lg:grid-cols-3">
                         <InfoItem label="Staff ID" value={userData.staffId} />
                         <InfoItem label="Date of Employment" value={formattedEmploymentDate} />
                         <InfoItem label="Status" value={userData.status} />
@@ -174,7 +174,7 @@ export function AdminProfileView({ userId }: { userId: string }) {
                             <DialogTrigger asChild>
                             <Button variant="outline" size="sm"><Edit className="mr-2 h-4 w-4" /> Edit</Button>
                             </DialogTrigger>
-                            <DialogContent>
+                            <DialogContent className="max-h-[90vh] overflow-y-auto">
                                 <DialogHeader>
                                     <DialogTitle>Edit Personal Information</DialogTitle>
                                 </DialogHeader>
@@ -182,7 +182,7 @@ export function AdminProfileView({ userId }: { userId: string }) {
                             </DialogContent>
                         </Dialog>
                     </CardHeader>
-                    <CardContent className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
+                    <CardContent className="grid grid-cols-1 gap-x-2 gap-y-4 sm:grid-cols-2 lg:grid-cols-3">
                         <InfoItem label="Phone Number" value={userData.phone} />
                         <InfoItem label="Date of Birth" value={formattedDob} />
                         <InfoItem label="Gender" value={userData.personalInfo?.gender} />
@@ -203,7 +203,7 @@ export function AdminProfileView({ userId }: { userId: string }) {
                             <DialogTrigger asChild>
                             <Button variant="outline" size="sm"><Edit className="mr-2 h-4 w-4" /> Edit</Button>
                             </DialogTrigger>
-                            <DialogContent>
+                            <DialogContent className="max-h-[90vh] overflow-y-auto">
                                 <DialogHeader>
                                     <DialogTitle>Edit Bank & Salary</DialogTitle>
                                 </DialogHeader>
@@ -211,7 +211,7 @@ export function AdminProfileView({ userId }: { userId: string }) {
                             </DialogContent>
                         </Dialog>
                     </CardHeader>
-                    <CardContent className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
+                    <CardContent className="grid grid-cols-1 gap-x-2 gap-y-4 sm:grid-cols-2 lg:grid-cols-3">
                         <InfoItem label="Salary" value={userData.salary?.amount} isCurrency />
                         <InfoItem label="Bank Details" value={userData.salary?.bankAccount} />
                         <InfoItem label="Payment Status" value={userData.salary?.paymentStatus} />
