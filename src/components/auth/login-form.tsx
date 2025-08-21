@@ -104,7 +104,7 @@ export function LoginForm() {
             <FormItem>
               <FormLabel>Staff ID</FormLabel>
               <FormControl>
-                <Input placeholder="e.g. S24SCI0001" {...field} />
+                <Input placeholder="e.g. GIIA-24-SCI-0001" {...field} />
               </FormControl>
               <FormMessage />
             </FormItem>

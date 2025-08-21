@@ -80,6 +80,8 @@ export type MockUser = {
   department?: string;
   subject?: string;
   children?: string[];
+  salary?: number;
+  bankAccountNumber?: string;
 };
 
 export type MockLessonNote = {

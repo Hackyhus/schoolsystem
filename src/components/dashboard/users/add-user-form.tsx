@@ -10,6 +10,7 @@ import { Button } from '@/components/ui/button';
 import {
   Form,
   FormControl,
+  FormDescription,
   FormField,
   FormItem,
   FormLabel,
@@ -40,7 +41,9 @@ const formSchema = z.object({
   stateOfOrigin: z.string().min(1, { message: 'State of Origin is required.' }),
   department: z.string().min(1, { message: 'Department is required.' }),
   employmentDate: z.date({ required_error: "Employment date is required."}),
-  role: z.enum(['Admin', 'MiniAdmin', 'Staff', 'HeadOfDepartment', 'Teacher', 'Parent']),
+  role: z.enum(['Teacher', 'HOD', 'Bursar', 'Principal', 'Support Staff']),
+  salary: z.coerce.number().positive({ message: 'Salary must be a positive number.'}),
+  bankAccountNumber: z.string().min(10, { message: 'Enter a valid account number.'}).max(10, { message: 'Account number must be 10 digits.'}),
 });
 
 // A simple in-memory cache for department codes
@@ -49,6 +52,10 @@ const departmentCodes: { [key: string]: string } = {
     'Arts': 'ART',
     'Commercial': 'COM',
     'Administration': 'ADM',
+    'English': 'ENG',
+    'Accounts': 'ACC',
+    'Principal': 'PRN',
+    'Bursar': 'BUR'
 };
 
 
@@ -64,14 +71,17 @@ export function AddUserForm({ onUserAdded }: { onUserAdded: () => void }) {
       phone: '',
       stateOfOrigin: '',
       department: 'Science',
-      role: 'Staff',
+      role: 'Teacher',
       employmentDate: new Date(),
+      salary: 0,
+      bankAccountNumber: ''
     },
   });
 
   async function generateStaffId(department: string, employmentDate: Date) {
     const year = format(employmentDate, 'yy');
     const deptCode = departmentCodes[department] || 'GEN';
+    const prefix = "GIIA";
 
     // Get the count of staff in the same department and year
     const usersRef = collection(db, 'users');
@@ -83,21 +93,12 @@ export function AddUserForm({ onUserAdded }: { onUserAdded: () => void }) {
     const querySnapshot = await getDocs(q);
     const serialNumber = (querySnapshot.size + 1).toString().padStart(4, '0');
 
-    return `S${year}${deptCode}${serialNumber}`;
+    return `${prefix}-${year}-${deptCode}-${serialNumber}`;
   }
 
   async function onSubmit(values: z.infer<typeof formSchema>) {
     try {
       const { email, stateOfOrigin, department, employmentDate, role } = values;
-
-      if (role === 'Admin') {
-        const adminQuery = query(collection(db, 'users'), where('role', '==', 'Admin'));
-        const adminSnapshot = await getDocs(adminQuery);
-        if (!adminSnapshot.empty) {
-          toast({ variant: 'destructive', title: 'Error', description: 'An Admin account already exists. Only one admin is allowed.' });
-          return;
-        }
-      }
 
       // Check for uniqueness
       const emailQuery = query(collection(db, 'users'), where('email', '==', email));
@@ -134,7 +135,9 @@ export function AddUserForm({ onUserAdded }: { onUserAdded: () => void }) {
         employmentDate: values.employmentDate,
         employmentYear: values.employmentDate.getFullYear(),
         role: values.role,
-        status: 'active', // 'pending' would be for invite-based flow
+        status: 'active',
+        salary: values.salary,
+        bankAccountNumber: values.bankAccountNumber,
         createdAt: new Date()
       });
 
@@ -151,7 +154,7 @@ export function AddUserForm({ onUserAdded }: { onUserAdded: () => void }) {
        toast({
         variant: 'destructive',
         title: 'Error',
-        description: e.message || 'There was a problem adding the user.',
+        description: e.code === 'auth/weak-password' ? 'Password must be at least 6 characters.' : (e.message || 'There was a problem adding the user.'),
       });
     }
   }
@@ -217,9 +220,12 @@ export function AddUserForm({ onUserAdded }: { onUserAdded: () => void }) {
           render={({ field }) => (
             <FormItem>
               <FormLabel>State of Origin</FormLabel>
-              <FormControl>
+               <FormControl>
                 <Input placeholder="e.g. Kaduna" {...field} />
               </FormControl>
+              <FormDescription>
+                This will be used as the staff's default password.
+              </FormDescription>
               <FormMessage />
             </FormItem>
           )}
@@ -300,20 +306,45 @@ export function AddUserForm({ onUserAdded }: { onUserAdded: () => void }) {
                   </SelectTrigger>
                 </FormControl>
                 <SelectContent>
-                  <SelectItem value="Admin">Admin</SelectItem>
-                  <SelectItem value="MiniAdmin">Mini Admin</SelectItem>
-                  <SelectItem value="HeadOfDepartment">Head of Department</SelectItem>
                   <SelectItem value="Teacher">Teacher</SelectItem>
-                  <SelectItem value="Staff">Staff</SelectItem>
-                  <SelectItem value="Parent">Parent</SelectItem>
+                  <SelectItem value="HOD">HOD</SelectItem>
+                  <SelectItem value="Bursar">Bursar</SelectItem>
+                  <SelectItem value="Principal">Principal</SelectItem>
+                  <SelectItem value="Support Staff">Support Staff</SelectItem>
                 </SelectContent>
               </Select>
               <FormMessage />
             </FormItem>
           )}
         />
+        <FormField
+          control={form.control}
+          name="salary"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Salary</FormLabel>
+               <FormControl>
+                <Input type="number" placeholder="e.g. 50000" {...field} />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+         <FormField
+          control={form.control}
+          name="bankAccountNumber"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Bank Account Number</FormLabel>
+               <FormControl>
+                <Input placeholder="0123456789" {...field} />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
         <Button type="submit" className="w-full" disabled={form.formState.isSubmitting}>
-           {form.formState.isSubmitting ? 'Adding...' : <> <PlusCircle className="mr-2 h-4 w-4" /> Add User</>}
+           {form.formState.isSubmitting ? 'Adding...' : <> <PlusCircle className="mr-2 h-4 w-4" /> Add Staff</>}
         </Button>
       </form>
     </Form>

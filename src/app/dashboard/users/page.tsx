@@ -77,8 +77,6 @@ export default function UsersPage() {
     }
   };
 
-  // This function is passed to the form, but the form now handles user creation directly.
-  // We keep it to refresh the user list.
   const handleUserAdded = () => {
     fetchUsers();
   };
@@ -102,6 +100,7 @@ export default function UsersPage() {
               <Table>
                 <TableHeader>
                   <TableRow>
+                    <TableHead>Staff ID</TableHead>
                     <TableHead>Name</TableHead>
                     <TableHead>Email</TableHead>
                     <TableHead>Role</TableHead>
@@ -112,6 +111,7 @@ export default function UsersPage() {
                   {isLoading ? (
                     Array.from({ length: 5 }).map((_, i) => (
                        <TableRow key={i}>
+                        <TableCell><Skeleton className="h-5 w-28" /></TableCell>
                         <TableCell><Skeleton className="h-5 w-24" /></TableCell>
                         <TableCell><Skeleton className="h-5 w-36" /></TableCell>
                         <TableCell><Skeleton className="h-5 w-16" /></TableCell>
@@ -120,6 +120,7 @@ export default function UsersPage() {
                     ))
                   ) : users.map((user) => (
                     <TableRow key={user.id}>
+                      <TableCell className="font-mono">{user.staffId}</TableCell>
                       <TableCell className="font-medium">{user.name}</TableCell>
                       <TableCell>{user.email}</TableCell>
                       <TableCell>
@@ -139,7 +140,7 @@ export default function UsersPage() {
                   {!isLoading && users.length === 0 && (
                     <TableRow>
                       <TableCell
-                        colSpan={4}
+                        colSpan={5}
                         className="h-24 text-center text-muted-foreground"
                       >
                         No users found. Add a user to get started.
@@ -154,9 +155,9 @@ export default function UsersPage() {
         <div className="lg:col-span-1">
           <Card>
             <CardHeader>
-              <CardTitle>Add New User</CardTitle>
+              <CardTitle>Add New Staff</CardTitle>
               <CardDescription>
-                Create a new account for a staff member or parent.
+                Create a new account for a staff member.
               </CardDescription>
             </CardHeader>
             <CardContent>
