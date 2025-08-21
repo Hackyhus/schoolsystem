@@ -5,6 +5,8 @@ import { useForm } from 'react-hook-form';
 import * as z from 'zod';
 import { useRouter } from 'next/navigation';
 import { signInWithEmailAndPassword } from 'firebase/auth';
+import { collection, query, where, getDocs } from 'firebase/firestore';
+
 
 import { Button } from '@/components/ui/button';
 import {
@@ -15,23 +17,14 @@ import {
   FormLabel,
   FormMessage,
 } from '@/components/ui/form';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
 import { Input } from '@/components/ui/input';
 import { useRole } from '@/context/role-context';
 import { useToast } from '@/hooks/use-toast';
 import { auth, db } from '@/lib/firebase';
-import { doc, getDoc } from 'firebase/firestore';
 
 const formSchema = z.object({
-  email: z.string().email({ message: 'Please enter a valid email.' }),
+  staffId: z.string().min(1, { message: 'Staff ID is required.' }),
   password: z.string().min(1, { message: 'Password is required.' }),
-  role: z.enum(['Admin', 'HeadOfDepartment', 'Teacher', 'Parent']),
 });
 
 export function LoginForm() {
@@ -42,55 +35,61 @@ export function LoginForm() {
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      email: '',
+      staffId: '',
       password: '',
-      role: 'Teacher',
     },
   });
 
   async function onSubmit(values: z.infer<typeof formSchema>) {
     try {
+      // 1. Find the user by staffId in Firestore
+      const usersRef = collection(db, 'users');
+      const q = query(usersRef, where('staffId', '==', values.staffId));
+      const querySnapshot = await getDocs(q);
+
+      if (querySnapshot.empty) {
+        toast({
+          variant: 'destructive',
+          title: 'Login Failed',
+          description: 'Invalid Staff ID or Password.',
+        });
+        return;
+      }
+
+      const userDoc = querySnapshot.docs[0];
+      const userData = userDoc.data();
+
+      // 2. Sign in with the user's email and provided password
       const userCredential = await signInWithEmailAndPassword(
         auth,
-        values.email,
+        userData.email, // Use email from Firestore to sign in
         values.password
       );
+      
       const user = userCredential.user;
 
       if (user) {
-        const userDocRef = doc(db, 'users', user.uid);
-        const userDoc = await getDoc(userDocRef);
+        setRole(userData.role);
 
-        if (userDoc.exists()) {
-          const userData = userDoc.data();
-          if (userData.role === values.role) {
-            setRole(values.role);
-            toast({
-              title: 'Login Successful',
-              description: `Welcome! You are logged in as ${values.role}.`,
-            });
-            router.push('/dashboard');
-          } else {
-            toast({
-              variant: 'destructive',
-              title: 'Role Mismatch',
-              description: `You are not registered as a ${values.role}.`,
-            });
-            auth.signOut();
-          }
-        } else {
+        // 3. Show password change reminder if needed
+        if (values.password.toLowerCase() === userData.stateOfOrigin.toLowerCase()) {
            toast({
-              variant: 'destructive',
-              title: 'Login Failed',
-              description: 'No user data found.',
+              title: 'Welcome!',
+              description: 'For your security, please update your password in your profile settings.',
+            });
+        } else {
+             toast({
+              title: 'Login Successful',
+              description: `Welcome back! You are logged in as ${userData.role}.`,
             });
         }
+        router.push('/dashboard');
       }
     } catch (error: any) {
       toast({
         variant: 'destructive',
         title: 'Login Failed',
-        description: error.message,
+        description: 'Invalid Staff ID or Password.',
       });
     }
   }
@@ -100,12 +99,12 @@ export function LoginForm() {
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
         <FormField
           control={form.control}
-          name="email"
+          name="staffId"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Email</FormLabel>
+              <FormLabel>Staff ID</FormLabel>
               <FormControl>
-                <Input placeholder="name@giia.com.ng" {...field} />
+                <Input placeholder="e.g. S24SCI0001" {...field} />
               </FormControl>
               <FormMessage />
             </FormItem>
@@ -120,29 +119,6 @@ export function LoginForm() {
               <FormControl>
                 <Input type="password" placeholder="••••••••" {...field} />
               </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-        <FormField
-          control={form.control}
-          name="role"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Role</FormLabel>
-              <Select onValueChange={field.onChange} defaultValue={field.value}>
-                <FormControl>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select a role to log in as" />
-                  </SelectTrigger>
-                </FormControl>
-                <SelectContent>
-                  <SelectItem value="Admin">Admin</SelectItem>
-                  <SelectItem value="HeadOfDepartment">Head of Department</SelectItem>
-                  <SelectItem value="Teacher">Teacher</SelectItem>
-                  <SelectItem value="Parent">Parent</SelectItem>
-                </SelectContent>
-              </Select>
               <FormMessage />
             </FormItem>
           )}

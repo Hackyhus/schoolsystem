@@ -30,14 +30,11 @@ export default function Home() {
           <LoginForm />
         </CardContent>
         <CardFooter className="flex-col gap-4">
-          <div className="text-center text-sm text-muted-foreground">
-            Don't have an account?{' '}
-            <Button variant="link" asChild className="p-0">
-              <Link href="/signup">
-                Create one
+           <Button variant="link" asChild className="p-0 text-sm">
+              <Link href="/forgot-password">
+                Forgot Password?
               </Link>
             </Button>
-          </div>
         </CardFooter>
       </Card>
     </main>

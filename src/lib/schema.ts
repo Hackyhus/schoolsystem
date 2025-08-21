@@ -71,10 +71,12 @@ export type Student = {
 // Merging old and new mock data structures for compatibility
 // This will be updated as we build out the full application
 export type MockUser = {
-  id: number;
+  id: string; // Changed to string to match Firestore UID
+  staffId: string;
   name: string;
   email: string;
   role: string;
+  stateOfOrigin: string;
   department?: string;
   subject?: string;
   children?: string[];
@@ -84,7 +86,7 @@ export type MockLessonNote = {
     id: string;
     title: string;
     subject: string;
-    teacherId: number;
+    teacherId: string;
     teacherName: string;
     status: string;
     submissionDate: string;
