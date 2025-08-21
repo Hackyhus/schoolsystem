@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import React from 'react';
@@ -155,6 +156,7 @@ const baseNav = [
   { "group": "Main", "links": [{ "icon": "home", "label": "Dashboard", "path": "/dashboard" }] },
   { "group": "User", "links": [
       { "icon": "user", "label": "Profile", "path": "/profile" },
+      { "icon": "bell", "label": "Notifications", "path": "/dashboard/notifications" },
       { "icon": "lock", "label": "Change Password", "path": "/settings" }
   ]}
 ];

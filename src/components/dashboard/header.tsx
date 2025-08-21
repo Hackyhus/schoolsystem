@@ -1,4 +1,3 @@
-
 'use client';
 import { Bell, ChevronDown, User as UserIcon, LogOut, Moon, Sun } from 'lucide-react';
 import {
@@ -18,6 +17,7 @@ import { useRole } from '@/context/role-context';
 import { usePathname } from 'next/navigation';
 import { useTheme } from '@/context/theme-context';
 import Link from 'next/link';
+import { NotificationBell } from './notifications/notification-bell';
 
 export function DashboardHeader() {
   const { role, logout } = useRole();
@@ -42,10 +42,7 @@ export function DashboardHeader() {
       <SidebarTrigger />
       <h1 className="hidden font-headline text-xl font-semibold md:block">{getPageTitle()}</h1>
       <div className="ml-auto flex items-center gap-2">
-        <Button variant="ghost" size="icon" className="rounded-full">
-          <Bell className="h-5 w-5" />
-          <span className="sr-only">Toggle notifications</span>
-        </Button>
+        <NotificationBell />
          <Button
           variant="ghost"
           size="icon"

@@ -1,4 +1,5 @@
 
+
 export type User = {
   _id: string;
   firstName: string;
@@ -51,6 +52,21 @@ export type LessonNote = {
   updatedAt: Date;
 };
 
+export type AppNotification = {
+  id: string;
+  toUserId: string;
+  type: 'APPROVAL' | 'REJECTION' | 'INFO';
+  title: string;
+  body: string;
+  ref: {
+    collection: string;
+    id: string;
+  };
+  read: boolean;
+  createdAt: { seconds: number; nanoseconds: number };
+};
+
+
 export type Announcement = {
   _id: string;
   title: string;
@@ -75,6 +91,7 @@ export type MockUser = {
   staffId: string;
   firstName: string;
   lastName: string;
+  name: string;
   email: string;
   phone: string;
   stateOfOrigin: string;

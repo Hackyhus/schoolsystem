@@ -2,7 +2,7 @@
 
 import { useEffect, useState, useCallback } from 'react';
 import { notFound, useParams } from 'next/navigation';
-import { doc, getDoc, updateDoc } from 'firebase/firestore';
+import { doc, getDoc, updateDoc, collection, addDoc, serverTimestamp } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import type { MockLessonNote } from '@/lib/schema';
 import {
@@ -21,13 +21,34 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { useToast } from '@/hooks/use-toast';
 import { useRole } from '@/context/role-context';
 
+
+async function createNotification(teacherId: string, noteId: string, noteTitle: string, action: 'Approved' | 'Rejected') {
+  try {
+    await addDoc(collection(db, "notifications"), {
+      toUserId: teacherId,
+      type: action === 'Approved' ? 'APPROVAL' : 'REJECTION',
+      title: `Lesson Note ${action}`,
+      body: `Your lesson note "${noteTitle}" has been ${action.toLowerCase()}.`,
+      ref: {
+        collection: 'lessonNotes',
+        id: noteId,
+      },
+      read: false,
+      createdAt: serverTimestamp(),
+    });
+  } catch (error) {
+    console.error("Error creating notification:", error);
+    // Optionally, handle this error (e.g., log to a monitoring service)
+  }
+}
+
 export default function LessonNoteDetailPage() {
   const params = useParams();
   const { id } = params;
   const [note, setNote] = useState<MockLessonNote | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const { toast } = useToast();
-  const { role } = useRole();
+  const { role, user } = useRole();
 
   const fetchNote = useCallback(async () => {
     if (typeof id !== 'string') return;
@@ -57,25 +78,32 @@ export default function LessonNoteDetailPage() {
   }, [fetchNote]);
 
   const handleReview = async (action: 'Approve' | 'Reject', comment: string) => {
-    if (typeof id !== 'string' || !note) return;
+    if (typeof id !== 'string' || !note || !user) return;
+
+    const actionPastTense = action === 'Approve' ? 'Approved' : 'Rejected';
 
     let newStatus = note.status;
     let reviewData = {};
+    const reviewerName = user.displayName || 'Reviewer';
 
     if (role === 'HeadOfDepartment') {
       newStatus = action === 'Approve' ? 'Pending Admin Approval' : 'Rejected by HOD';
-      reviewData = { status: newStatus, hod_review: `${action}d: ${comment}` };
+      reviewData = { status: newStatus, hod_review: `${actionPastTense} by ${reviewerName}: ${comment}` };
     } else if (role === 'Admin') {
       newStatus = action === 'Approve' ? 'Approved' : 'Rejected by Admin';
-       reviewData = { status: newStatus, admin_review: `${action}d: ${comment}` };
+       reviewData = { status: newStatus, admin_review: `${actionPastTense} by ${reviewerName}: ${comment}` };
     }
 
     try {
         const docRef = doc(db, 'lessonNotes', id);
         await updateDoc(docRef, reviewData);
+        
+        // Create a notification for the teacher
+        await createNotification(note.teacherId, note.id, note.title, actionPastTense);
+
         toast({
-            title: `Lesson Note ${action}d`,
-            description: "The status has been updated.",
+            title: `Lesson Note ${actionPastTense}`,
+            description: "The status has been updated and the teacher has been notified.",
         });
         fetchNote(); // Re-fetch the note to show updated status
     } catch (error) {

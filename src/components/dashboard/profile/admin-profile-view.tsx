@@ -1,223 +1,317 @@
 
 'use client';
 
-import { useEffect, useState, useCallback }from 'react';
-import { doc, getDoc } from 'firebase/firestore';
+import { useEffect, useState, useCallback } from 'react';
+import { doc, getDoc, updateDoc } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import type { MockUser } from '@/lib/schema';
+import { useToast } from '@/hooks/use-toast';
 import { Skeleton } from '@/components/ui/skeleton';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from '@/components/ui/card';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { format } from 'date-fns';
 import { Button } from '@/components/ui/button';
-import { ArrowLeft, Edit } from 'lucide-react';
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { Camera, Edit } from 'lucide-react';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from '@/components/ui/dialog';
 import { PersonalInfoForm } from './personal-info-form';
 import { ProfessionalInfoForm } from './professional-info-form';
 import { BankDetailsForm } from './bank-details-form';
-import { useRouter } from 'next/navigation';
 import { useRole } from '@/context/role-context';
+import { format } from 'date-fns';
 
-const InfoItem = ({ label, value, isCurrency = false }: { label: string; value?: string | number | null; isCurrency?: boolean }) => {
-    const displayValue = value === null || value === undefined || value === '' ? 'N/A' : value;
-    const formattedValue = isCurrency && typeof displayValue === 'number'
-        ? new Intl.NumberFormat('en-NG', { style: 'currency', currency: 'NGN' }).format(displayValue)
-        : displayValue;
-
-    return (
-        <div className="p-2">
-            <p className="text-sm font-medium text-muted-foreground">{label}</p>
-            <p className="text-base font-semibold">{formattedValue}</p>
-        </div>
-    );
-};
-
+const InfoItem = ({
+  label,
+  value,
+}: {
+  label: string;
+  value: string | undefined | null;
+}) => (
+  <div className="py-2">
+    <p className="text-sm font-medium text-muted-foreground">{label}</p>
+    <p className="text-base font-semibold">{value || 'N/A'}</p>
+  </div>
+);
 
 export function AdminProfileView({ userId }: { userId: string }) {
-    const [userData, setUserData] = useState<MockUser | null>(null);
-    const [isLoading, setIsLoading] = useState(true);
-    const [isPersonalInfoOpen, setPersonalInfoOpen] = useState(false);
-    const [isProfessionalInfoOpen, setProfessionalInfoOpen] = useState(false);
-    const [isBankDetailsOpen, setBankDetailsOpen] = useState(false);
-    const router = useRouter();
-    const { role: currentUserRole, user: currentUser } = useRole();
-    const isAdminViewing = currentUserRole === 'Admin' && currentUser?.uid !== userId;
+  const [user, setUser] = useState<MockUser | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const { toast } = useToast();
+  const { role: currentUserRole } = useRole();
+  const [isPersonalInfoOpen, setIsPersonalInfoOpen] = useState(false);
+  const [isProfessionalInfoOpen, setIsProfessionalInfoOpen] = useState(false);
+  const [isBankDetailsOpen, setIsBankDetailsOpen] = useState(false);
 
-    const fetchUserData = useCallback(async () => {
-        if (!userId) return;
-        setIsLoading(true);
-        const userDocRef = doc(db, 'users', userId);
-        const userDocSnap = await getDoc(userDocRef);
-        if (userDocSnap.exists()) {
-            setUserData({ id: userDocSnap.id, ...userDocSnap.data() } as MockUser);
-        }
-        setIsLoading(false);
-    }, [userId]);
-
-    useEffect(() => {
-        fetchUserData();
-    }, [fetchUserData]);
-
-
-    const handleProfileUpdate = (updatedData: Partial<MockUser>) => {
-        setUserData(prevData => prevData ? { ...prevData, ...updatedData } : null);
-        // Close all dialogs
-        setPersonalInfoOpen(false);
-        setProfessionalInfoOpen(false);
-        setBankDetailsOpen(false);
-        // Optionally re-fetch to ensure data is consistent
-        fetchUserData();
+  const fetchUser = useCallback(async () => {
+    setIsLoading(true);
+    try {
+      const docRef = doc(db, 'users', userId);
+      const docSnap = await getDoc(docRef);
+      if (docSnap.exists()) {
+        const data = docSnap.data();
+        // Convert Firestore Timestamps to JS Dates
+        const userData = {
+          ...data,
+          id: docSnap.id,
+          employmentDate: data.employmentDate?.toDate(),
+          personalInfo: {
+            ...data.personalInfo,
+            dob: data.personalInfo?.dob?.toDate(),
+          },
+        } as MockUser;
+        setUser(userData);
+      } else {
+        toast({
+          variant: 'destructive',
+          title: 'Error',
+          description: 'User not found.',
+        });
+      }
+    } catch (error) {
+      console.error('Error fetching user:', error);
+      toast({
+        variant: 'destructive',
+        title: 'Error',
+        description: 'Could not fetch user data.',
+      });
+    } finally {
+      setIsLoading(false);
     }
+  }, [userId, toast]);
 
-    if (isLoading) {
-        return (
-             <div className="space-y-4">
-                <Skeleton className="h-10 w-1/3" />
-                <Card>
-                    <CardHeader>
-                        <Skeleton className="h-8 w-48" />
-                        <Skeleton className="h-4 w-64" />
-                    </CardHeader>
-                    <CardContent className="space-y-4 pt-6">
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            <Skeleton className="h-10 w-full" />
-                            <Skeleton className="h-10 w-full" />
-                            <Skeleton className="h-10 w-full" />
-                            <Skeleton className="h-10 w-full" />
-                        </div>
-                    </CardContent>
-                </Card>
-            </div>
-        )
-    }
+  useEffect(() => {
+    fetchUser();
+  }, [fetchUser]);
 
-    if (!userData) {
-        return <div>User data could not be loaded.</div>
-    }
+  const handleUpdate = () => {
+    fetchUser(); // Re-fetch user data after an update
+    setIsPersonalInfoOpen(false);
+    setIsProfessionalInfoOpen(false);
+    setIsBankDetailsOpen(false);
+  };
+  
+  const canEdit =
+    currentUserRole === 'Admin' ||
+    currentUserRole === 'Super Admin' ||
+    (user && auth.currentUser?.uid === user.id);
 
-    const userInitials = userData.name ? userData.name.split(' ').map(n => n[0]).join('') : '..';
-    const formattedEmploymentDate = userData.employmentDate
-        ? format(new Date((userData.employmentDate as any).seconds * 1000), 'PPP')
-        : 'N/A';
-    const formattedDob = userData.personalInfo?.dob
-        ? format(new Date((userData.personalInfo.dob as any).seconds * 1000), 'PPP')
-        : 'N/A';
-
-
+  if (isLoading) {
     return (
-        <div className="space-y-8">
-             <div className="flex flex-wrap items-center justify-between gap-4">
-                <div>
-                    <h1 className="font-headline text-3xl font-bold">{isAdminViewing ? 'Staff Profile' : 'My Profile'}</h1>
-                    <p className="text-muted-foreground">
-                         {isAdminViewing ? `Viewing details for ${userData.name}.` : 'View and update your personal information.'}
-                    </p>
-                </div>
-                 {isAdminViewing && (
-                     <Button variant="outline" onClick={() => router.back()}>
-                        <ArrowLeft className="mr-2 h-4 w-4" />
-                        Back to Users
-                     </Button>
-                )}
-            </div>
-            
-            <div className="flex flex-col items-start gap-4 sm:flex-row">
-                <Avatar className="h-24 w-24">
-                    <AvatarImage src={userData.personalInfo?.profilePicture || ''} alt={userData.name} />
-                    <AvatarFallback>{userInitials}</AvatarFallback>
-                </Avatar>
-                <div>
-                    <h2 className="text-2xl font-bold">{userData.name}</h2>
-                    <p className="text-muted-foreground">{userData.email}</p>
-                    <p className="text-sm text-muted-foreground">{userData.role} - {userData.department}</p>
-                </div>
-            </div>
-
-            <div className="grid gap-8">
-                <Card>
-                    <CardHeader className="flex flex-row items-center justify-between">
-                        <div>
-                            <CardTitle>Professional Information</CardTitle>
-                            <CardDescription>
-                                {isAdminViewing ? 'Official staff details and role.' : 'This information is managed by the administrator.'}
-                            </CardDescription>
-                        </div>
-                        {isAdminViewing && (
-                            <Dialog open={isProfessionalInfoOpen} onOpenChange={setProfessionalInfoOpen}>
-                                <DialogTrigger asChild>
-                                <Button variant="outline" size="sm"><Edit className="mr-2 h-4 w-4" /> Edit</Button>
-                                </DialogTrigger>
-                                <DialogContent>
-                                    <DialogHeader>
-                                        <DialogTitle>Edit Professional Information</DialogTitle>
-                                    </DialogHeader>
-                                    <ProfessionalInfoForm userData={userData} onUpdate={handleProfileUpdate} />
-                                </DialogContent>
-                            </Dialog>
-                        )}
-                    </CardHeader>
-                    <CardContent className="grid grid-cols-1 gap-x-2 gap-y-4 sm:grid-cols-2 lg:grid-cols-3">
-                        <InfoItem label="Staff ID" value={userData.staffId} />
-                        <InfoItem label="Date of Employment" value={formattedEmploymentDate} />
-                        <InfoItem label="Status" value={userData.status} />
-                        <InfoItem label="State of Origin" value={userData.stateOfOrigin} />
-                    </CardContent>
-                </Card>
-
-                <Card>
-                    <CardHeader className="flex flex-row items-center justify-between">
-                        <div>
-                            <CardTitle>Personal Information</CardTitle>
-                            <CardDescription>Contact and personal staff details.</CardDescription>
-                        </div>
-                        <Dialog open={isPersonalInfoOpen} onOpenChange={setPersonalInfoOpen}>
-                            <DialogTrigger asChild>
-                            <Button variant="outline" size="sm"><Edit className="mr-2 h-4 w-4" /> Edit</Button>
-                            </DialogTrigger>
-                            <DialogContent className="max-h-[90vh] overflow-y-auto">
-                                <DialogHeader>
-                                    <DialogTitle>Edit Personal Information</DialogTitle>
-                                </DialogHeader>
-                                <PersonalInfoForm userData={userData} onUpdate={handleProfileUpdate} />
-                            </DialogContent>
-                        </Dialog>
-                    </CardHeader>
-                    <CardContent className="grid grid-cols-1 gap-x-2 gap-y-4 sm:grid-cols-2 lg:grid-cols-3">
-                        <InfoItem label="Phone Number" value={userData.phone} />
-                        <InfoItem label="Date of Birth" value={formattedDob} />
-                        <InfoItem label="Gender" value={userData.personalInfo?.gender} />
-                        <InfoItem label="Next of Kin" value={userData.personalInfo?.nextOfKin} />
-                        <div className="col-span-1 sm:col-span-2 lg:col-span-3">
-                            <InfoItem label="Address" value={userData.personalInfo?.address} />
-                        </div>
-                    </CardContent>
-                </Card>
-
-                <Card>
-                    <CardHeader className="flex flex-row items-center justify-between">
-                        <div>
-                            <CardTitle>Bank & Salary Details</CardTitle>
-                            <CardDescription>Financial information for salary payment.</CardDescription>
-                        </div>
-                        <Dialog open={isBankDetailsOpen} onOpenChange={setBankDetailsOpen}>
-                            <DialogTrigger asChild>
-                            <Button variant="outline" size="sm"><Edit className="mr-2 h-4 w-4" /> Edit</Button>
-                            </DialogTrigger>
-                            <DialogContent className="max-h-[90vh] overflow-y-auto">
-                                <DialogHeader>
-                                    <DialogTitle>Edit Bank & Salary</DialogTitle>
-                                </DialogHeader>
-                                <BankDetailsForm userData={userData} onUpdate={handleProfileUpdate} />
-                            </DialogContent>
-                        </Dialog>
-                    </CardHeader>
-                    <CardContent className="grid grid-cols-1 gap-x-2 gap-y-4 sm:grid-cols-2 lg:grid-cols-3">
-                        <InfoItem label="Salary" value={userData.salary?.amount} isCurrency />
-                        <InfoItem label="Bank Details" value={userData.salary?.bankAccount} />
-                        <InfoItem label="Payment Status" value={userData.salary?.paymentStatus} />
-                    </CardContent>
-                </Card>
-            </div>
+      <div className="space-y-8">
+        <div className="flex items-center gap-4">
+          <Skeleton className="h-24 w-24 rounded-full" />
+          <div className="space-y-2">
+            <Skeleton className="h-7 w-48" />
+            <Skeleton className="h-5 w-32" />
+          </div>
         </div>
-    )
+        <Skeleton className="h-64 w-full" />
+        <Skeleton className="h-64 w-full" />
+      </div>
+    );
+  }
+
+  if (!user) {
+    return (
+      <div className="text-center text-muted-foreground">User not found.</div>
+    );
+  }
+
+  const userInitials =
+    user.name
+      ?.split(' ')
+      .map((n) => n[0])
+      .join('') || '..';
+
+  return (
+    <div className="space-y-8">
+      <Card>
+        <CardHeader>
+          <div className="flex flex-col items-center gap-4 text-center sm:flex-row sm:text-left">
+            <div className="relative">
+              <Avatar className="h-24 w-24 text-4xl">
+                <AvatarImage
+                  src={user.personalInfo?.profilePicture || ''}
+                  alt={user.name || ''}
+                />
+                <AvatarFallback>{userInitials}</AvatarFallback>
+              </Avatar>
+              <Dialog
+                open={isPersonalInfoOpen}
+                onOpenChange={setIsPersonalInfoOpen}
+              >
+                <DialogTrigger asChild>
+                  <Button
+                    variant="outline"
+                    size="icon"
+                    className="absolute bottom-0 right-0 rounded-full"
+                  >
+                    <Camera className="h-4 w-4" />
+                  </Button>
+                </DialogTrigger>
+                <DialogContent>
+                  <DialogHeader>
+                    <DialogTitle>Edit Personal Information</DialogTitle>
+                  </DialogHeader>
+                  <PersonalInfoForm user={user} onUpdate={handleUpdate} />
+                </DialogContent>
+              </Dialog>
+            </div>
+            <div className="space-y-1">
+              <CardTitle className="text-3xl">{user.name}</CardTitle>
+              <CardDescription>{user.email}</CardDescription>
+            </div>
+          </div>
+        </CardHeader>
+      </Card>
+
+      {/* Professional Information */}
+      <Card>
+        <CardHeader className="flex flex-row items-center justify-between">
+          <div>
+            <CardTitle>Professional Information</CardTitle>
+            <CardDescription>
+              Employment and role details. This information is managed by the
+              administrator.
+            </CardDescription>
+          </div>
+          <Dialog
+            open={isProfessionalInfoOpen}
+            onOpenChange={setIsProfessionalInfoOpen}
+          >
+            <DialogTrigger asChild>
+              <Button variant="outline" size="icon" disabled={!canEdit}>
+                <Edit className="h-4 w-4" />
+              </Button>
+            </DialogTrigger>
+            <DialogContent>
+              <DialogHeader>
+                <DialogTitle>Edit Professional Information</DialogTitle>
+              </DialogHeader>
+              <ProfessionalInfoForm user={user} onUpdate={handleUpdate} />
+            </DialogContent>
+          </Dialog>
+        </CardHeader>
+        <CardContent>
+          <div className="grid grid-cols-1 gap-x-6 gap-y-4 md:grid-cols-2 lg:grid-cols-3">
+            <InfoItem label="Staff ID" value={user.staffId} />
+            <InfoItem label="Role" value={user.role} />
+            <InfoItem label="Department" value={user.department} />
+            <InfoItem
+              label="Employment Date"
+              value={
+                user.employmentDate
+                  ? format(user.employmentDate, 'PPP')
+                  : 'N/A'
+              }
+            />
+            <InfoItem label="Status" value={user.status} />
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Personal Information */}
+      <Card>
+        <CardHeader className="flex flex-row items-center justify-between">
+          <div>
+            <CardTitle>Personal Information</CardTitle>
+            <CardDescription>
+              Your personal contact and demographic details.
+            </CardDescription>
+          </div>
+          <Dialog
+            open={isPersonalInfoOpen}
+            onOpenChange={setIsPersonalInfoOpen}
+          >
+            <DialogTrigger asChild>
+              <Button variant="outline" size="icon" disabled={!canEdit}>
+                <Edit className="h-4 w-4" />
+              </Button>
+            </DialogTrigger>
+            <DialogContent>
+              <DialogHeader>
+                <DialogTitle>Edit Personal Information</DialogTitle>
+              </DialogHeader>
+              <PersonalInfoForm user={user} onUpdate={handleUpdate} />
+            </DialogContent>
+          </Dialog>
+        </CardHeader>
+        <CardContent>
+          <div className="grid grid-cols-1 gap-x-6 gap-y-4 md:grid-cols-2 lg:grid-cols-3">
+            <InfoItem label="Full Name" value={user.name} />
+            <InfoItem label="Phone Number" value={user.phone} />
+            <InfoItem
+              label="Date of Birth"
+              value={
+                user.personalInfo?.dob
+                  ? format(user.personalInfo.dob, 'PPP')
+                  : 'N/A'
+              }
+            />
+            <InfoItem label="Gender" value={user.personalInfo?.gender} />
+            <InfoItem label="State of Origin" value={user.stateOfOrigin} />
+            <InfoItem
+              label="Address"
+              value={user.personalInfo?.address}
+              />
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Bank & Salary Details */}
+      <Card>
+        <CardHeader className="flex flex-row items-center justify-between">
+          <div>
+            <CardTitle>Bank & Salary Details</CardTitle>
+            <CardDescription>
+              Your salary and bank account information.
+            </CardDescription>
+          </div>
+          <Dialog
+            open={isBankDetailsOpen}
+            onOpenChange={setIsBankDetailsOpen}
+          >
+            <DialogTrigger asChild>
+              <Button variant="outline" size="icon" disabled={!canEdit}>
+                <Edit className="h-4 w-4" />
+              </Button>
+            </DialogTrigger>
+            <DialogContent>
+              <DialogHeader>
+                <DialogTitle>Edit Bank & Salary Details</DialogTitle>
+              </DialogHeader>
+              <BankDetailsForm user={user} onUpdate={handleUpdate} />
+            </DialogContent>
+          </Dialog>
+        </CardHeader>
+        <CardContent>
+          <div className="grid grid-cols-1 gap-x-6 gap-y-4 md:grid-cols-2 lg:grid-cols-3">
+            <InfoItem
+              label="Salary"
+              value={
+                user.salary?.amount
+                  ? `₦${user.salary.amount.toLocaleString()}`
+                  : 'N/A'
+              }
+            />
+            <InfoItem
+              label="Bank Account"
+              value={user.salary?.bankAccount}
+            />
+          </div>
+        </CardContent>
+      </Card>
+    </div>
+  );
 }
