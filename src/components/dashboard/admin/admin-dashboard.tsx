@@ -1,10 +1,8 @@
 'use client';
 import {
-  Activity,
   ArrowUpRight,
   BookCheck,
   Users,
-  MessageSquare,
 } from 'lucide-react';
 import {
   Card,
@@ -88,7 +86,7 @@ export function AdminDashboard() {
         </p>
       </div>
 
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-2">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Active Users</CardTitle>
@@ -107,26 +105,6 @@ export function AdminDashboard() {
           <CardContent>
             <div className="text-2xl font-bold">{stats.lessonNotes}</div>
             <p className="text-xs text-muted-foreground">total submissions</p>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Parent Engagement</CardTitle>
-            <Activity className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">82%</div>
-            <p className="text-xs text-muted-foreground">+2.5% from last month</p>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Messages Sent</CardTitle>
-            <MessageSquare className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">542</div>
-            <p className="text-xs text-muted-foreground">24 new today</p>
           </CardContent>
         </Card>
       </div>
