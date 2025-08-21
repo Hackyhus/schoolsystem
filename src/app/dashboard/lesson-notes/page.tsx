@@ -48,7 +48,7 @@ export default function LessonNotesPage() {
     try {
       let notesQuery;
       if (role === 'Teacher') {
-        notesQuery = query(collection(db, 'lessonNotes'), where("teacherId", "==", user?.uid), orderBy("submissionDate", "desc"));
+        notesQuery = query(collection(db, 'lessonNotes'), where("teacherId", "==", user?.uid));
       } else {
         // Admin and HOD see all for now. This could be scoped by department for HODs.
         notesQuery = query(collection(db, 'lessonNotes'), orderBy("submissionDate", "desc"));
@@ -58,13 +58,17 @@ export default function LessonNotesPage() {
       const notesList = querySnapshot.docs.map(
         (doc) => ({ id: doc.id, ...doc.data() } as MockLessonNote)
       );
+
+      // Sort on the client-side
+      notesList.sort((a, b) => new Date(b.submissionDate).getTime() - new Date(a.submissionDate).getTime());
+
       setNotes(notesList);
     } catch (error) {
       console.error("Error fetching lesson notes:", error);
       toast({
         variant: "destructive",
         title: "Error",
-        description: "Could not fetch lesson notes.",
+        description: "Could not fetch lesson notes. This might be due to a missing database index.",
       });
     } finally {
       setIsLoading(false);
