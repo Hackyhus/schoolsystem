@@ -156,13 +156,11 @@ export function AdminProfileView({ userId }: { userId: string }) {
                             </Dialog>
                         )}
                     </CardHeader>
-                    <CardContent>
-                        <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
-                            <InfoItem label="Staff ID" value={userData.staffId} />
-                            <InfoItem label="Date of Employment" value={formattedEmploymentDate} />
-                            <InfoItem label="Status" value={userData.status} />
-                            <InfoItem label="State of Origin" value={userData.stateOfOrigin} />
-                        </div>
+                    <CardContent className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
+                        <InfoItem label="Staff ID" value={userData.staffId} />
+                        <InfoItem label="Date of Employment" value={formattedEmploymentDate} />
+                        <InfoItem label="Status" value={userData.status} />
+                        <InfoItem label="State of Origin" value={userData.stateOfOrigin} />
                     </CardContent>
                 </Card>
 
@@ -184,15 +182,13 @@ export function AdminProfileView({ userId }: { userId: string }) {
                             </DialogContent>
                         </Dialog>
                     </CardHeader>
-                    <CardContent>
-                        <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
-                            <InfoItem label="Phone Number" value={userData.phone} />
-                            <InfoItem label="Date of Birth" value={formattedDob} />
-                            <InfoItem label="Gender" value={userData.personalInfo?.gender} />
-                            <InfoItem label="Next of Kin" value={userData.personalInfo?.nextOfKin} />
-                            <div className="col-span-full">
+                    <CardContent className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
+                        <InfoItem label="Phone Number" value={userData.phone} />
+                        <InfoItem label="Date of Birth" value={formattedDob} />
+                        <InfoItem label="Gender" value={userData.personalInfo?.gender} />
+                        <InfoItem label="Next of Kin" value={userData.personalInfo?.nextOfKin} />
+                        <div className="col-span-1 sm:col-span-2 lg:col-span-3">
                             <InfoItem label="Address" value={userData.personalInfo?.address} />
-                            </div>
                         </div>
                     </CardContent>
                 </Card>
@@ -215,12 +211,10 @@ export function AdminProfileView({ userId }: { userId: string }) {
                             </DialogContent>
                         </Dialog>
                     </CardHeader>
-                    <CardContent>
-                        <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
-                            <InfoItem label="Salary" value={userData.salary?.amount} isCurrency />
-                            <InfoItem label="Bank Details" value={userData.salary?.bankAccount} />
-                            <InfoItem label="Payment Status" value={userData.salary?.paymentStatus} />
-                        </div>
+                    <CardContent className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
+                        <InfoItem label="Salary" value={userData.salary?.amount} isCurrency />
+                        <InfoItem label="Bank Details" value={userData.salary?.bankAccount} />
+                        <InfoItem label="Payment Status" value={userData.salary?.paymentStatus} />
                     </CardContent>
                 </Card>
             </div>
