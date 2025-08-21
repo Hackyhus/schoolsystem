@@ -189,7 +189,7 @@ export function AdminProfileView({ userId }: { userId: string }) {
                         <InfoItem label="Date of Birth" value={formattedDob} />
                         <InfoItem label="Gender" value={userData.personalInfo?.gender} />
                         <InfoItem label="Next of Kin" value={userData.personalInfo?.nextOfKin} />
-                        <div className="sm:col-span-2">
+                        <div className="sm:col-span-2 lg:col-span-3">
                            <InfoItem label="Address" value={userData.personalInfo?.address} />
                         </div>
                     </div>
