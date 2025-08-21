@@ -22,56 +22,65 @@ export const RoleProvider = ({ children }: { children: React.ReactNode }) => {
   const router = useRouter();
 
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, async (user) => {
+    const unsubscribe = onAuthStateChanged(auth, async (currentUser) => {
+      // If the current user in the context is already the authenticated user, do nothing.
+      // This prevents re-fetching and state changes when an admin creates a new user,
+      // which can briefly change auth state before being reverted.
+      if (user && currentUser && user.uid === currentUser.uid) {
+        setIsLoading(false);
+        return;
+      }
+      
       setIsLoading(true);
-      if (user) {
-        setUser(user);
-        const userDocRef = doc(db, 'users', user.uid);
+      if (currentUser) {
+        setUser(currentUser);
+        const userDocRef = doc(db, 'users', currentUser.uid);
         const userDoc = await getDoc(userDocRef);
+
         if (userDoc.exists()) {
           const userData = userDoc.data();
-          setRoleState(userData.role);
-           try {
-            localStorage.setItem('user-role', JSON.stringify(userData.role));
+          const userRole = userData.role;
+          setRoleState(userRole);
+          try {
+            localStorage.setItem('user-role', JSON.stringify(userRole));
           } catch (error) {
             console.error('Failed to write to localStorage', error);
           }
         } else {
-          // No user document, log them out
+          // If a user exists in auth but not in Firestore, it's an invalid state.
+          // Log them out to prevent access.
           await signOut(auth);
-          setRoleState(null);
-          setUser(null);
         }
       } else {
         setUser(null);
         setRoleState(null);
-         try {
-           localStorage.removeItem('user-role');
-         } catch (error) {
-            console.error('Failed to remove from localStorage', error);
-         }
+        try {
+          localStorage.removeItem('user-role');
+        } catch (error) {
+          console.error('Failed to remove from localStorage', error);
+        }
       }
       setIsLoading(false);
     });
 
     return () => unsubscribe();
-  }, []);
+  }, [user]);
 
    useEffect(() => {
-    // Fallback for when onAuthStateChanged is slow
-    try {
-      const storedRole = localStorage.getItem('user-role');
-      if (storedRole) {
-        setRoleState(JSON.parse(storedRole));
-      }
-    } catch (error) {
-      console.error('Failed to read from localStorage', error);
-    } finally {
-        if (isLoading) {
-             setIsLoading(false);
+    // Fallback to localStorage to reduce loading flashes on page reload.
+    if (isLoading && !user) {
+        try {
+            const storedRole = localStorage.getItem('user-role');
+            if (storedRole) {
+                setRoleState(JSON.parse(storedRole));
+            }
+        } catch (error) {
+            console.error('Failed to read from localStorage', error);
+        } finally {
+            setIsLoading(false);
         }
     }
-  }, [isLoading]);
+  }, [isLoading, user]);
 
 
   const setRole = useCallback((newRole: string) => {
