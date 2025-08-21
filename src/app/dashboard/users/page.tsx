@@ -1,3 +1,4 @@
+
 'use client';
 
 import {
@@ -44,9 +45,8 @@ export default function UsersPage() {
     setIsLoading(true);
     try {
       const usersRef = collection(db, 'users');
-      // Query for documents where staffId exists and is not null
-      const q = query(usersRef, where('staffId', '!=', null));
-      const querySnapshot = await getDocs(q);
+      // Fetch all users
+      const querySnapshot = await getDocs(usersRef);
       const usersList = querySnapshot.docs.map(
         (doc) => ({ id: doc.id, ...doc.data() } as MockUser)
       );
@@ -166,7 +166,7 @@ export default function UsersPage() {
               ) : (
                 users.map((user) => (
                   <TableRow key={user.id}>
-                    <TableCell className="font-mono">{user.staffId}</TableCell>
+                    <TableCell className="font-mono">{user.staffId || 'N/A'}</TableCell>
                     <TableCell className="font-medium">{user.name}</TableCell>
                     <TableCell>{user.email}</TableCell>
                     <TableCell>

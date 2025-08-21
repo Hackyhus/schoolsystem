@@ -57,7 +57,7 @@ const formSchema = z.object({
   employmentDate: z.string().refine((val) => dateRegex.test(val), {
     message: "Invalid date format. Please use DD/MM/YYYY.",
   }),
-  role: z.enum(['Teacher', 'HOD', 'Bursar', 'Principal', 'Support Staff', 'Staff']),
+  role: z.enum(['Teacher', 'HeadOfDepartment', 'Principal', 'Director', 'ExamOfficer', 'Accountant', 'Parent', 'Student', 'Admin']),
   address: z.string().min(1, { message: "Address is required."}),
   gender: z.enum(['Male', 'Female'], { required_error: 'Gender is required.'}),
   dob: z.string().refine((val) => dateRegex.test(val), {
@@ -85,7 +85,7 @@ export function AddUserForm({ onUserAdded }: { onUserAdded: () => void }) {
       phone: '',
       stateOfOrigin: '',
       department: 'Science',
-      role: 'Staff',
+      role: 'Teacher',
       address: '',
       salaryAmount: '',
       dob: '',
@@ -401,12 +401,15 @@ export function AddUserForm({ onUserAdded }: { onUserAdded: () => void }) {
                   </SelectTrigger>
                 </FormControl>
                 <SelectContent>
-                  <SelectItem value="Staff">Staff</SelectItem>
-                  <SelectItem value="Teacher">Teacher</SelectItem>
-                  <SelectItem value="HOD">HOD</SelectItem>
-                  <SelectItem value="Bursar">Bursar</SelectItem>
+                  <SelectItem value="Admin">Admin</SelectItem>
                   <SelectItem value="Principal">Principal</SelectItem>
-                  <SelectItem value="Support Staff">Support Staff</SelectItem>
+                  <SelectItem value="Director">Director</SelectItem>
+                  <SelectItem value="HeadOfDepartment">HOD</SelectItem>
+                  <SelectItem value="Teacher">Teacher</SelectItem>
+                  <SelectItem value="Accountant">Accountant</SelectItem>
+                  <SelectItem value="ExamOfficer">Exam Officer</SelectItem>
+                  <SelectItem value="Parent">Parent</SelectItem>
+                  <SelectItem value="Student">Student</SelectItem>
                 </SelectContent>
               </Select>
               <FormMessage />
