@@ -16,14 +16,19 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
-import { Badge } from '@/components/ui/badge';
-import { studentPerformance } from '@/lib/mock-data';
+import { useRole } from '@/context/role-context';
+import { ParentDashboard } from '@/components/dashboard/parent/parent-dashboard';
 
 export default function PerformancePage() {
+  const { role } = useRole();
 
-  // This page is now "My Students" for Teachers.
+  // For parents, this page shows the full performance dashboard.
+  if (role === 'Parent') {
+    return <ParentDashboard />;
+  }
+  
+  // For Teachers, this page is "My Students".
   // The content will be a list of students assigned to the teacher.
-  // The previous performance chart is now deprecated in favor of this new view.
   
   return (
     <div className="space-y-8">
