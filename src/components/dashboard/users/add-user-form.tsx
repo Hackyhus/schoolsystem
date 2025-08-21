@@ -88,7 +88,16 @@ export function AddUserForm({ onUserAdded }: { onUserAdded: () => void }) {
 
   async function onSubmit(values: z.infer<typeof formSchema>) {
     try {
-      const { email, stateOfOrigin, department, employmentDate } = values;
+      const { email, stateOfOrigin, department, employmentDate, role } = values;
+
+      if (role === 'Admin') {
+        const adminQuery = query(collection(db, 'users'), where('role', '==', 'Admin'));
+        const adminSnapshot = await getDocs(adminQuery);
+        if (!adminSnapshot.empty) {
+          toast({ variant: 'destructive', title: 'Error', description: 'An Admin account already exists. Only one admin is allowed.' });
+          return;
+        }
+      }
 
       // Check for uniqueness
       const emailQuery = query(collection(db, 'users'), where('email', '==', email));
