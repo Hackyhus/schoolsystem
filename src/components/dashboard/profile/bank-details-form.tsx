@@ -90,7 +90,7 @@ export function BankDetailsForm({
   return (
     <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6 pt-4">
-        <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
+        <div className="space-y-4">
           <FormField
             control={form.control}
             name="salaryAmount"
