@@ -1,4 +1,4 @@
-import { LoginForm } from '@/components/auth/login-form';
+import { AdminLoginForm } from '@/components/auth/admin-login-form';
 import {
   Card,
   CardContent,
@@ -19,11 +19,11 @@ export default function AdminLoginPage() {
         style={{ backgroundImage: "url('/school-background.jpg')" }}
       ></div>
       <div className="absolute inset-0 bg-gradient-to-t from-black/80 to-black/20 backdrop-blur-sm"></div>
-       <main className="relative z-10 flex min-h-screen flex-col items-center justify-center bg-transparent p-4 font-body">
+      <main className="relative z-10 flex min-h-screen flex-col items-center justify-center bg-transparent p-4 font-body">
         <Card className="w-full max-w-sm shadow-2xl">
           <CardHeader className="text-center">
-             <div className="mx-auto mb-4">
-               <Image
+            <div className="mx-auto mb-4">
+              <Image
                 src="/school-logo.png"
                 alt="Great Insight International Academy Logo"
                 width={250}
@@ -39,7 +39,7 @@ export default function AdminLoginPage() {
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <LoginForm />
+            <AdminLoginForm />
           </CardContent>
           <CardFooter className="flex-col gap-4">
             <Button variant="link" asChild className="p-0 text-sm">
@@ -51,7 +51,7 @@ export default function AdminLoginPage() {
           <Button
             variant="link"
             asChild
-            className="text-xs text-muted-foreground hover:text-muted-foreground/80"
+            className="text-xs text-slate-300 hover:text-slate-100"
           >
             <Link href="/">Return to Staff Login</Link>
           </Button>
