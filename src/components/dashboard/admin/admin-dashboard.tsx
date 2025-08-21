@@ -2,6 +2,8 @@
 import {
   ArrowUpRight,
   BookCheck,
+  Clock,
+  FileWarning,
   Users,
 } from 'lucide-react';
 import {
@@ -23,7 +25,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import Link from 'next/link';
 import { useEffect, useState, useCallback } from 'react';
-import { collection, getDocs, limit, query, orderBy } from 'firebase/firestore';
+import { collection, getDocs, limit, query, orderBy, where } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import type { MockLessonNote, MockUser } from '@/lib/schema';
 import { useToast } from '@/hooks/use-toast';
@@ -33,27 +35,37 @@ export function AdminDashboard() {
   const [stats, setStats] = useState({
     users: 0,
     lessonNotes: 0,
+    pendingReviews: 0,
+    teachers: 0,
   });
   const [recentNotes, setRecentNotes] = useState<MockLessonNote[]>([]);
   const [announcements, setAnnouncements] = useState<any[]>([]); // Using any for now
 
   const fetchData = useCallback(async () => {
     try {
-      const usersSnapshot = await getDocs(collection(db, "users"));
-      const lessonNotesSnapshot = await getDocs(collection(db, "lessonNotes"));
+      const usersQuery = collection(db, "users");
+      const lessonNotesQuery = collection(db, "lessonNotes");
+      
+      const usersSnapshot = await getDocs(usersQuery);
+      const lessonNotesSnapshot = await getDocs(lessonNotesQuery);
+
+      const pendingReviewsQuery = query(lessonNotesQuery, where("status", "in", ["Pending HOD Approval", "Pending Admin Approval"]));
+      const pendingReviewsSnapshot = await getDocs(pendingReviewsQuery);
+
+      const teachersQuery = query(usersQuery, where("role", "==", "Teacher"));
+      const teachersSnapshot = await getDocs(teachersQuery);
+
       setStats({
         users: usersSnapshot.size,
         lessonNotes: lessonNotesSnapshot.size,
+        pendingReviews: pendingReviewsSnapshot.size,
+        teachers: teachersSnapshot.size,
       });
 
       const recentNotesQuery = query(collection(db, "lessonNotes"), orderBy("submissionDate", "desc"), limit(4));
       const recentNotesSnapshot = await getDocs(recentNotesQuery);
       const notesList = recentNotesSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as MockLessonNote));
       setRecentNotes(notesList);
-
-      // Add announcement fetching if collection exists
-      // const announcementsSnapshot = await getDocs(collection(db, "announcements"));
-      // setAnnouncements(announcementsSnapshot.docs.map(doc => ({id: doc.id, ...doc.data()})))
 
     } catch (error) {
       console.error("Error fetching dashboard data:", error);
@@ -72,8 +84,8 @@ export function AdminDashboard() {
 
   const statusVariant = (status: string) => {
     if (status === 'Approved') return 'default';
-    if (status === 'Pending HOD Approval' || status.includes('Pending')) return 'secondary';
-    if (status === 'Rejected by HOD') return 'destructive';
+    if (status.includes('Pending')) return 'secondary';
+    if (status.includes('Rejected')) return 'destructive';
     return 'outline';
   };
   
@@ -86,7 +98,7 @@ export function AdminDashboard() {
         </p>
       </div>
 
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-2">
+       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Active Users</CardTitle>
@@ -99,12 +111,32 @@ export function AdminDashboard() {
         </Card>
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Lesson Notes Submitted</CardTitle>
+            <CardTitle className="text-sm font-medium">Total Teachers</CardTitle>
+            <Users className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{stats.teachers}</div>
+            <p className="text-xs text-muted-foreground">teachers currently active</p>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Lesson Notes</CardTitle>
             <BookCheck className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{stats.lessonNotes}</div>
-            <p className="text-xs text-muted-foreground">total submissions</p>
+            <p className="text-xs text-muted-foreground">total submissions this term</p>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Pending Reviews</CardTitle>
+            <Clock className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{stats.pendingReviews}</div>
+            <p className="text-xs text-muted-foreground">notes awaiting approval</p>
           </CardContent>
         </Card>
       </div>

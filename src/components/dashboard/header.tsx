@@ -1,5 +1,5 @@
 'use client';
-import { Bell, ChevronDown, User as UserIcon, LogOut } from 'lucide-react';
+import { Bell, ChevronDown, User as UserIcon, LogOut, Moon, Sun } from 'lucide-react';
 import {
   SidebarTrigger,
 } from '@/components/ui/sidebar';
@@ -15,9 +15,11 @@ import {
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { useRole } from '@/context/role-context';
 import { usePathname } from 'next/navigation';
+import { useTheme } from '@/context/theme-context';
 
 export function DashboardHeader() {
   const { role, logout } = useRole();
+  const { theme, setTheme } = useTheme();
   const pathname = usePathname();
 
   const getPageTitle = () => {
@@ -33,10 +35,20 @@ export function DashboardHeader() {
     <header className="sticky top-0 z-10 flex h-16 items-center gap-4 border-b bg-background px-4 md:px-6">
       <SidebarTrigger className="md:hidden" />
       <h1 className="hidden font-headline text-xl font-semibold md:block">{getPageTitle()}</h1>
-      <div className="ml-auto flex items-center gap-4">
+      <div className="ml-auto flex items-center gap-2">
         <Button variant="ghost" size="icon" className="rounded-full">
           <Bell className="h-5 w-5" />
           <span className="sr-only">Toggle notifications</span>
+        </Button>
+         <Button
+          variant="ghost"
+          size="icon"
+          className="rounded-full"
+          onClick={() => setTheme(theme === 'light' ? 'dark' : 'light')}
+        >
+          <Sun className="h-5 w-5 rotate-0 scale-100 transition-all dark:-rotate-90 dark:scale-0" />
+          <Moon className="absolute h-5 w-5 rotate-90 scale-0 transition-all dark:rotate-0 dark:scale-100" />
+          <span className="sr-only">Toggle theme</span>
         </Button>
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
