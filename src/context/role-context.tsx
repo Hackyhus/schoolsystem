@@ -33,6 +33,14 @@ export const RoleProvider = ({ children }: { children: React.ReactNode }) => {
       
       setIsLoading(true);
       if (currentUser) {
+        // This is the key change: if we already have a logged-in user (i.e., the admin)
+        // and the new auth state is for a *different* user, we ignore it.
+        // This prevents the admin's session from being replaced by the newly created user.
+        if (user && user.uid !== currentUser.uid) {
+            setIsLoading(false);
+            return;
+        }
+        
         setUser(currentUser);
         const userDocRef = doc(db, 'users', currentUser.uid);
         const userDoc = await getDoc(userDocRef);
