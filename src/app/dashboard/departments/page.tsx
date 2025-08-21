@@ -54,7 +54,7 @@ export default function DepartmentsPage() {
               </TableRow>
             </TableHeader>
             <TableBody>
-                {departments.map((dept) => (
+                {departments.length > 0 ? departments.map((dept: any) => (
                   <TableRow key={dept.id}>
                     <TableCell className="font-medium">{dept.name}</TableCell>
                     <TableCell>{dept.hod}</TableCell>
@@ -66,7 +66,13 @@ export default function DepartmentsPage() {
                        </Button>
                     </TableCell>
                   </TableRow>
-                ))}
+                )) : (
+                  <TableRow>
+                    <TableCell colSpan={5} className="h-24 text-center">
+                      No departments found.
+                    </TableCell>
+                  </TableRow>
+                )}
             </TableBody>
           </Table>
         </CardContent>

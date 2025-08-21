@@ -37,7 +37,7 @@ import { Button } from '@/components/ui/button';
 
 export default function MessagingPage() {
   const [isCollapsed, setIsCollapsed] = useState(false);
-  const [selectedMessage, setSelectedMessage] = useState(messages[0].id);
+  const [selectedMessage, setSelectedMessage] = useState(messages.length > 0 ? messages[0].id : null);
   const { role } = useRole();
 
   const message = messages.find((m) => m.id === selectedMessage);
@@ -96,25 +96,30 @@ export default function MessagingPage() {
                 <Input placeholder="Search" className="pl-8" />
               </div>
             </div>
-
-            <div className="flex flex-col gap-1 p-2">
-              {messages.map((item) => (
-                <button
-                  key={item.id}
-                  className={cn(
-                    'flex items-center gap-3 rounded-md px-3 py-2 text-sm transition-colors hover:bg-muted',
-                    selectedMessage === item.id && 'bg-muted font-semibold',
-                    isCollapsed && 'justify-center'
-                  )}
-                  onClick={() => setSelectedMessage(item.id)}
-                >
-                  <Inbox className="h-4 w-4" />
-                  <span className={cn(isCollapsed && 'hidden')}>
-                    {item.from}
-                  </span>
-                </button>
-              ))}
-            </div>
+            {messages.length > 0 ? (
+              <div className="flex flex-col gap-1 p-2">
+                {messages.map((item) => (
+                  <button
+                    key={item.id}
+                    className={cn(
+                      'flex items-center gap-3 rounded-md px-3 py-2 text-sm transition-colors hover:bg-muted',
+                      selectedMessage === item.id && 'bg-muted font-semibold',
+                      isCollapsed && 'justify-center'
+                    )}
+                    onClick={() => setSelectedMessage(item.id)}
+                  >
+                    <Inbox className="h-4 w-4" />
+                    <span className={cn(isCollapsed && 'hidden')}>
+                      {item.from}
+                    </span>
+                  </button>
+                ))}
+              </div>
+            ) : (
+              <div className="p-4 text-center text-muted-foreground">
+                <p>No messages</p>
+              </div>
+            )}
           </ResizablePanel>
           <ResizableHandle withHandle />
           <ResizablePanel defaultSize={75}>

@@ -18,10 +18,15 @@ import { lessonNotes } from '@/lib/mock-data';
 import { BookCheck, Clock, FileWarning, TrendingUp } from 'lucide-react';
 
 export default function ReportsPage() {
+  const totalNotes = lessonNotes.length;
+  const approvedCount = totalNotes > 0 ? lessonNotes.filter(n => n.status.includes('Approved')).length : 0;
+  const pendingCount = totalNotes > 0 ? lessonNotes.filter(n => n.status.includes('Pending')).length : 0;
+  const rejectedCount = totalNotes > 0 ? lessonNotes.filter(n => n.status.includes('Rejected')).length : 0;
+
   const submissionStatusData = [
-    { name: 'Approved', value: lessonNotes.filter(n => n.status.includes('Approved')).length, fill: 'var(--color-approved)' },
-    { name: 'Pending', value: lessonNotes.filter(n => n.status.includes('Pending')).length, fill: 'var(--color-pending)' },
-    { name: 'Rejected', value: lessonNotes.filter(n => n.status.includes('Rejected')).length, fill: 'var(--color-rejected)' },
+    { name: 'Approved', value: approvedCount, fill: 'var(--color-approved)' },
+    { name: 'Pending', value: pendingCount, fill: 'var(--color-pending)' },
+    { name: 'Rejected', value: rejectedCount, fill: 'var(--color-rejected)' },
   ];
   const chartConfig = {
     value: {
@@ -40,12 +45,6 @@ export default function ReportsPage() {
       color: 'hsl(var(--destructive))',
     },
   };
-
-  const totalNotes = lessonNotes.length;
-  const approvedCount = submissionStatusData.find(d => d.name === 'Approved')?.value || 0;
-  const pendingCount = submissionStatusData.find(d => d.name === 'Pending')?.value || 0;
-  const rejectedCount = submissionStatusData.find(d => d.name === 'Rejected')?.value || 0;
-
 
   return (
     <div className="space-y-8">
@@ -79,7 +78,7 @@ export default function ReportsPage() {
           <CardContent>
             <div className="text-2xl font-bold">{approvedCount}</div>
             <p className="text-xs text-muted-foreground">
-              {((approvedCount / totalNotes) * 100).toFixed(0)}% approval rate
+              {totalNotes > 0 ? ((approvedCount / totalNotes) * 100).toFixed(0) : 0}% approval rate
             </p>
           </CardContent>
         </Card>
@@ -103,7 +102,7 @@ export default function ReportsPage() {
           <CardContent>
             <div className="text-2xl font-bold">{rejectedCount}</div>
             <p className="text-xs text-muted-foreground">
-             {((rejectedCount / totalNotes) * 100).toFixed(0)}% rejection rate
+             {totalNotes > 0 ? ((rejectedCount / totalNotes) * 100).toFixed(0) : 0}% rejection rate
             </p>
           </CardContent>
         </Card>
@@ -118,30 +117,36 @@ export default function ReportsPage() {
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <ChartContainer
-            config={chartConfig}
-            className="h-[200px] w-full"
-          >
-            <ResponsiveContainer>
-              <BarChart
-                data={submissionStatusData}
-                layout="vertical"
-                margin={{ left: 10, right: 10 }}
-              >
-                <XAxis type="number" hide />
-                <YAxis
-                  dataKey="name"
-                  type="category"
-                  tickLine={false}
-                  axisLine={false}
-                  tickMargin={10}
-                  width={80}
-                />
-                 <Tooltip cursor={false} content={<ChartTooltipContent hideLabel />} />
-                <Bar dataKey="value" radius={5} />
-              </BarChart>
-            </ResponsiveContainer>
-          </ChartContainer>
+          {totalNotes > 0 ? (
+            <ChartContainer
+              config={chartConfig}
+              className="h-[200px] w-full"
+            >
+              <ResponsiveContainer>
+                <BarChart
+                  data={submissionStatusData}
+                  layout="vertical"
+                  margin={{ left: 10, right: 10 }}
+                >
+                  <XAxis type="number" hide />
+                  <YAxis
+                    dataKey="name"
+                    type="category"
+                    tickLine={false}
+                    axisLine={false}
+                    tickMargin={10}
+                    width={80}
+                  />
+                  <Tooltip cursor={false} content={<ChartTooltipContent hideLabel />} />
+                  <Bar dataKey="value" radius={5} />
+                </BarChart>
+              </ResponsiveContainer>
+            </ChartContainer>
+          ) : (
+            <div className="flex h-[200px] items-center justify-center text-muted-foreground">
+              No data to display.
+            </div>
+          )}
         </CardContent>
       </Card>
     </div>
