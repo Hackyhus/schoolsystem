@@ -67,7 +67,7 @@ export function DashboardSidebar() {
   const currentNav = role ? navItems[role] : [];
 
   return (
-    <Sidebar>
+    <Sidebar collapsible="icon">
       <SidebarHeader className="border-b border-sidebar-border">
         <div className="flex items-center gap-2 p-4">
           <Link href="/dashboard" className="flex items-center gap-2">
