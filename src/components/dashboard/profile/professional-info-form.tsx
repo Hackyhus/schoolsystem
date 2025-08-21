@@ -1,3 +1,4 @@
+
 'use client';
 
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -17,7 +18,6 @@ import {
 } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import type { MockUser } from '@/lib/schema';
-import { Card, CardContent } from '@/components/ui/card';
 import {
   Select,
   SelectContent,
@@ -53,14 +53,13 @@ export function ProfessionalInfoForm({
   onUpdate,
 }: ProfessionalInfoFormProps) {
   const { toast } = useToast();
-  const { role: adminRole } = useRole(); // get the role of the person viewing the page
 
   const form = useForm<ProfessionalInfoFormValues>({
     resolver: zodResolver(formSchema),
     defaultValues: {
       role: userData.role || '',
       department: userData.department || '',
-      employmentDate: userData.employmentDate ? new Date(userData.employmentDate.seconds * 1000) : new Date(),
+      employmentDate: userData.employmentDate ? new Date((userData.employmentDate as any).seconds * 1000) : new Date(),
     },
   });
 
@@ -90,48 +89,10 @@ export function ProfessionalInfoForm({
     }
   };
   
-   const isViewingOwnProfile = adminRole !== 'Admin';
-
-  if (isViewingOwnProfile) {
-     const formattedEmploymentDate = userData.employmentDate
-        ? format(new Date(userData.employmentDate.seconds * 1000), 'PPP')
-        : 'N/A';
-    
-    const formattedDob = userData.personalInfo?.dob
-        ? format(new Date(userData.personalInfo.dob.seconds * 1000), 'PPP')
-        : 'N/A';
-        
-    const InfoItem = ({ label, value }: { label: string, value: string | undefined | null }) => (
-        <div>
-            <p className="text-sm font-medium text-muted-foreground">{label}</p>
-            <p className="text-base font-semibold">{value || 'N/A'}</p>
-        </div>
-    )
-
-    return (
-        <Card>
-            <CardContent className="pt-6">
-                <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
-                    <InfoItem label="Staff ID" value={userData.staffId} />
-                    <InfoItem label="Email" value={userData.email} />
-                    <InfoItem label="Role" value={userData.role} />
-                    <InfoItem label="Department" value={userData.department} />
-                    <InfoItem label="Date of Employment" value={formattedEmploymentDate} />
-                    <InfoItem label="Date of Birth" value={formattedDob} />
-                    <InfoItem label="Gender" value={userData.personalInfo?.gender} />
-                    <InfoItem label="State of Origin" value={userData.stateOfOrigin} />
-                </div>
-            </CardContent>
-        </Card>
-    );
-  }
-
-
   return (
     <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-        <Card>
-          <CardContent className="grid grid-cols-1 gap-6 pt-6 sm:grid-cols-2">
+        <div className="grid grid-cols-1 gap-6 pt-6 sm:grid-cols-2">
             <div>
               <p className="text-sm font-medium text-muted-foreground">
                 Staff ID
@@ -160,9 +121,15 @@ export function ProfessionalInfoForm({
                       </SelectTrigger>
                     </FormControl>
                     <SelectContent>
-                      <SelectItem value="Teacher">Teacher</SelectItem>
-                      <SelectItem value="HeadOfDepartment">HOD</SelectItem>
                        <SelectItem value="Admin">Admin</SelectItem>
+                        <SelectItem value="Principal">Principal</SelectItem>
+                        <SelectItem value="Director">Director</SelectItem>
+                        <SelectItem value="HeadOfDepartment">HOD</SelectItem>
+                        <SelectItem value="Teacher">Teacher</SelectItem>
+                        <SelectItem value="Accountant">Accountant</SelectItem>
+                        <SelectItem value="ExamOfficer">Exam Officer</SelectItem>
+                        <SelectItem value="Parent">Parent</SelectItem>
+                        <SelectItem value="Student">Student</SelectItem>
                     </SelectContent>
                   </Select>
                   <FormMessage />
@@ -235,8 +202,7 @@ export function ProfessionalInfoForm({
                 </FormItem>
               )}
             />
-          </CardContent>
-        </Card>
+        </div>
         <div className="flex justify-end">
           <Button type="submit" disabled={form.formState.isSubmitting}>
             {form.formState.isSubmitting

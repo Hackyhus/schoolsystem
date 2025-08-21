@@ -11,11 +11,13 @@ import { Button } from '@/components/ui/button';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import type { MockUser } from '@/lib/schema';
+import { useRole } from '@/context/role-context';
 
 const formSchema = z.object({
     bankName: z.string().min(1, 'Bank name is required.'),
     accountNumber: z.string().min(10, 'Account number must be at least 10 digits.').max(10, 'Account number must be 10 digits.'),
     accountName: z.string().min(1, 'Account name is required.'),
+    salaryAmount: z.string().optional(),
 });
 
 type BankDetailsFormValues = z.infer<typeof formSchema>;
@@ -27,25 +29,47 @@ interface BankDetailsFormProps {
 
 export function BankDetailsForm({ userData, onUpdate }: BankDetailsFormProps) {
     const { toast } = useToast();
+    const { role } = useRole(); // For admin check
+    const bankAccountParts = userData.salary?.bankAccount?.split(' - ') || ['','',''];
+
     const form = useForm<BankDetailsFormValues>({
         resolver: zodResolver(formSchema),
         defaultValues: {
-            bankName: userData.salary?.bankAccount?.split(' - ')[0] || '',
-            accountNumber: userData.salary?.bankAccount?.split(' - ')[1] || '',
-            accountName: userData.salary?.bankAccount?.split(' - ')[2] || '',
+            bankName: bankAccountParts[0] || '',
+            accountNumber: bankAccountParts[1] || '',
+            accountName: bankAccountParts[2] || '',
+            salaryAmount: new Intl.NumberFormat('en-NG').format(userData.salary?.amount || 0)
         }
     });
+
+    const handleSalaryChange = (e: React.ChangeEvent<HTMLInputElement>, field: any) => {
+      const rawValue = e.target.value.replace(/,/g, '');
+      if (!isNaN(Number(rawValue))) {
+        const formattedValue = new Intl.NumberFormat('en-NG').format(Number(rawValue));
+        field.onChange(formattedValue);
+      } else if (rawValue === '') {
+        field.onChange('');
+      }
+    };
+
 
     const onSubmit = async (values: BankDetailsFormValues) => {
         try {
             const userDocRef = doc(db, 'users', userData.id);
             const bankAccountString = `${values.bankName} - ${values.accountNumber} - ${values.accountName}`;
-            
-            await updateDoc(userDocRef, {
-                'salary.bankAccount': bankAccountString
-            });
+            const salaryAmount = Number(values.salaryAmount?.replace(/,/g, '') || 0);
 
-            onUpdate({ salary: { ...userData.salary, bankAccount: bankAccountString } });
+            const updatedData: any = {
+                'salary.bankAccount': bankAccountString
+            };
+
+            if (role === 'Admin') {
+                updatedData['salary.amount'] = salaryAmount;
+            }
+            
+            await updateDoc(userDocRef, updatedData);
+
+            onUpdate({ salary: { ...userData.salary, amount: salaryAmount, bankAccount: bankAccountString } });
             toast({ title: 'Success', description: 'Bank details updated successfully.' });
         } catch (error) {
             console.error('Error updating bank details:', error);
@@ -56,6 +80,26 @@ export function BankDetailsForm({ userData, onUpdate }: BankDetailsFormProps) {
     return (
         <Form {...form}>
             <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+                {role === 'Admin' && (
+                     <FormField
+                        control={form.control}
+                        name="salaryAmount"
+                        render={({ field }) => (
+                            <FormItem>
+                            <FormLabel>Salary (NGN)</FormLabel>
+                            <FormControl>
+                            <Input 
+                                type="text" 
+                                placeholder="e.g. 150,000"
+                                {...field}
+                                onChange={(e) => handleSalaryChange(e, field)}
+                            />
+                            </FormControl>
+                            <FormMessage />
+                            </FormItem>
+                        )}
+                    />
+                )}
                 <FormField
                     control={form.control}
                     name="bankName"
@@ -97,7 +141,7 @@ export function BankDetailsForm({ userData, onUpdate }: BankDetailsFormProps) {
                 />
                 <div className="flex justify-end">
                      <Button type="submit" disabled={form.formState.isSubmitting}>
-                        {form.formState.isSubmitting ? 'Saving...' : 'Save Bank Details'}
+                        {form.formState.isSubmitting ? 'Saving...' : 'Save Changes'}
                     </Button>
                 </div>
             </form>

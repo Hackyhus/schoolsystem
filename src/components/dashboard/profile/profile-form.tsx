@@ -1,7 +1,7 @@
 
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { doc, getDoc } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import type { MockUser } from '@/lib/schema';
@@ -11,32 +11,39 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { PersonalInfoForm } from './personal-info-form';
 import { ProfessionalInfoForm } from './professional-info-form';
 import { BankDetailsForm } from './bank-details-form';
+import { useRole } from '@/context/role-context';
+import { AdminProfileView } from './admin-profile-view';
 
 export function ProfileForm({ userId }: { userId: string }) {
     const [userData, setUserData] = useState<MockUser | null>(null);
     const [isLoading, setIsLoading] = useState(true);
+    const { role, user: currentUser } = useRole();
 
-    useEffect(() => {
-        const fetchUserData = async () => {
-            setIsLoading(true);
-            const userDocRef = doc(db, 'users', userId);
-            const userDocSnap = await getDoc(userDocRef);
-            if (userDocSnap.exists()) {
-                setUserData({ id: userDocSnap.id, ...userDocSnap.data() } as MockUser);
-            }
-            setIsLoading(false);
-        };
-
-        if (userId) {
-            fetchUserData();
+    const fetchUserData = useCallback(async () => {
+         if (!userId) return;
+        setIsLoading(true);
+        const userDocRef = doc(db, 'users', userId);
+        const userDocSnap = await getDoc(userDocRef);
+        if (userDocSnap.exists()) {
+            setUserData({ id: userDocSnap.id, ...userDocSnap.data() } as MockUser);
         }
+        setIsLoading(false);
     }, [userId]);
 
 
+    useEffect(() => {
+        fetchUserData();
+    }, [fetchUserData]);
+
+
     const handleProfileUpdate = (updatedData: Partial<MockUser>) => {
-        if (userData) {
-            setUserData({ ...userData, ...updatedData });
-        }
+       setUserData(prevData => prevData ? { ...prevData, ...updatedData } : null);
+       fetchUserData();
+    }
+    
+    // Admin is viewing another user's profile
+    if (role === 'Admin' && currentUser?.uid !== userId) {
+        return <AdminProfileView userId={userId} />;
     }
 
 
@@ -66,6 +73,7 @@ export function ProfileForm({ userId }: { userId: string }) {
         return <div>User data could not be loaded.</div>
     }
 
+    // Regular user viewing their own profile
     return (
         <Tabs defaultValue="personal" className="w-full">
             <TabsList className="grid w-full grid-cols-3">
@@ -91,11 +99,11 @@ export function ProfileForm({ userId }: { userId: string }) {
                     <CardHeader>
                         <CardTitle>Professional Information</CardTitle>
                         <CardDescription>
-                            This information is managed by the administrator and cannot be edited.
+                           This information is managed by the administrator. Contact them for any changes.
                         </CardDescription>
                     </CardHeader>
-                    <CardContent>
-                       <ProfessionalInfoForm userData={userData} />
+                    <CardContent className="pt-6">
+                        <ProfessionalInfoForm userData={userData} onUpdate={handleProfileUpdate} />
                     </CardContent>
                 </Card>
             </TabsContent>

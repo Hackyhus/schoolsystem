@@ -1,7 +1,7 @@
 
 'use client';
 
-import { ProfileForm } from '@/components/dashboard/profile/profile-form';
+import { AdminProfileView } from '@/components/dashboard/profile/admin-profile-view';
 import { useParams } from 'next/navigation';
 
 export default function UserProfilePage() {
@@ -13,15 +13,6 @@ export default function UserProfilePage() {
     }
 
     return (
-         <div className="space-y-8">
-            <div>
-                <h1 className="font-headline text-3xl font-bold">Staff Profile</h1>
-                <p className="text-muted-foreground">
-                    Viewing details for staff member.
-                </p>
-            </div>
-            <ProfileForm userId={id} />
-        </div>
+        <AdminProfileView userId={id} />
     );
 }
-
