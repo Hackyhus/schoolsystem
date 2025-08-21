@@ -80,65 +80,67 @@ export function BankDetailsForm({ userData, onUpdate }: BankDetailsFormProps) {
     return (
         <Form {...form}>
             <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-                {role === 'Admin' && (
-                     <FormField
+                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    {role === 'Admin' && (
+                        <FormField
+                            control={form.control}
+                            name="salaryAmount"
+                            render={({ field }) => (
+                                <FormItem>
+                                <FormLabel>Salary (NGN)</FormLabel>
+                                <FormControl>
+                                <Input 
+                                    type="text" 
+                                    placeholder="e.g. 150,000"
+                                    {...field}
+                                    onChange={(e) => handleSalaryChange(e, field)}
+                                />
+                                </FormControl>
+                                <FormMessage />
+                                </FormItem>
+                            )}
+                        />
+                    )}
+                    <FormField
                         control={form.control}
-                        name="salaryAmount"
+                        name="bankName"
                         render={({ field }) => (
                             <FormItem>
-                            <FormLabel>Salary (NGN)</FormLabel>
-                            <FormControl>
-                            <Input 
-                                type="text" 
-                                placeholder="e.g. 150,000"
-                                {...field}
-                                onChange={(e) => handleSalaryChange(e, field)}
-                            />
-                            </FormControl>
-                            <FormMessage />
+                                <FormLabel>Bank Name</FormLabel>
+                                <FormControl>
+                                    <Input placeholder="e.g. Guaranty Trust Bank" {...field} />
+                                </FormControl>
+                                <FormMessage />
                             </FormItem>
                         )}
                     />
-                )}
-                <FormField
-                    control={form.control}
-                    name="bankName"
-                    render={({ field }) => (
-                        <FormItem>
-                            <FormLabel>Bank Name</FormLabel>
-                            <FormControl>
-                                <Input placeholder="e.g. Guaranty Trust Bank" {...field} />
-                            </FormControl>
-                            <FormMessage />
-                        </FormItem>
-                    )}
-                />
-                 <FormField
-                    control={form.control}
-                    name="accountNumber"
-                    render={({ field }) => (
-                        <FormItem>
-                            <FormLabel>Account Number (10 Digits)</FormLabel>
-                            <FormControl>
-                                <Input type="number" {...field} />
-                            </FormControl>
-                            <FormMessage />
-                        </FormItem>
-                    )}
-                />
-                <FormField
-                    control={form.control}
-                    name="accountName"
-                    render={({ field }) => (
-                        <FormItem>
-                            <FormLabel>Account Name</FormLabel>
-                            <FormControl>
-                                <Input placeholder="As it appears on your bank statement" {...field} />
-                            </FormControl>
-                            <FormMessage />
-                        </FormItem>
-                    )}
-                />
+                    <FormField
+                        control={form.control}
+                        name="accountNumber"
+                        render={({ field }) => (
+                            <FormItem>
+                                <FormLabel>Account Number (10 Digits)</FormLabel>
+                                <FormControl>
+                                    <Input type="number" {...field} />
+                                </FormControl>
+                                <FormMessage />
+                            </FormItem>
+                        )}
+                    />
+                    <FormField
+                        control={form.control}
+                        name="accountName"
+                        render={({ field }) => (
+                            <FormItem>
+                                <FormLabel>Account Name</FormLabel>
+                                <FormControl>
+                                    <Input placeholder="As it appears on your bank statement" {...field} />
+                                </FormControl>
+                                <FormMessage />
+                            </FormItem>
+                        )}
+                    />
+                </div>
                 <div className="flex justify-end">
                      <Button type="submit" disabled={form.formState.isSubmitting}>
                         {form.formState.isSubmitting ? 'Saving...' : 'Save Changes'}
