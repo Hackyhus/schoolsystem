@@ -128,7 +128,8 @@ export type MockLessonNote = {
     teacherName: string;
     status: string;
     submissionDate: string;
-    content: string;
+    fileUrl: string;
+    content: string; // this is legacy, should be removed later
     hod_review: string | null;
     admin_review: string | null;
 };

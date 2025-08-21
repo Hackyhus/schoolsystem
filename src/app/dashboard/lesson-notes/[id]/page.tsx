@@ -14,12 +14,14 @@ import {
 } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
-import { Check, Send, ThumbsDown, ThumbsUp, User } from 'lucide-react';
+import { Check, Send, ThumbsDown, ThumbsUp, User, File as FileIcon } from 'lucide-react';
 import { LessonNoteSummarizer } from '@/components/lesson-note-summarizer';
 import { ReviewForm } from '@/components/dashboard/lesson-notes/review-form';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useToast } from '@/hooks/use-toast';
 import { useRole } from '@/context/role-context';
+import { Button } from '@/components/ui/button';
+import Link from 'next/link';
 
 
 async function createNotification(teacherId: string, noteId: string, noteTitle: string, action: 'Approved' | 'Rejected') {
@@ -98,8 +100,7 @@ export default function LessonNoteDetailPage() {
         const docRef = doc(db, 'lessonNotes', id);
         await updateDoc(docRef, reviewData);
         
-        // Create a notification for the teacher
-        await createNotification(note.teacherId, note.id, note.title, actionPastTense);
+        await createNotification(note.teacherId, note.id, note.title, actionPastTense as 'Approved' | 'Rejected');
 
         toast({
             title: `Lesson Note ${actionPastTense}`,
@@ -161,11 +162,28 @@ export default function LessonNoteDetailPage() {
         <div className="lg:col-span-2 space-y-8">
             <Card>
                 <CardHeader>
-                    <CardTitle>Lesson Note Content</CardTitle>
+                    <CardTitle>Lesson Note Document</CardTitle>
                     <CardDescription>Subject: {note.subject}</CardDescription>
                 </CardHeader>
-                <CardContent className="prose prose-stone dark:prose-invert max-w-none">
-                    <p>{note.content}</p>
+                <CardContent>
+                  {note.fileUrl ? (
+                    <div className="flex items-center space-x-4 rounded-md border p-4">
+                      <FileIcon className="h-10 w-10 text-muted-foreground" />
+                      <div className="flex-1 space-y-1">
+                        <p className="text-sm font-medium leading-none">
+                          {note.title}.{note.fileUrl.split('.').pop()?.split('?')[0]}
+                        </p>
+                        <p className="text-sm text-muted-foreground">
+                          Click to download the lesson note file.
+                        </p>
+                      </div>
+                      <Button asChild>
+                        <a href={note.fileUrl} target="_blank" rel="noopener noreferrer">Download</a>
+                      </Button>
+                    </div>
+                  ) : (
+                    <p className="text-muted-foreground">No file was uploaded for this lesson note.</p>
+                  )}
                 </CardContent>
             </Card>
              <Card>
@@ -224,7 +242,10 @@ export default function LessonNoteDetailPage() {
                     </ul>
                 </CardContent>
             </Card>
-            <LessonNoteSummarizer lessonNotes={note.content} />
+            {/* The summarizer expects text content, which we no longer have. 
+                We can adapt this later to maybe summarize the text extracted from the uploaded file.
+            <LessonNoteSummarizer lessonNotes={note.content} /> 
+            */}
         </div>
       </div>
     </div>

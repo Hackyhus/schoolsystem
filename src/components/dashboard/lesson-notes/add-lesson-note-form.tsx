@@ -33,13 +33,14 @@ import { db, storage } from '@/lib/firebase';
 import { UploadCloud } from 'lucide-react';
 import { useRole } from '@/context/role-context';
 import { useState } from 'react';
-import { Textarea } from '@/components/ui/textarea';
 
 const formSchema = z.object({
   title: z.string().min(1, { message: 'Title is required.' }),
   class: z.string().min(1, { message: 'Please select a class.' }),
   subject: z.string().min(1, { message: 'Please select a subject.' }),
-  content: z.string().min(10, { message: 'Content must be at least 10 characters.' }),
+  file: z
+    .instanceof(FileList)
+    .refine((files) => files?.length === 1, 'File is required.'),
 });
 
 export function AddLessonNoteForm({
@@ -50,6 +51,8 @@ export function AddLessonNoteForm({
   const { user } = useRole();
   const { toast } = useToast();
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const fileRef =
+    React.useRef<HTMLInputElement>() as React.MutableRefObject<HTMLInputElement>;
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -57,7 +60,6 @@ export function AddLessonNoteForm({
       title: '',
       class: '',
       subject: '',
-      content: '',
     },
   });
 
@@ -73,17 +75,27 @@ export function AddLessonNoteForm({
     setIsSubmitting(true);
 
     try {
+      const file = values.file[0];
+      const storageRef = ref(
+        storage,
+        `lessonNotes/${user.uid}/${Date.now()}-${file.name}`
+      );
+
+      const uploadResult = await uploadBytes(storageRef, file);
+      const downloadURL = await getDownloadURL(uploadResult.ref);
+
       const newNoteRef = doc(collection(db, 'lessonNotes'));
       await setDoc(newNoteRef, {
         id: newNoteRef.id,
         title: values.title,
         class: values.class,
         subject: values.subject,
-        content: values.content,
+        fileUrl: downloadURL,
+        storagePath: uploadResult.ref.fullPath,
         teacherId: user.uid,
         teacherName: user.displayName || 'Unknown Teacher',
         status: 'Pending HOD Approval',
-        submissionDate: new Date().toLocaleDateString('en-CA'), // YYYY-MM-DD
+        submissionDate: new Date().toLocaleDateString('en-CA'),
       });
 
       toast({
@@ -91,13 +103,17 @@ export function AddLessonNoteForm({
         description: 'Your lesson plan has been sent to your HOD for review.',
       });
       form.reset();
+      if (fileRef.current) {
+        fileRef.current.value = '';
+      }
       onNoteAdded();
     } catch (e: any) {
       console.error('Error submitting lesson note: ', e);
       toast({
         variant: 'destructive',
         title: 'Submission Failed',
-        description: e.message || 'There was a problem submitting your lesson note.',
+        description:
+          e.message || 'There was a problem submitting your lesson note.',
       });
     } finally {
       setIsSubmitting(false);
@@ -179,17 +195,21 @@ export function AddLessonNoteForm({
         </div>
         <FormField
           control={form.control}
-          name="content"
+          name="file"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Lesson Content</FormLabel>
+              <FormLabel>Lesson Plan Document</FormLabel>
               <FormControl>
-                <Textarea
-                    placeholder="Type or paste your lesson note content here..."
-                    className="min-h-[150px]"
-                    {...field}
+                <Input
+                  type="file"
+                  accept=".pdf, .doc, .docx"
+                  ref={fileRef}
+                  onChange={(e) => field.onChange(e.target.files)}
                 />
               </FormControl>
+              <FormDescription>
+                Upload your lesson plan in PDF or Word format.
+              </FormDescription>
               <FormMessage />
             </FormItem>
           )}
