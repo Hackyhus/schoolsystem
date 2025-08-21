@@ -3,7 +3,7 @@
 
 import { useEffect, useState, useCallback } from 'react';
 import { doc, getDoc, updateDoc } from 'firebase/firestore';
-import { db, auth } from '@/lib/firebase';
+import { auth, db } from '@/lib/firebase';
 import type { MockUser } from '@/lib/schema';
 import { useToast } from '@/hooks/use-toast';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -137,26 +137,33 @@ export function AdminProfileView({ userId }: { userId: string }) {
       <Card>
         <CardHeader>
           <div className="flex flex-col items-center gap-4 text-center sm:flex-row sm:text-left">
-            <div className="relative">
-              <Avatar className="h-24 w-24 text-4xl">
-                <AvatarImage
-                  src={user.personalInfo?.profilePicture || ''}
-                  alt={user.name || ''}
-                />
-                <AvatarFallback>{userInitials}</AvatarFallback>
-              </Avatar>
+             <Dialog open={isPersonalInfoOpen} onOpenChange={setIsPersonalInfoOpen}>
+                <div className="relative">
+                <Avatar className="h-24 w-24 text-4xl">
+                    <AvatarImage
+                    src={user.personalInfo?.profilePicture || ''}
+                    alt={user.name || ''}
+                    />
+                    <AvatarFallback>{userInitials}</AvatarFallback>
+                </Avatar>
                 <DialogTrigger asChild>
-                  <Button
-                    variant="outline"
-                    size="icon"
-                    className="absolute bottom-0 right-0 rounded-full"
-                    disabled={!canEditPersonalFields}
-                     onClick={() => setIsPersonalInfoOpen(true)}
-                  >
-                    <Camera className="h-4 w-4" />
-                  </Button>
+                    <Button
+                        variant="outline"
+                        size="icon"
+                        className="absolute bottom-0 right-0 rounded-full"
+                        disabled={!canEditPersonalFields}
+                    >
+                        <Camera className="h-4 w-4" />
+                    </Button>
                 </DialogTrigger>
-            </div>
+                </div>
+                 <DialogContent>
+                    <DialogHeader>
+                        <DialogTitle>Edit Personal Information</DialogTitle>
+                    </DialogHeader>
+                    <PersonalInfoForm user={user} onUpdate={handleUpdate} />
+                </DialogContent>
+            </Dialog>
             <div className="space-y-1">
               <CardTitle className="text-3xl">{user.name}</CardTitle>
               <CardDescription>{user.email}</CardDescription>
