@@ -18,7 +18,7 @@ import {
 } from '@/components/ui/table';
 import { AddUserForm } from '@/components/dashboard/users/add-user-form';
 import { Button } from '@/components/ui/button';
-import { PlusCircle, Trash2 } from 'lucide-react';
+import { PlusCircle, Trash2, Edit } from 'lucide-react';
 import { useEffect, useState, useCallback } from 'react';
 import { collection, getDocs, deleteDoc, doc, query, where, updateDoc } from 'firebase/firestore';
 import { auth, db } from '@/lib/firebase';
@@ -40,6 +40,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
+import Link from 'next/link';
 
 export default function UsersPage() {
   const [users, setUsers] = useState<MockUser[]>([]);
@@ -51,12 +52,11 @@ export default function UsersPage() {
     setIsLoading(true);
     try {
       const usersRef = collection(db, 'users');
-      // Query for users that have a staffId. We will filter out the admin client-side.
-      const q = query(usersRef, where('staffId', '!=', null));
+      // Query for users that are not students
+      const q = query(usersRef, where('role', '!=', 'Student'));
       const querySnapshot = await getDocs(q);
       const usersList = querySnapshot.docs
         .map((doc) => ({ id: doc.id, ...doc.data() } as MockUser))
-        .filter((user) => user.role !== 'Admin'); // Filter out Admins on the client
       setUsers(usersList);
     } catch (error) {
       console.error('Error fetching users:', error);
@@ -125,29 +125,29 @@ export default function UsersPage() {
     setIsModalOpen(false); // Close the modal
   };
 
-  const availableRoles = ['Principal', 'Director', 'HeadOfDepartment', 'Teacher', 'Accountant', 'ExamOfficer', 'Parent', 'Student'];
+  const availableRoles = ['Principal', 'Director', 'HeadOfDepartment', 'Teacher', 'Accountant', 'ExamOfficer', 'Parent', 'Admin'];
 
 
   return (
     <div className="space-y-8">
       <div>
-        <h1 className="font-headline text-3xl font-bold">User Management</h1>
+        <h1 className="font-headline text-3xl font-bold">Staff Management</h1>
         <p className="text-muted-foreground">
-          Manage staff and parent accounts.
+          Manage staff accounts and profiles.
         </p>
       </div>
       <Card>
         <CardHeader className="flex-row items-center justify-between">
           <div>
-            <CardTitle>All Users</CardTitle>
+            <CardTitle>All Staff</CardTitle>
             <CardDescription>
-              A list of all non-admin users in the system.
+              A list of all non-student users in the system.
             </CardDescription>
           </div>
           <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
             <DialogTrigger asChild>
               <Button>
-                <PlusCircle className="mr-2 h-4 w-4" /> Add New User
+                <PlusCircle className="mr-2 h-4 w-4" /> Add New Staff
               </Button>
             </DialogTrigger>
             <DialogContent className="max-h-[90vh] overflow-y-auto">
@@ -215,6 +215,11 @@ export default function UsersPage() {
                        </Select>
                     </TableCell>
                     <TableCell className="text-right space-x-2">
+                       <Button asChild variant="outline" size="icon">
+                         <Link href={`/dashboard/users/${user.id}`}>
+                           <Edit className="h-4 w-4" />
+                         </Link>
+                       </Button>
                       <Button
                         variant="ghost"
                         size="icon"
