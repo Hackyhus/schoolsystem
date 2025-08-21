@@ -18,7 +18,7 @@ import {
 } from '@/components/ui/table';
 import { AddUserForm } from '@/components/dashboard/users/add-user-form';
 import { Button } from '@/components/ui/button';
-import { Eye, PlusCircle, Trash2 } from 'lucide-react';
+import { PlusCircle, Trash2 } from 'lucide-react';
 import { useEffect, useState, useCallback } from 'react';
 import { collection, getDocs, deleteDoc, doc, query, where, updateDoc } from 'firebase/firestore';
 import { auth, db } from '@/lib/firebase';
@@ -40,7 +40,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import Link from 'next/link';
 
 export default function UsersPage() {
   const [users, setUsers] = useState<MockUser[]>([]);
