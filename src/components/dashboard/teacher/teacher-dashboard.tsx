@@ -1,11 +1,5 @@
 'use client';
-import {
-  Book,
-  CheckCircle,
-  Clock,
-  Upload,
-  XCircle,
-} from 'lucide-react';
+import { Book, CheckCircle, Clock, Upload, XCircle } from 'lucide-react';
 import {
   Card,
   CardContent,
@@ -23,15 +17,53 @@ import {
 } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { lessonNotes } from '@/lib/mock-data';
 import Link from 'next/link';
+import { useRole } from '@/context/role-context';
+import { useEffect, useState, useCallback } from 'react';
+import { collection, query, where, getDocs } from 'firebase/firestore';
+import { db } from '@/lib/firebase';
+import type { MockLessonNote } from '@/lib/schema';
+import { useToast } from '@/hooks/use-toast';
 
 export function TeacherDashboard() {
-  const teacherId = 3; // Mock teacher: Mr. David Chen
-  const myNotes = lessonNotes.filter(n => n.teacherId === teacherId);
-  const pendingNotes = myNotes.filter(n => n.status.includes('Pending')).length;
-  const approvedNotes = myNotes.filter(n => n.status === 'Approved').length;
-  const rejectedNotes = myNotes.filter(n => n.status.includes('Rejected')).length;
+  const { user } = useRole();
+  const { toast } = useToast();
+  const [notes, setNotes] = useState<MockLessonNote[]>([]);
+  const [stats, setStats] = useState({
+    total: 0,
+    approved: 0,
+    pending: 0,
+    rejected: 0,
+  });
+
+  const fetchNotes = useCallback(async () => {
+    if (!user) return;
+    try {
+      const q = query(collection(db, 'lessonNotes'), where('teacherId', '==', user.uid));
+      const querySnapshot = await getDocs(q);
+      const notesList = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as MockLessonNote));
+      setNotes(notesList);
+
+      const total = notesList.length;
+      const approved = notesList.filter(n => n.status.includes('Approved')).length;
+      const pending = notesList.filter(n => n.status.includes('Pending')).length;
+      const rejected = notesList.filter(n => n.status.includes('Rejected')).length;
+      setStats({ total, approved, pending, rejected });
+
+    } catch (error) {
+      console.error("Error fetching lesson notes:", error);
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "Could not fetch your lesson notes.",
+      });
+    }
+  }, [user, toast]);
+
+  useEffect(() => {
+    fetchNotes();
+  }, [fetchNotes]);
+
 
   const statusVariant = (status: string) => {
     if (status.includes('Approved')) return 'default';
@@ -45,7 +77,7 @@ export function TeacherDashboard() {
       <div>
         <h1 className="font-headline text-3xl font-bold">Teacher Dashboard</h1>
         <p className="text-muted-foreground">
-          Welcome, Mr. David Chen. Manage your lesson notes and performance data.
+          Welcome, {user?.displayName || 'Teacher'}. Manage your lesson notes and performance data.
         </p>
       </div>
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
@@ -55,7 +87,7 @@ export function TeacherDashboard() {
             <Book className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{myNotes.length}</div>
+            <div className="text-2xl font-bold">{stats.total}</div>
             <p className="text-xs text-muted-foreground">notes submitted this term</p>
           </CardContent>
         </Card>
@@ -65,7 +97,7 @@ export function TeacherDashboard() {
             <CheckCircle className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{approvedNotes}</div>
+            <div className="text-2xl font-bold">{stats.approved}</div>
             <p className="text-xs text-muted-foreground">notes approved</p>
           </CardContent>
         </Card>
@@ -75,7 +107,7 @@ export function TeacherDashboard() {
             <Clock className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{pendingNotes}</div>
+            <div className="text-2xl font-bold">{stats.pending}</div>
             <p className="text-xs text-muted-foreground">awaiting review</p>
           </CardContent>
         </Card>
@@ -85,7 +117,7 @@ export function TeacherDashboard() {
             <XCircle className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{rejectedNotes}</div>
+            <div className="text-2xl font-bold">{stats.rejected}</div>
             <p className="text-xs text-muted-foreground">require your attention</p>
           </CardContent>
         </Card>
@@ -117,7 +149,7 @@ export function TeacherDashboard() {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {myNotes.map((note) => (
+              {notes.map((note) => (
                 <TableRow key={note.id}>
                   <TableCell className="font-medium">{note.title}</TableCell>
                   <TableCell>{note.subject}</TableCell>
@@ -127,11 +159,16 @@ export function TeacherDashboard() {
                   </TableCell>
                   <TableCell className="text-right">
                     <Button asChild variant="outline" size="sm">
-                       <Link href={`/dashboard/lesson-notes/${note.id}`}>View</Link>
+                      <Link href={`/dashboard/lesson-notes/${note.id}`}>View</Link>
                     </Button>
                   </TableCell>
                 </TableRow>
               ))}
+              {notes.length === 0 && (
+                <TableRow>
+                  <TableCell colSpan={5} className="h-24 text-center">No notes found.</TableCell>
+                </TableRow>
+              )}
             </TableBody>
           </Table>
         </CardContent>

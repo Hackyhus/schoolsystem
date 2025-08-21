@@ -4,6 +4,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
 import * as z from 'zod';
 import { useRouter } from 'next/navigation';
+import { signInWithEmailAndPassword } from 'firebase/auth';
 
 import { Button } from '@/components/ui/button';
 import {
@@ -24,6 +25,8 @@ import {
 import { Input } from '@/components/ui/input';
 import { useRole } from '@/context/role-context';
 import { useToast } from '@/hooks/use-toast';
+import { auth, db } from '@/lib/firebase';
+import { doc, getDoc } from 'firebase/firestore';
 
 const formSchema = z.object({
   email: z.string().email({ message: 'Please enter a valid email.' }),
@@ -45,13 +48,51 @@ export function LoginForm() {
     },
   });
 
-  function onSubmit(values: z.infer<typeof formSchema>) {
-    setRole(values.role);
-    toast({
-      title: 'Login Successful',
-      description: `Welcome! You are logged in as ${values.role}.`,
-    });
-    router.push('/dashboard');
+  async function onSubmit(values: z.infer<typeof formSchema>) {
+    try {
+      const userCredential = await signInWithEmailAndPassword(
+        auth,
+        values.email,
+        values.password
+      );
+      const user = userCredential.user;
+
+      if (user) {
+        const userDocRef = doc(db, 'users', user.uid);
+        const userDoc = await getDoc(userDocRef);
+
+        if (userDoc.exists()) {
+          const userData = userDoc.data();
+          if (userData.role === values.role) {
+            setRole(values.role);
+            toast({
+              title: 'Login Successful',
+              description: `Welcome! You are logged in as ${values.role}.`,
+            });
+            router.push('/dashboard');
+          } else {
+            toast({
+              variant: 'destructive',
+              title: 'Role Mismatch',
+              description: `You are not registered as a ${values.role}.`,
+            });
+            auth.signOut();
+          }
+        } else {
+           toast({
+              variant: 'destructive',
+              title: 'Login Failed',
+              description: 'No user data found.',
+            });
+        }
+      }
+    } catch (error: any) {
+      toast({
+        variant: 'destructive',
+        title: 'Login Failed',
+        description: error.message,
+      });
+    }
   }
 
   return (
@@ -108,9 +149,10 @@ export function LoginForm() {
         />
         <Button
           type="submit"
-          className="w-full bg-accent text-accent-foreground hover:bg-accent/90"
+          className="w-full"
+          disabled={form.formState.isSubmitting}
         >
-          Sign In
+          {form.formState.isSubmitting ? 'Signing In...' : 'Sign In'}
         </Button>
       </form>
     </Form>

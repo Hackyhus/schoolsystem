@@ -6,7 +6,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { ThumbsDown, ThumbsUp } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 
-export function ReviewForm() {
+export function ReviewForm({ onSubmit }: { onSubmit: (action: 'Approve' | 'Reject', comment: string) => void; }) {
   const [review, setReview] = useState('');
   const { toast } = useToast();
 
@@ -20,11 +20,7 @@ export function ReviewForm() {
       return;
     }
     
-    console.log({ action, review });
-    toast({
-      title: `Lesson Note ${action}d`,
-      description: 'The teacher has been notified of your decision.',
-    });
+    onSubmit(action, review);
     setReview('');
   };
 

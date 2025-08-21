@@ -10,16 +10,59 @@ import {
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { lessonNotes } from '@/lib/mock-data';
 import Link from 'next/link';
 import { useRole } from '@/context/role-context';
 import { Upload } from 'lucide-react';
+import { useEffect, useState, useCallback } from 'react';
+import { collection, query, where, getDocs } from 'firebase/firestore';
+import { db } from '@/lib/firebase';
+import type { MockLessonNote } from '@/lib/schema';
+import { Skeleton } from '@/components/ui/skeleton';
+import { useToast } from '@/hooks/use-toast';
+
 
 export default function LessonNotesPage() {
-  const { role } = useRole();
+  const { role, user } = useRole();
+  const [notes, setNotes] = useState<MockLessonNote[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const { toast } = useToast();
 
-  const teacherId = 3; // Mock teacher: Mr. David Chen
-  const notes = role === 'Teacher' ? lessonNotes.filter(n => n.teacherId === teacherId) : lessonNotes;
+  const fetchNotes = useCallback(async () => {
+    if (!user && role !== 'Admin' && role !== 'HeadOfDepartment') {
+      setIsLoading(false);
+      return;
+    }
+    
+    setIsLoading(true);
+    try {
+      let notesQuery;
+      if (role === 'Teacher') {
+        notesQuery = query(collection(db, 'lessonNotes'), where("teacherId", "==", user?.uid));
+      } else {
+        // Admin and HOD see all for now. This could be scoped by department for HODs.
+        notesQuery = query(collection(db, 'lessonNotes'));
+      }
+      
+      const querySnapshot = await getDocs(notesQuery);
+      const notesList = querySnapshot.docs.map(
+        (doc) => ({ id: doc.id, ...doc.data() } as MockLessonNote)
+      );
+      setNotes(notesList);
+    } catch (error) {
+      console.error("Error fetching lesson notes:", error);
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "Could not fetch lesson notes.",
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  }, [user, role, toast]);
+
+  useEffect(() => {
+    fetchNotes();
+  }, [fetchNotes]);
 
   const statusVariant = (status: string) => {
     if (status.includes('Approved')) return 'default';
@@ -71,7 +114,18 @@ export default function LessonNotesPage() {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {notes.map((note) => (
+              {isLoading ? (
+                 Array.from({ length: 3 }).map((_, i) => (
+                   <TableRow key={i}>
+                    <TableCell><Skeleton className="h-5 w-32" /></TableCell>
+                     {role !== 'Teacher' && <TableCell><Skeleton className="h-5 w-24" /></TableCell>}
+                    <TableCell><Skeleton className="h-5 w-24" /></TableCell>
+                    <TableCell><Skeleton className="h-5 w-24" /></TableCell>
+                    <TableCell><Skeleton className="h-6 w-28" /></TableCell>
+                    <TableCell className="text-right"><Skeleton className="h-8 w-20" /></TableCell>
+                  </TableRow>
+                 ))
+              ) : notes.map((note) => (
                 <TableRow key={note.id}>
                   <TableCell className="font-medium">{note.title}</TableCell>
                   {role !== 'Teacher' && <TableCell>{note.teacherName}</TableCell>}
@@ -87,6 +141,16 @@ export default function LessonNotesPage() {
                   </TableCell>
                 </TableRow>
               ))}
+               {!isLoading && notes.length === 0 && (
+                    <TableRow>
+                      <TableCell
+                        colSpan={role !== 'Teacher' ? 6: 5}
+                        className="h-24 text-center text-muted-foreground"
+                      >
+                        No lesson notes found.
+                      </TableCell>
+                    </TableRow>
+                  )}
             </TableBody>
           </Table>
         </CardContent>

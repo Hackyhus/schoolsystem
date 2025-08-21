@@ -5,54 +5,6 @@ export const users: MockUser[] = [];
 
 
 export const lessonNotes: MockLessonNote[] = [
-    {
-        id: '1',
-        title: 'Introduction to Algebra',
-        subject: 'Mathematics',
-        teacherId: 3,
-        teacherName: 'Mr. David Chen',
-        status: 'Approved',
-        submissionDate: '2023-10-26',
-        content: 'This lesson covers the basics of algebraic expressions, including variables, coefficients, and constants. Students will learn to simplify and evaluate simple expressions.',
-        hod_review: 'Approved by HOD',
-        admin_review: 'Approved by Admin'
-    },
-    {
-        id: '2',
-        title: 'The Water Cycle',
-        subject: 'Integrated Science',
-        teacherId: 3,
-        teacherName: 'Mr. David Chen',
-        status: 'Pending HOD Approval',
-        submissionDate: '2023-10-27',
-        content: 'A comprehensive look at the stages of the water cycle: evaporation, condensation, precipitation, and collection. Includes diagrams and a hands-on experiment.',
-        hod_review: null,
-        admin_review: null
-    },
-     {
-        id: '3',
-        title: 'Introduction to Photosynthesis',
-        subject: 'Biology',
-        teacherId: 4,
-        teacherName: 'Ms. Grace Lee',
-        status: 'Rejected by HOD',
-        submissionDate: '2023-10-25',
-        content: 'This lesson explains the process of photosynthesis, including the role of chlorophyll, sunlight, water, and carbon dioxide. It also covers the chemical equation for photosynthesis.',
-        hod_review: 'Rejected: Please include more details on the light-independent reactions.',
-        admin_review: null
-    },
-    {
-        id: '4',
-        title: 'World War II: The European Theater',
-        subject: 'History',
-        teacherId: 5,
-        teacherName: 'Mr. Samuel Okafor',
-        status: 'Pending Admin Approval',
-        submissionDate: '2023-10-28',
-        content: 'An in-depth study of the major events and turning points of World War II in Europe, from the invasion of Poland to the fall of Berlin.',
-        hod_review: 'Approved by HOD',
-        admin_review: null
-    }
 ];
 
 export const studentPerformance = {
@@ -123,7 +75,4 @@ export const messages: { id: number; from: string; to: string; subject: string; 
 ];
 
 export const departmentStaff: { id: number; name: string; subject: string; class: string; }[] = [
-  { id: 3, name: 'Mr. David Chen', subject: 'Mathematics', class: 'JSS 2' },
-  { id: 4, name: 'Ms. Grace Lee', subject: 'Biology', class: 'SSS 1' },
-  { id: 6, name: 'Dr. Helen Abebe', subject: 'Chemistry', class: 'SSS 2' },
 ];

@@ -4,6 +4,9 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
 import * as z from 'zod';
 import { useRouter } from 'next/navigation';
+import { createUserWithEmailAndPassword } from 'firebase/auth';
+import { doc, setDoc } from 'firebase/firestore';
+
 
 import { Button } from '@/components/ui/button';
 import {
@@ -23,8 +26,10 @@ import {
 } from '@/components/ui/select';
 import { Input } from '@/components/ui/input';
 import { useToast } from '@/hooks/use-toast';
+import { auth, db } from '@/lib/firebase';
 
 const formSchema = z.object({
+  name: z.string().min(1, { message: 'Name is required.' }),
   email: z.string().email({ message: 'Please enter a valid email.' }),
   password: z.string().min(6, { message: 'Password must be at least 6 characters.' }),
   role: z.enum(['Admin', 'HeadOfDepartment', 'Teacher', 'Parent']),
@@ -37,26 +42,56 @@ export function SignUpForm() {
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
+      name: '',
       email: '',
       password: '',
       role: 'Teacher',
     },
   });
 
-  function onSubmit(values: z.infer<typeof formSchema>) {
-    // For test purposes, we'll just show a success message
-    // In a real app, you would handle user creation with Firebase Auth here
-    toast({
-      title: 'Account Created!',
-      description: `A test account for ${values.email} has been created.`,
-    });
-    console.log('Account creation details:', values);
-    router.push('/');
+  async function onSubmit(values: z.infer<typeof formSchema>) {
+    try {
+       const userCredential = await createUserWithEmailAndPassword(auth, values.email, values.password);
+       const user = userCredential.user;
+
+       await setDoc(doc(db, 'users', user.uid), {
+         uid: user.uid,
+         name: values.name,
+         email: values.email,
+         role: values.role,
+         createdAt: new Date(),
+       });
+
+      toast({
+        title: 'Account Created!',
+        description: `An account for ${values.email} has been created.`,
+      });
+      router.push('/');
+    } catch (error: any) {
+        toast({
+        variant: 'destructive',
+        title: 'Account Creation Failed',
+        description: error.message,
+      });
+    }
   }
 
   return (
     <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+         <FormField
+          control={form.control}
+          name="name"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Full Name</FormLabel>
+              <FormControl>
+                <Input placeholder="John Doe" {...field} />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
         <FormField
           control={form.control}
           name="email"
@@ -108,9 +143,10 @@ export function SignUpForm() {
         />
         <Button
           type="submit"
-          className="w-full bg-accent text-accent-foreground hover:bg-accent/90"
+          className="w-full"
+          disabled={form.formState.isSubmitting}
         >
-          Create Account
+          {form.formState.isSubmitting ? 'Creating Account...' : 'Create Account'}
         </Button>
       </form>
     </Form>

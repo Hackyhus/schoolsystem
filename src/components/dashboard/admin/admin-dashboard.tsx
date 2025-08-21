@@ -23,16 +23,54 @@ import {
 } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { announcements, lessonNotes, users } from '@/lib/mock-data';
 import Link from 'next/link';
+import { useEffect, useState, useCallback } from 'react';
+import { collection, getDocs, limit, query, orderBy } from 'firebase/firestore';
+import { db } from '@/lib/firebase';
+import type { MockLessonNote, MockUser } from '@/lib/schema';
+import { useToast } from '@/hooks/use-toast';
 
 export function AdminDashboard() {
-  const stats = [
-    { title: 'Parent Engagement', value: '82%', icon: Activity, change: '+2.5% from last month' },
-    { title: 'Lesson Notes Submitted', value: '125', icon: BookCheck, change: '+15 this week' },
-    { title: 'Active Users', value: '350', icon: Users, change: '+5 new accounts' },
-    { title: 'Messages Sent', value: '542', icon: MessageSquare, change: '24 new today' },
-  ];
+  const { toast } = useToast();
+  const [stats, setStats] = useState({
+    users: 0,
+    lessonNotes: 0,
+  });
+  const [recentNotes, setRecentNotes] = useState<MockLessonNote[]>([]);
+  const [announcements, setAnnouncements] = useState<any[]>([]); // Using any for now
+
+  const fetchData = useCallback(async () => {
+    try {
+      const usersSnapshot = await getDocs(collection(db, "users"));
+      const lessonNotesSnapshot = await getDocs(collection(db, "lessonNotes"));
+      setStats({
+        users: usersSnapshot.size,
+        lessonNotes: lessonNotesSnapshot.size,
+      });
+
+      const recentNotesQuery = query(collection(db, "lessonNotes"), orderBy("submissionDate", "desc"), limit(4));
+      const recentNotesSnapshot = await getDocs(recentNotesQuery);
+      const notesList = recentNotesSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as MockLessonNote));
+      setRecentNotes(notesList);
+
+      // Add announcement fetching if collection exists
+      // const announcementsSnapshot = await getDocs(collection(db, "announcements"));
+      // setAnnouncements(announcementsSnapshot.docs.map(doc => ({id: doc.id, ...doc.data()})))
+
+    } catch (error) {
+      console.error("Error fetching dashboard data:", error);
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "Could not fetch dashboard data.",
+      });
+    }
+  }, [toast]);
+
+  useEffect(() => {
+    fetchData();
+  }, [fetchData]);
+
 
   const statusVariant = (status: string) => {
     if (status === 'Approved') return 'default';
@@ -51,18 +89,46 @@ export function AdminDashboard() {
       </div>
 
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-        {stats.map((stat) => (
-          <Card key={stat.title}>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">{stat.title}</CardTitle>
-              <stat.icon className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{stat.value}</div>
-              <p className="text-xs text-muted-foreground">{stat.change}</p>
-            </CardContent>
-          </Card>
-        ))}
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Active Users</CardTitle>
+            <Users className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{stats.users}</div>
+            <p className="text-xs text-muted-foreground">total users in system</p>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Lesson Notes Submitted</CardTitle>
+            <BookCheck className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{stats.lessonNotes}</div>
+            <p className="text-xs text-muted-foreground">total submissions</p>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Parent Engagement</CardTitle>
+            <Activity className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">82%</div>
+            <p className="text-xs text-muted-foreground">+2.5% from last month</p>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Messages Sent</CardTitle>
+            <MessageSquare className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">542</div>
+            <p className="text-xs text-muted-foreground">24 new today</p>
+          </CardContent>
+        </Card>
       </div>
 
       <div className="grid gap-8 lg:grid-cols-2">
@@ -84,7 +150,7 @@ export function AdminDashboard() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {lessonNotes.slice(0, 4).map((note) => (
+                {recentNotes.map((note) => (
                   <TableRow key={note.id}>
                     <TableCell>
                       <div className="font-medium">{note.teacherName}</div>
@@ -101,6 +167,11 @@ export function AdminDashboard() {
                     </TableCell>
                   </TableRow>
                 ))}
+                 {recentNotes.length === 0 && (
+                    <TableRow>
+                      <TableCell colSpan={4} className="h-24 text-center">No recent notes.</TableCell>
+                    </TableRow>
+                  )}
               </TableBody>
             </Table>
           </CardContent>
@@ -114,13 +185,10 @@ export function AdminDashboard() {
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
-             {announcements.slice(0, 2).map((ann) => (
-              <div key={ann.id} className="rounded-md border p-4">
-                <h3 className="font-semibold">{ann.title}</h3>
-                <p className="text-sm text-muted-foreground">{ann.content}</p>
-                <p className="pt-2 text-xs text-muted-foreground">{ann.date}</p>
+             {/* Add dynamic announcements here */}
+              <div className="rounded-md border p-4 text-center text-muted-foreground">
+                <p>Announcements feature coming soon.</p>
               </div>
-            ))}
             <Button className="w-full">Create New Announcement</Button>
           </CardContent>
         </Card>

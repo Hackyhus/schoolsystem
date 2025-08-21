@@ -16,13 +16,73 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
-import { useUser } from '@/context/user-context';
 import { AddUserForm } from '@/components/dashboard/users/add-user-form';
 import { Button } from '@/components/ui/button';
 import { Trash2 } from 'lucide-react';
+import { useEffect, useState, useCallback } from 'react';
+import { collection, getDocs, deleteDoc, doc, setDoc } from 'firebase/firestore';
+import { createUserWithEmailAndPassword } from 'firebase/auth';
+import { auth, db } from '@/lib/firebase';
+import type { MockUser } from '@/lib/schema';
+import { Skeleton } from '@/components/ui/skeleton';
+import { useToast } from '@/hooks/use-toast';
 
 export default function UsersPage() {
-  const { users, removeUser } = useUser();
+  const [users, setUsers] = useState<MockUser[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const { toast } = useToast();
+
+  const fetchUsers = useCallback(async () => {
+    setIsLoading(true);
+    try {
+      const querySnapshot = await getDocs(collection(db, 'users'));
+      const usersList = querySnapshot.docs.map(
+        (doc) => ({ id: doc.id, ...doc.data() } as MockUser)
+      );
+      setUsers(usersList);
+    } catch (error) {
+      console.error('Error fetching users:', error);
+      toast({
+        variant: 'destructive',
+        title: 'Error',
+        description: 'Could not fetch users.',
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  }, [toast]);
+
+  useEffect(() => {
+    fetchUsers();
+  }, [fetchUsers]);
+
+  const removeUser = async (userId: string) => {
+     if (!confirm('Are you sure you want to delete this user? This action cannot be undone.')) return;
+    try {
+      // Note: This does not delete the user from Firebase Auth, only Firestore.
+      // A more robust solution would use a Cloud Function to delete the Auth user.
+      await deleteDoc(doc(db, 'users', userId));
+      toast({
+        title: 'User Removed',
+        description: 'The user has been successfully deleted from the list.',
+      });
+      fetchUsers(); // Refresh the list
+    } catch (error) {
+       console.error('Error removing user:', error);
+       toast({
+        variant: 'destructive',
+        title: 'Error',
+        description: 'Could not remove the user.',
+      });
+    }
+  };
+
+  // This function is passed to the form, but the form now handles user creation directly.
+  // We keep it to refresh the user list.
+  const handleUserAdded = () => {
+    fetchUsers();
+  };
+
 
   return (
     <div className="space-y-8">
@@ -49,7 +109,16 @@ export default function UsersPage() {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {users.map((user) => (
+                  {isLoading ? (
+                    Array.from({ length: 5 }).map((_, i) => (
+                       <TableRow key={i}>
+                        <TableCell><Skeleton className="h-5 w-24" /></TableCell>
+                        <TableCell><Skeleton className="h-5 w-36" /></TableCell>
+                        <TableCell><Skeleton className="h-5 w-16" /></TableCell>
+                        <TableCell className="text-right"><Skeleton className="h-8 w-8 inline-block" /></TableCell>
+                      </TableRow>
+                    ))
+                  ) : users.map((user) => (
                     <TableRow key={user.id}>
                       <TableCell className="font-medium">{user.name}</TableCell>
                       <TableCell>{user.email}</TableCell>
@@ -60,14 +129,14 @@ export default function UsersPage() {
                         <Button
                           variant="ghost"
                           size="icon"
-                          onClick={() => removeUser(user.id)}
+                          onClick={() => removeUser(user.id.toString())}
                         >
                           <Trash2 className="h-4 w-4" />
                         </Button>
                       </TableCell>
                     </TableRow>
                   ))}
-                  {users.length === 0 && (
+                  {!isLoading && users.length === 0 && (
                     <TableRow>
                       <TableCell
                         colSpan={4}
@@ -91,7 +160,7 @@ export default function UsersPage() {
               </CardDescription>
             </CardHeader>
             <CardContent>
-              <AddUserForm />
+              <AddUserForm onUserAdded={handleUserAdded} />
             </CardContent>
           </Card>
         </div>

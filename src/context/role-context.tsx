@@ -1,8 +1,12 @@
 'use client';
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
+import { onAuthStateChanged, signOut, User } from 'firebase/auth';
+import { doc, getDoc } from 'firebase/firestore';
+import { auth, db } from '@/lib/firebase';
 
 type RoleContextType = {
+  user: User | null;
   role: string | null;
   setRole: (role: string) => void;
   logout: () => void;
@@ -12,11 +16,49 @@ type RoleContextType = {
 const RoleContext = createContext<RoleContextType | undefined>(undefined);
 
 export const RoleProvider = ({ children }: { children: React.ReactNode }) => {
+  const [user, setUser] = useState<User | null>(null);
   const [role, setRoleState] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const router = useRouter();
 
   useEffect(() => {
+    const unsubscribe = onAuthStateChanged(auth, async (user) => {
+      setIsLoading(true);
+      if (user) {
+        setUser(user);
+        const userDocRef = doc(db, 'users', user.uid);
+        const userDoc = await getDoc(userDocRef);
+        if (userDoc.exists()) {
+          const userData = userDoc.data();
+          setRoleState(userData.role);
+           try {
+            localStorage.setItem('user-role', JSON.stringify(userData.role));
+          } catch (error) {
+            console.error('Failed to write to localStorage', error);
+          }
+        } else {
+          // No user document, log them out
+          await signOut(auth);
+          setRoleState(null);
+          setUser(null);
+        }
+      } else {
+        setUser(null);
+        setRoleState(null);
+         try {
+           localStorage.removeItem('user-role');
+         } catch (error) {
+            console.error('Failed to remove from localStorage', error);
+         }
+      }
+      setIsLoading(false);
+    });
+
+    return () => unsubscribe();
+  }, []);
+
+   useEffect(() => {
+    // Fallback for when onAuthStateChanged is slow
     try {
       const storedRole = localStorage.getItem('user-role');
       if (storedRole) {
@@ -25,9 +67,12 @@ export const RoleProvider = ({ children }: { children: React.ReactNode }) => {
     } catch (error) {
       console.error('Failed to read from localStorage', error);
     } finally {
-      setIsLoading(false);
+        if (isLoading) {
+             setIsLoading(false);
+        }
     }
-  }, []);
+  }, [isLoading]);
+
 
   const setRole = useCallback((newRole: string) => {
     try {
@@ -38,18 +83,20 @@ export const RoleProvider = ({ children }: { children: React.ReactNode }) => {
     }
   }, []);
 
-  const logout = useCallback(() => {
+  const logout = useCallback(async () => {
     try {
+      await signOut(auth);
       localStorage.removeItem('user-role');
+      setUser(null);
       setRoleState(null);
       router.push('/');
     } catch (error) {
-      console.error('Failed to remove from localStorage', error);
+      console.error('Failed to log out', error);
     }
   }, [router]);
 
   return (
-    <RoleContext.Provider value={{ role, setRole, logout, isLoading }}>
+    <RoleContext.Provider value={{ user, role, setRole, logout, isLoading }}>
       {children}
     </RoleContext.Provider>
   );
