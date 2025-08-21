@@ -121,7 +121,7 @@ export function AdminProfileView({ userId }: { userId: string }) {
                 )}
             </div>
             
-            <div className="flex items-center gap-4">
+            <div className="flex flex-col items-start gap-4 sm:flex-row">
                 <Avatar className="h-24 w-24">
                     <AvatarImage src={userData.personalInfo?.profilePicture || ''} alt={userData.name} />
                     <AvatarFallback>{userInitials}</AvatarFallback>
@@ -189,7 +189,7 @@ export function AdminProfileView({ userId }: { userId: string }) {
                         <InfoItem label="Date of Birth" value={formattedDob} />
                         <InfoItem label="Gender" value={userData.personalInfo?.gender} />
                         <InfoItem label="Next of Kin" value={userData.personalInfo?.nextOfKin} />
-                        <div className="sm:col-span-2 lg:col-span-3">
+                        <div className="col-span-full">
                            <InfoItem label="Address" value={userData.personalInfo?.address} />
                         </div>
                     </div>
@@ -225,3 +225,5 @@ export function AdminProfileView({ userId }: { userId: string }) {
         </div>
     )
 }
+
+    
