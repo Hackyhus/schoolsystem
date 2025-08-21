@@ -1,5 +1,5 @@
 'use client';
-import { Bell, ChevronDown, User as UserIcon } from 'lucide-react';
+import { Bell, ChevronDown, User as UserIcon, LogOut } from 'lucide-react';
 import {
   SidebarTrigger,
 } from '@/components/ui/sidebar';
