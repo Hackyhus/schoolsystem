@@ -2,10 +2,13 @@
 'use client';
 
 import { AdminProfileView } from '@/components/dashboard/profile/admin-profile-view';
-import { useParams } from 'next/navigation';
+import { useParams, useRouter } from 'next/navigation';
+import { Button } from '@/components/ui/button';
+import { ArrowLeft } from 'lucide-react';
 
 export default function UserProfilePage() {
     const params = useParams();
+    const router = useRouter();
     const { id } = params;
 
     if (typeof id !== 'string') {
@@ -13,6 +16,12 @@ export default function UserProfilePage() {
     }
 
     return (
-        <AdminProfileView userId={id} />
+        <div className="space-y-4">
+            <Button variant="outline" onClick={() => router.back()}>
+                <ArrowLeft className="mr-2 h-4 w-4" />
+                Back to Users
+            </Button>
+            <AdminProfileView userId={id} />
+        </div>
     );
 }
