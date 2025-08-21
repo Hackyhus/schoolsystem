@@ -7,10 +7,6 @@ import { db } from '@/lib/firebase';
 import type { MockUser } from '@/lib/schema';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { PersonalInfoForm } from './personal-info-form';
-import { ProfessionalInfoForm } from './professional-info-form';
-import { BankDetailsForm } from './bank-details-form';
 import { useRole } from '@/context/role-context';
 import { AdminProfileView } from './admin-profile-view';
 
@@ -35,17 +31,11 @@ export function ProfileForm({ userId }: { userId: string }) {
         fetchUserData();
     }, [fetchUserData]);
 
-
-    const handleProfileUpdate = (updatedData: Partial<MockUser>) => {
-       setUserData(prevData => prevData ? { ...prevData, ...updatedData } : null);
-       fetchUserData();
-    }
     
     // Admin is viewing another user's profile
     if (role === 'Admin' && currentUser?.uid !== userId) {
         return <AdminProfileView userId={userId} />;
     }
-
 
     if (isLoading) {
         return (
@@ -74,52 +64,5 @@ export function ProfileForm({ userId }: { userId: string }) {
     }
 
     // Regular user viewing their own profile
-    return (
-        <Tabs defaultValue="personal" className="w-full">
-            <TabsList className="grid w-full grid-cols-3">
-                <TabsTrigger value="personal">Personal Info</TabsTrigger>
-                <TabsTrigger value="professional">Professional Info</TabsTrigger>
-                <TabsTrigger value="bank">Bank Details</TabsTrigger>
-            </TabsList>
-            <TabsContent value="personal">
-                <Card>
-                    <CardHeader>
-                        <CardTitle>Personal Information</CardTitle>
-                        <CardDescription>
-                            Update your personal details here. Click save when you're done.
-                        </CardDescription>
-                    </CardHeader>
-                    <CardContent>
-                        <PersonalInfoForm userData={userData} onUpdate={handleProfileUpdate} />
-                    </CardContent>
-                </Card>
-            </TabsContent>
-            <TabsContent value="professional">
-                <Card>
-                    <CardHeader>
-                        <CardTitle>Professional Information</CardTitle>
-                        <CardDescription>
-                           This information is managed by the administrator. Contact them for any changes.
-                        </CardDescription>
-                    </CardHeader>
-                    <CardContent className="pt-6">
-                        <ProfessionalInfoForm userData={userData} onUpdate={handleProfileUpdate} />
-                    </CardContent>
-                </Card>
-            </TabsContent>
-            <TabsContent value="bank">
-                 <Card>
-                    <CardHeader>
-                        <CardTitle>Bank Details</CardTitle>
-                        <CardDescription>
-                           Update your bank account information for salary payments.
-                        </CardDescription>
-                    </CardHeader>
-                    <CardContent>
-                        <BankDetailsForm userData={userData} onUpdate={handleProfileUpdate} />
-                    </CardContent>
-                </Card>
-            </TabsContent>
-        </Tabs>
-    )
+    return <AdminProfileView userId={userId} />
 }

@@ -10,11 +10,13 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { format } from 'date-fns';
 import { Button } from '@/components/ui/button';
-import { Edit } from 'lucide-react';
+import { ArrowLeft, Edit } from 'lucide-react';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { PersonalInfoForm } from './personal-info-form';
 import { ProfessionalInfoForm } from './professional-info-form';
 import { BankDetailsForm } from './bank-details-form';
+import { useRouter } from 'next/navigation';
+import { useRole } from '@/context/role-context';
 
 const InfoItem = ({ label, value, isCurrency = false }: { label: string; value?: string | number | null; isCurrency?: boolean }) => {
     const displayValue = value === null || value === undefined || value === '' ? 'N/A' : value;
@@ -37,6 +39,9 @@ export function AdminProfileView({ userId }: { userId: string }) {
     const [isPersonalInfoOpen, setPersonalInfoOpen] = useState(false);
     const [isProfessionalInfoOpen, setProfessionalInfoOpen] = useState(false);
     const [isBankDetailsOpen, setBankDetailsOpen] = useState(false);
+    const router = useRouter();
+    const { role: currentUserRole, user: currentUser } = useRole();
+    const isAdminViewing = currentUserRole === 'Admin' && currentUser?.uid !== userId;
 
     const fetchUserData = useCallback(async () => {
         if (!userId) return;
@@ -101,11 +106,19 @@ export function AdminProfileView({ userId }: { userId: string }) {
 
     return (
         <div className="space-y-8">
-             <div>
-                <h1 className="font-headline text-3xl font-bold">Staff Profile</h1>
-                <p className="text-muted-foreground">
-                    Viewing details for {userData.name}.
-                </p>
+             <div className="flex items-center justify-between">
+                <div>
+                    <h1 className="font-headline text-3xl font-bold">{isAdminViewing ? 'Staff Profile' : 'My Profile'}</h1>
+                    <p className="text-muted-foreground">
+                         {isAdminViewing ? `Viewing details for ${userData.name}.` : 'View and update your personal information.'}
+                    </p>
+                </div>
+                 {isAdminViewing && (
+                     <Button variant="outline" onClick={() => router.back()}>
+                        <ArrowLeft className="mr-2 h-4 w-4" />
+                        Back to Users
+                     </Button>
+                )}
             </div>
             
             <div className="flex items-center gap-4">
@@ -124,19 +137,23 @@ export function AdminProfileView({ userId }: { userId: string }) {
                 <CardHeader className="flex flex-row items-center justify-between">
                     <div>
                         <CardTitle>Professional Information</CardTitle>
-                        <CardDescription>Official staff details and role.</CardDescription>
+                        <CardDescription>
+                            {isAdminViewing ? 'Official staff details and role.' : 'This information is managed by the administrator.'}
+                        </CardDescription>
                     </div>
-                     <Dialog open={isProfessionalInfoOpen} onOpenChange={setProfessionalInfoOpen}>
-                        <DialogTrigger asChild>
-                           <Button variant="outline" size="sm"><Edit className="mr-2 h-4 w-4" /> Edit</Button>
-                        </DialogTrigger>
-                        <DialogContent>
-                            <DialogHeader>
-                                <DialogTitle>Edit Professional Information</DialogTitle>
-                            </DialogHeader>
-                            <ProfessionalInfoForm userData={userData} onUpdate={handleProfileUpdate} />
-                        </DialogContent>
-                    </Dialog>
+                     {isAdminViewing && (
+                        <Dialog open={isProfessionalInfoOpen} onOpenChange={setProfessionalInfoOpen}>
+                            <DialogTrigger asChild>
+                            <Button variant="outline" size="sm"><Edit className="mr-2 h-4 w-4" /> Edit</Button>
+                            </DialogTrigger>
+                            <DialogContent>
+                                <DialogHeader>
+                                    <DialogTitle>Edit Professional Information</DialogTitle>
+                                </DialogHeader>
+                                <ProfessionalInfoForm userData={userData} onUpdate={handleProfileUpdate} />
+                            </DialogContent>
+                        </Dialog>
+                    )}
                 </CardHeader>
                 <CardContent>
                      <div className="grid grid-cols-2 gap-6 md:grid-cols-3">

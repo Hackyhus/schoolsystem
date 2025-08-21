@@ -1,7 +1,7 @@
 
 'use client';
 
-import { ProfileForm } from '@/components/dashboard/profile/profile-form';
+import { AdminProfileView } from '@/components/dashboard/profile/admin-profile-view';
 import { useRole } from '@/context/role-context';
 
 export default function ProfilePage() {
@@ -16,14 +16,6 @@ export default function ProfilePage() {
     }
 
     return (
-        <div className="space-y-8">
-            <div>
-                <h1 className="font-headline text-3xl font-bold">My Profile</h1>
-                <p className="text-muted-foreground">
-                    View and update your personal information.
-                </p>
-            </div>
-            <ProfileForm userId={user.uid} />
-        </div>
+       <AdminProfileView userId={user.uid} />
     );
 }
