@@ -1,30 +1,149 @@
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { BarChart2 } from 'lucide-react';
+
+'use client';
+import { Bar, BarChart, ResponsiveContainer, XAxis, YAxis } from 'recharts';
+
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from '@/components/ui/card';
+import {
+  ChartContainer,
+  ChartTooltip,
+  ChartTooltipContent,
+} from '@/components/ui/chart';
+import { lessonNotes } from '@/lib/mock-data';
+import { BookCheck, Clock, FileWarning, TrendingUp } from 'lucide-react';
 
 export default function ReportsPage() {
+  const submissionStatusData = [
+    { name: 'Approved', value: lessonNotes.filter(n => n.status.includes('Approved')).length, fill: 'var(--color-approved)' },
+    { name: 'Pending', value: lessonNotes.filter(n => n.status.includes('Pending')).length, fill: 'var(--color-pending)' },
+    { name: 'Rejected', value: lessonNotes.filter(n => n.status.includes('Rejected')).length, fill: 'var(--color-rejected)' },
+  ];
+  const chartConfig = {
+    value: {
+      label: 'Count',
+    },
+     approved: {
+      label: 'Approved',
+      color: 'hsl(var(--chart-2))',
+    },
+    pending: {
+      label: 'Pending',
+      color: 'hsl(var(--chart-4))',
+    },
+    rejected: {
+      label: 'Rejected',
+      color: 'hsl(var(--destructive))',
+    },
+  };
+
+  const totalNotes = lessonNotes.length;
+  const approvedCount = submissionStatusData.find(d => d.name === 'Approved')?.value || 0;
+  const pendingCount = submissionStatusData.find(d => d.name === 'Pending')?.value || 0;
+  const rejectedCount = submissionStatusData.find(d => d.name === 'Rejected')?.value || 0;
+
+
   return (
     <div className="space-y-8">
-       <div>
+      <div>
         <h1 className="font-headline text-3xl font-bold">Reports & Analytics</h1>
         <p className="text-muted-foreground">
           Analyze school-wide data and generate reports.
         </p>
       </div>
+      
+       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">
+              Total Submissions
+            </CardTitle>
+            <TrendingUp className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{totalNotes}</div>
+            <p className="text-xs text-muted-foreground">
+              lesson notes this term
+            </p>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Approved</CardTitle>
+            <BookCheck className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{approvedCount}</div>
+            <p className="text-xs text-muted-foreground">
+              {((approvedCount / totalNotes) * 100).toFixed(0)}% approval rate
+            </p>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Pending</CardTitle>
+            <Clock className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{pendingCount}</div>
+            <p className="text-xs text-muted-foreground">
+              awaiting review
+            </p>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Rejected</CardTitle>
+            <FileWarning className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{rejectedCount}</div>
+            <p className="text-xs text-muted-foreground">
+             {((rejectedCount / totalNotes) * 100).toFixed(0)}% rejection rate
+            </p>
+          </CardContent>
+        </Card>
+      </div>
 
-       <Card className="flex min-h-[50vh] flex-col items-center justify-center text-center">
+
+      <Card>
         <CardHeader>
-          <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-primary/10">
-            <BarChart2 className="h-8 w-8 text-primary"/>
-          </div>
-          <CardTitle>Coming Soon</CardTitle>
-          <CardDescription>The reports and analytics dashboard is currently under development.</CardDescription>
+          <CardTitle>Lesson Note Submission Status</CardTitle>
+          <CardDescription>
+            A summary of all lesson note submissions by their current status.
+          </CardDescription>
         </CardHeader>
         <CardContent>
-            <p className="text-sm text-muted-foreground">
-                Detailed analytics on lesson submissions, attendance, and more will be available here.
-            </p>
+          <ChartContainer
+            config={chartConfig}
+            className="h-[200px] w-full"
+          >
+            <ResponsiveContainer>
+              <BarChart
+                data={submissionStatusData}
+                layout="vertical"
+                margin={{ left: 10, right: 10 }}
+              >
+                <XAxis type="number" hide />
+                <YAxis
+                  dataKey="name"
+                  type="category"
+                  tickLine={false}
+                  axisLine={false}
+                  tickMargin={10}
+                  width={80}
+                />
+                 <Tooltip cursor={false} content={<ChartTooltipContent hideLabel />} />
+                <Bar dataKey="value" radius={5} />
+              </BarChart>
+            </ResponsiveContainer>
+          </ChartContainer>
         </CardContent>
-       </Card>
+      </Card>
     </div>
   );
 }
