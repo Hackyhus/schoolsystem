@@ -100,7 +100,10 @@ export type MockUser = {
   employmentDate: Date;
   salary: {
     amount: number;
-    bankAccount: string | null;
+    bankAccount: string | null; // Legacy, will be replaced
+    bankName: string | null;
+    accountNumber: string | null;
+    accountName: string | null;
     paymentStatus: string;
   };
   personalInfo: {
@@ -133,3 +136,5 @@ export type MockLessonNote = {
     hod_review: string | null;
     admin_review: string | null;
 };
+
+    

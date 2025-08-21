@@ -51,6 +51,15 @@ const availableRoles = [
   'Admin',
 ];
 
+const NIGERIAN_BANKS = [
+  "Access Bank", "Citibank", "Ecobank Nigeria", "Fidelity Bank Nigeria", "First Bank of Nigeria",
+  "First City Monument Bank", "Globus Bank", "Guaranty Trust Bank", "Heritage Bank Plc", "Keystone Bank Limited",
+  "Parallex Bank", "Polaris Bank", "PremiumTrust Bank", "Providus Bank Plc", "Stanbic IBTC Bank Nigeria Limited",
+  "Standard Chartered", "Sterling Bank", "SunTrust Bank Nigeria Limited", "Titan Trust Bank Limited", "Union Bank of Nigeria",
+  "United Bank for Africa", "Unity Bank Plc", "Wema Bank", "Zenith Bank"
+];
+
+
 const formSchema = z.object({
   firstName: z.string().min(1, 'First name is required.'),
   lastName: z.string().min(1, 'Last name is required.'),
@@ -64,7 +73,9 @@ const formSchema = z.object({
   dob: z.date({ required_error: 'Date of birth is required.' }),
   gender: z.string().min(1, 'Gender is required.'),
   salaryAmount: z.number().min(0, 'Salary must be a positive number.'),
-  bankAccount: z.string().min(1, 'Bank account details are required.'),
+  bankName: z.string().min(1, 'Bank name is required.'),
+  accountNumber: z.string().min(1, 'Account number is required.'),
+  accountName: z.string().min(1, 'Account name is required.'),
 });
 
 
@@ -91,7 +102,9 @@ export function AddUserForm({ onUserAdded }: { onUserAdded: () => void }) {
       department: '',
       address: '',
       gender: '',
-      bankAccount: '',
+      accountNumber: '',
+      accountName: '',
+      bankName: '',
     },
   });
 
@@ -146,7 +159,9 @@ export function AddUserForm({ onUserAdded }: { onUserAdded: () => void }) {
         },
         salary: {
           amount: values.salaryAmount,
-          bankAccount: values.bankAccount,
+          bankName: values.bankName,
+          accountNumber: values.accountNumber,
+          accountName: values.accountName,
           paymentStatus: 'Active',
         },
         permissions: {
@@ -193,7 +208,28 @@ export function AddUserForm({ onUserAdded }: { onUserAdded: () => void }) {
             <FormField control={form.control} name="role" render={({ field }) => ( <FormItem> <FormLabel>Role</FormLabel> <Select onValueChange={field.onChange} defaultValue={field.value}> <FormControl> <SelectTrigger> <SelectValue placeholder="Select a role" /> </SelectTrigger> </FormControl> <SelectContent> {availableRoles.map(role => ( <SelectItem key={role} value={role}>{role}</SelectItem> ))} </SelectContent> </Select> <FormMessage /> </FormItem> )}/>
             <FormField control={form.control} name="department" render={({ field }) => ( <FormItem> <FormLabel>Department</FormLabel> <Select onValueChange={field.onChange} defaultValue={field.value}> <FormControl> <SelectTrigger> <SelectValue placeholder="Select a department" /> </SelectTrigger> </FormControl> <SelectContent> <SelectItem value="Science">Science</SelectItem> <SelectItem value="Arts">Arts</SelectItem> <SelectItem value="Commercial">Commercial</SelectItem> <SelectItem value="Administration">Administration</SelectItem> </SelectContent> </Select> <FormMessage /> </FormItem> )}/>
             <FormField control={form.control} name="employmentDate" render={({ field }) => ( <FormItem className="flex flex-col"> <FormLabel>Employment Date</FormLabel> <Popover> <PopoverTrigger asChild> <FormControl> <Button variant={'outline'} className={cn('pl-3 text-left font-normal', !field.value && 'text-muted-foreground' )}> {field.value ? ( format(field.value, 'PPP') ) : ( <span>Pick a date</span> )} <CalendarIcon className="ml-auto h-4 w-4 opacity-50" /> </Button> </FormControl> </PopoverTrigger> <PopoverContent className="w-auto p-0" align="start"> <Calendar mode="single" selected={field.value} onSelect={field.onChange} disabled={(date) => date > new Date()} initialFocus /> </PopoverContent> </Popover> <FormMessage /> </FormItem> )}/>
-            <FormField control={form.control} name="bankAccount" render={({ field }) => ( <FormItem> <FormLabel>Bank Account</FormLabel> <FormControl> <Input placeholder="Bank - Account Number - Name" {...field} /> </FormControl> <FormMessage /> </FormItem> )}/>
+            <FormField control={form.control} name="bankName" render={({ field }) => (
+              <FormItem>
+                <FormLabel>Bank Name</FormLabel>
+                <Select onValueChange={field.onChange} defaultValue={field.value}>
+                  <FormControl>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select a bank" />
+                    </SelectTrigger>
+                  </FormControl>
+                  <SelectContent>
+                    {NIGERIAN_BANKS.map((bank) => (
+                      <SelectItem key={bank} value={bank}>
+                        {bank}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <FormMessage />
+              </FormItem>
+            )}/>
+            <FormField control={form.control} name="accountNumber" render={({ field }) => ( <FormItem> <FormLabel>Account Number</FormLabel> <FormControl> <Input placeholder="0123456789" {...field} /> </FormControl> <FormMessage /> </FormItem> )}/>
+            <FormField control={form.control} name="accountName" render={({ field }) => ( <FormItem> <FormLabel>Account Name</FormLabel> <FormControl> <Input placeholder="John Doe" {...field} /> </FormControl> <FormMessage /> </FormItem> )}/>
             <FormField control={form.control} name="salaryAmount" render={({ field }) => ( <FormItem> <FormLabel>Salary Amount (₦)</FormLabel> <FormControl> <Input type="number" placeholder="e.g. 150000" onChange={e => field.onChange(Number(e.target.value))} /> </FormControl> <FormMessage /> </FormItem> )}/>
 
         </div>
@@ -212,3 +248,5 @@ export function AddUserForm({ onUserAdded }: { onUserAdded: () => void }) {
     </Form>
   );
 }
+
+    

@@ -20,7 +20,6 @@ import { Camera, Edit } from 'lucide-react';
 import {
   Dialog,
   DialogContent,
-  DialogDescription,
   DialogHeader,
   DialogTitle,
   DialogTrigger,
@@ -137,33 +136,34 @@ export function AdminProfileView({ userId }: { userId: string }) {
       <Card>
         <CardHeader>
           <div className="flex flex-col items-center gap-4 text-center sm:flex-row sm:text-left">
-             <Dialog open={isPersonalInfoOpen} onOpenChange={setIsPersonalInfoOpen}>
-                <div className="relative">
+            <Dialog open={isPersonalInfoOpen} onOpenChange={setIsPersonalInfoOpen}>
+              <div className="relative">
                 <Avatar className="h-24 w-24 text-4xl">
-                    <AvatarImage
+                  <AvatarImage
                     src={user.personalInfo?.profilePicture || ''}
                     alt={user.name || ''}
-                    />
-                    <AvatarFallback>{userInitials}</AvatarFallback>
+                  />
+                  <AvatarFallback>{userInitials}</AvatarFallback>
                 </Avatar>
                 <DialogTrigger asChild>
-                    <Button
-                        variant="outline"
-                        size="icon"
-                        className="absolute bottom-0 right-0 rounded-full"
-                        disabled={!canEditPersonalFields}
+                   <Button
+                      variant="outline"
+                      size="icon"
+                      className="absolute bottom-0 right-0 rounded-full"
+                      disabled={!canEditPersonalFields}
                     >
-                        <Camera className="h-4 w-4" />
+                      <Camera className="h-4 w-4" />
                     </Button>
                 </DialogTrigger>
-                </div>
-                 <DialogContent>
-                    <DialogHeader>
-                        <DialogTitle>Edit Personal Information</DialogTitle>
-                    </DialogHeader>
-                    <PersonalInfoForm user={user} onUpdate={handleUpdate} />
-                </DialogContent>
+              </div>
+              <DialogContent>
+                <DialogHeader>
+                  <DialogTitle>Edit Personal Information</DialogTitle>
+                </DialogHeader>
+                <PersonalInfoForm user={user} onUpdate={handleUpdate} />
+              </DialogContent>
             </Dialog>
+
             <div className="space-y-1">
               <CardTitle className="text-3xl">{user.name}</CardTitle>
               <CardDescription>{user.email}</CardDescription>
@@ -226,14 +226,14 @@ export function AdminProfileView({ userId }: { userId: string }) {
               Your personal contact and demographic details.
             </CardDescription>
           </div>
-          <Dialog
+           <Dialog
             open={isPersonalInfoOpen}
             onOpenChange={setIsPersonalInfoOpen}
           >
             <DialogTrigger asChild>
-              <Button variant="outline" size="icon" disabled={!canEditPersonalFields}>
-                <Edit className="h-4 w-4" />
-              </Button>
+                <Button variant="outline" size="icon" disabled={!canEditPersonalFields}>
+                    <Edit className="h-4 w-4" />
+                </Button>
             </DialogTrigger>
             <DialogContent>
               <DialogHeader>
@@ -279,13 +279,16 @@ export function AdminProfileView({ userId }: { userId: string }) {
             onOpenChange={setIsBankDetailsOpen}
           >
             <DialogTrigger asChild>
-              <Button variant="outline" size="icon" disabled={!canEditAdminFields}>
+              <Button variant="outline" size="icon" disabled={!canEditPersonalFields}>
                 <Edit className="h-4 w-4" />
               </Button>
             </DialogTrigger>
             <DialogContent>
               <DialogHeader>
                 <DialogTitle>Edit Bank & Salary Details</DialogTitle>
+                <DialogDescription>
+                    Salary can only be changed by an administrator.
+                </DialogDescription>
               </DialogHeader>
               <BankDetailsForm user={user} onUpdate={handleUpdate} />
             </DialogContent>
@@ -301,9 +304,17 @@ export function AdminProfileView({ userId }: { userId: string }) {
                   : 'N/A'
               }
             />
+             <InfoItem
+              label="Bank Name"
+              value={user.salary?.bankName}
+            />
+             <InfoItem
+              label="Account Number"
+              value={user.salary?.accountNumber}
+            />
             <InfoItem
-              label="Bank Account"
-              value={user.salary?.bankAccount}
+              label="Account Name"
+              value={user.salary?.accountName}
             />
           </div>
         </CardContent>
@@ -311,3 +322,5 @@ export function AdminProfileView({ userId }: { userId: string }) {
     </div>
   );
 }
+
+    

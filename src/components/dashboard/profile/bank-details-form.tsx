@@ -20,10 +20,23 @@ import { db } from '@/lib/firebase';
 import type { MockUser } from '@/lib/schema';
 import { Save } from 'lucide-react';
 import { useState } from 'react';
+import { useRole } from '@/context/role-context';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+
+const NIGERIAN_BANKS = [
+  "Access Bank", "Citibank", "Ecobank Nigeria", "Fidelity Bank Nigeria", "First Bank of Nigeria",
+  "First City Monument Bank", "Globus Bank", "Guaranty Trust Bank", "Heritage Bank Plc", "Keystone Bank Limited",
+  "Parallex Bank", "Polaris Bank", "PremiumTrust Bank", "Providus Bank Plc", "Stanbic IBTC Bank Nigeria Limited",
+  "Standard Chartered", "Sterling Bank", "SunTrust Bank Nigeria Limited", "Titan Trust Bank Limited", "Union Bank of Nigeria",
+  "United Bank for Africa", "Unity Bank Plc", "Wema Bank", "Zenith Bank"
+];
+
 
 const formSchema = z.object({
-  salaryAmount: z.string().min(1, { message: 'Salary is required.' }),
-  bankAccount: z.string().optional(),
+  salaryAmount: z.string().optional(),
+  bankName: z.string().min(1, 'Please select a bank.'),
+  accountNumber: z.string().min(10, 'Account number must be at least 10 digits.').max(10, 'Account number must be 10 digits.'),
+  accountName: z.string().min(1, 'Account name is required.'),
 });
 
 type BankDetailsFormValues = z.infer<typeof formSchema>;
@@ -37,12 +50,15 @@ export function BankDetailsForm({
 }) {
   const { toast } = useToast();
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const { role: currentUserRole } = useRole();
 
   const form = useForm<BankDetailsFormValues>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      salaryAmount: user.salary?.amount.toString() || '',
-      bankAccount: user.salary?.bankAccount || '',
+      salaryAmount: user.salary?.amount.toLocaleString() || '0',
+      bankName: user.salary?.bankName || '',
+      accountNumber: user.salary?.accountNumber || '',
+      accountName: user.salary?.accountName || '',
     },
   });
 
@@ -65,10 +81,18 @@ export function BankDetailsForm({
     setIsSubmitting(true);
     try {
       const userRef = doc(db, 'users', user.id);
-      await updateDoc(userRef, {
-        'salary.amount': Number(values.salaryAmount.replace(/,/g, '')),
-        'salary.bankAccount': values.bankAccount,
-      });
+      
+      const updateData: any = {
+        'salary.bankName': values.bankName,
+        'salary.accountNumber': values.accountNumber,
+        'salary.accountName': values.accountName,
+      };
+
+      if (currentUserRole === 'Admin' && values.salaryAmount) {
+        updateData['salary.amount'] = Number(values.salaryAmount.replace(/,/g, ''));
+      }
+
+      await updateDoc(userRef, updateData);
 
       toast({
         title: 'Success',
@@ -103,20 +127,58 @@ export function BankDetailsForm({
                     placeholder="e.g. 150,000"
                     {...field}
                     onChange={(e) => handleSalaryChange(e, field)}
+                    disabled={currentUserRole !== 'Admin'}
                   />
                 </FormControl>
                 <FormMessage />
               </FormItem>
             )}
           />
-          <FormField
+           <FormField
             control={form.control}
-            name="bankAccount"
+            name="bankName"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Bank Account Number</FormLabel>
+                <FormLabel>Bank Name</FormLabel>
+                <Select onValueChange={field.onChange} defaultValue={field.value}>
+                  <FormControl>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select a bank" />
+                    </SelectTrigger>
+                  </FormControl>
+                  <SelectContent>
+                    {NIGERIAN_BANKS.map((bank) => (
+                      <SelectItem key={bank} value={bank}>
+                        {bank}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+          <FormField
+            control={form.control}
+            name="accountNumber"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Account Number</FormLabel>
                 <FormControl>
-                  <Input placeholder="e.g. 0123456789" {...field} />
+                  <Input type="number" placeholder="e.g. 0123456789" {...field} />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+           <FormField
+            control={form.control}
+            name="accountName"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Account Name</FormLabel>
+                <FormControl>
+                  <Input placeholder="e.g. John Doe" {...field} />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -136,3 +198,5 @@ export function BankDetailsForm({
     </Form>
   );
 }
+
+    
