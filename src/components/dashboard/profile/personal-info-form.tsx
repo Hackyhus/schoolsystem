@@ -20,7 +20,7 @@ const formSchema = z.object({
     address: z.string().min(1, 'Address is required.'),
     phone: z.string().min(1, 'Phone number is required.'),
     nextOfKin: z.string().optional(),
-    profilePicture: z.instanceof(FileList).optional(),
+    profilePicture: z.any().optional(),
 });
 
 type PersonalInfoFormValues = z.infer<typeof formSchema>;
