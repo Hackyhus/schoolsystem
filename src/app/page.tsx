@@ -28,7 +28,6 @@ export default function Home() {
                 alt="Great Insight International Academy Logo"
                 width={250}
                 height={60}
-                priority
               />
             </div>
             <CardDescription>

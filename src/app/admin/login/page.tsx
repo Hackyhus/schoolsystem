@@ -28,7 +28,6 @@ export default function AdminLoginPage() {
                 alt="Great Insight International Academy Logo"
                 width={250}
                 height={60}
-                priority
               />
             </div>
             <CardTitle className="font-headline text-3xl text-primary">

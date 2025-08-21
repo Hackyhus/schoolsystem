@@ -76,7 +76,6 @@ export function DashboardSidebar() {
               alt="Great Insight International Academy Logo"
               width={200}
               height={48}
-              priority
             />
           </Link>
         </div>
