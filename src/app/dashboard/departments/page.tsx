@@ -17,13 +17,7 @@ import {
 } from '@/components/ui/table';
 import { Button } from '@/components/ui/button';
 import { PlusCircle, MoreHorizontal } from 'lucide-react';
-
-const departments = [
-    { id: 1, name: 'Science', hod: 'Mr. David Chen', teachers: 8, students: 120 },
-    { id: 2, name: 'Arts & Humanities', hod: 'Mrs. Aisha Bello', teachers: 6, students: 95 },
-    { id: 3, name: 'Technology', hod: 'Mr. John Adebayo', teachers: 4, students: 60 },
-    { id: 4, name: 'Vocational Studies', hod: 'Ms. Grace Eze', teachers: 3, students: 45 },
-];
+import { departments } from '@/lib/mock-data';
 
 
 export default function DepartmentsPage() {
