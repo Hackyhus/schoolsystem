@@ -1,5 +1,4 @@
 
-
 'use client';
 
 import { useEffect, useState, useCallback }from 'react';
@@ -80,7 +79,7 @@ export function AdminProfileView({ userId }: { userId: string }) {
                         <Skeleton className="h-4 w-64" />
                     </CardHeader>
                     <CardContent className="space-y-4 pt-6">
-                        <div className="grid grid-cols-2 gap-4">
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                             <Skeleton className="h-10 w-full" />
                             <Skeleton className="h-10 w-full" />
                             <Skeleton className="h-10 w-full" />
@@ -107,7 +106,7 @@ export function AdminProfileView({ userId }: { userId: string }) {
 
     return (
         <div className="space-y-8">
-             <div className="flex items-center justify-between">
+             <div className="flex flex-wrap items-center justify-between gap-4">
                 <div>
                     <h1 className="font-headline text-3xl font-bold">{isAdminViewing ? 'Staff Profile' : 'My Profile'}</h1>
                     <p className="text-muted-foreground">
@@ -226,5 +225,3 @@ export function AdminProfileView({ userId }: { userId: string }) {
         </div>
     )
 }
-
-    
