@@ -3,7 +3,7 @@
 
 import { useEffect, useState, useCallback } from 'react';
 import { doc, getDoc, updateDoc } from 'firebase/firestore';
-import { db } from '@/lib/firebase';
+import { db, auth } from '@/lib/firebase';
 import type { MockUser } from '@/lib/schema';
 import { useToast } from '@/hooks/use-toast';
 import { Skeleton } from '@/components/ui/skeleton';
