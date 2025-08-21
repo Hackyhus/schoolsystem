@@ -47,18 +47,8 @@ const formSchema = z.object({
   lastName: z.string().min(1, { message: 'Last name is required.' }),
   email: z.string().email({ message: 'Please enter a valid email.' }),
   role: z.enum(['Teacher', 'HeadOfDepartment', 'Principal', 'Director', 'ExamOfficer', 'Accountant', 'Parent', 'Student', 'Admin']),
+  stateOfOrigin: z.string().min(1, { message: 'State of Origin is required.' }),
 });
-
-// Function to generate a random password
-const generatePassword = () => {
-    const length = 8;
-    const charset = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
-    let retVal = "";
-    for (let i = 0, n = charset.length; i < length; ++i) {
-        retVal += charset.charAt(Math.floor(Math.random() * n));
-    }
-    return retVal;
-};
 
 // Function to generate a simple random Staff ID
 const generateStaffId = () => {
@@ -78,13 +68,14 @@ export function AddUserForm({ onUserAdded }: { onUserAdded: () => void }) {
       lastName: '',
       email: '',
       role: 'Teacher',
+      stateOfOrigin: '',
     },
   });
 
   async function onSubmit(values: z.infer<typeof formSchema>) {
     setIsSubmitting(true);
     try {
-      const { email, role, firstName, lastName } = values;
+      const { email, role, firstName, lastName, stateOfOrigin } = values;
 
       // Check if email already exists
       const emailQuery = query(collection(db, 'users'), where('email', '==', email));
@@ -96,10 +87,9 @@ export function AddUserForm({ onUserAdded }: { onUserAdded: () => void }) {
       }
       
       const staffId = generateStaffId();
-      const password = generatePassword();
+      const password = stateOfOrigin; // Use State of Origin as the password
 
       // Create user in Firebase Auth
-      // IMPORTANT: This temporarily signs in as the new user. The RoleContext handles this.
       const userCredential = await createUserWithEmailAndPassword(auth, email, password);
       const user = userCredential.user;
 
@@ -114,12 +104,12 @@ export function AddUserForm({ onUserAdded }: { onUserAdded: () => void }) {
         createdAt: new Date(),
         department: null,
         phone: null,
-        stateOfOrigin: null,
+        stateOfOrigin: stateOfOrigin,
       });
 
       toast({
         title: 'Staff Added Successfully',
-        description: `Staff ID: ${staffId} | Password: ${password}`,
+        description: `Staff ID: ${staffId}. The default password is the staff's State of Origin.`,
         duration: 20000, // Keep toast on screen longer
       });
       form.reset();
@@ -181,6 +171,22 @@ export function AddUserForm({ onUserAdded }: { onUserAdded: () => void }) {
         />
         <FormField
           control={form.control}
+          name="stateOfOrigin"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>State of Origin</FormLabel>
+              <FormControl>
+                <Input placeholder="e.g. Lagos" {...field} />
+              </FormControl>
+              <FormDescription>
+                This will be used as the default password.
+              </FormDescription>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+        <FormField
+          control={form.control}
           name="role"
           render={({ field }) => (
             <FormItem>
@@ -201,9 +207,6 @@ export function AddUserForm({ onUserAdded }: { onUserAdded: () => void }) {
             </FormItem>
           )}
         />
-         <FormDescription>
-            A random, secure password will be generated and displayed upon creation.
-         </FormDescription>
         <Button type="submit" className="w-full" disabled={isSubmitting}>
            {isSubmitting ? 'Adding...' : <> <PlusCircle className="mr-2 h-4 w-4" /> Add Staff</>}
         </Button>

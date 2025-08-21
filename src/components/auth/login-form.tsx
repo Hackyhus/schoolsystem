@@ -75,7 +75,7 @@ export function LoginForm() {
 
         // 3. Show password change reminder if needed
         // Compare the entered password (lowercase) with the stored state of origin (lowercase)
-        if (passwordToTry.toLowerCase() === userData.stateOfOrigin.toLowerCase()) {
+        if (userData.stateOfOrigin && passwordToTry.toLowerCase() === userData.stateOfOrigin.toLowerCase()) {
            toast({
               title: 'Welcome!',
               description: 'For your security, please update your password in your profile settings.',
