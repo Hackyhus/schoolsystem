@@ -1,4 +1,6 @@
-export const users = [
+import type { MockUser, MockLessonNote } from './schema';
+
+export const users: MockUser[] = [
   { id: 1, name: 'Admin User', email: 'admin@giia.com.ng', role: 'Admin' },
   { id: 2, name: 'Dr. Evelyn Reed', email: 'hod.science@giia.com.ng', role: 'HeadOfDepartment', department: 'Science' },
   { id: 3, name: 'Mr. David Chen', email: 'd.chen@giia.com.ng', role: 'Teacher', subject: 'Physics' },
@@ -6,7 +8,7 @@ export const users = [
   { id: 5, name: 'Mr. & Mrs. Okoro', email: 'parent.okoro@email.com', role: 'Parent', children: ['Ada Okoro'] },
 ];
 
-export const lessonNotes = [
+export const lessonNotes: MockLessonNote[] = [
   {
     id: 'LN001',
     title: 'Introduction to Thermodynamics',
