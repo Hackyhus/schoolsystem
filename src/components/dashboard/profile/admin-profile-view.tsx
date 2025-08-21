@@ -156,7 +156,7 @@ export function AdminProfileView({ userId }: { userId: string }) {
                     )}
                 </CardHeader>
                 <CardContent>
-                     <div className="grid grid-cols-2 gap-6 md:grid-cols-3">
+                     <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
                          <InfoItem label="Staff ID" value={userData.staffId} />
                          <InfoItem label="Date of Employment" value={formattedEmploymentDate} />
                          <InfoItem label="Status" value={userData.status} />
@@ -184,12 +184,12 @@ export function AdminProfileView({ userId }: { userId: string }) {
                     </Dialog>
                 </CardHeader>
                 <CardContent>
-                    <div className="grid grid-cols-2 gap-6 md:grid-cols-3">
+                    <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
                         <InfoItem label="Phone Number" value={userData.phone} />
                         <InfoItem label="Date of Birth" value={formattedDob} />
                         <InfoItem label="Gender" value={userData.personalInfo?.gender} />
                         <InfoItem label="Next of Kin" value={userData.personalInfo?.nextOfKin} />
-                        <div className="col-span-2">
+                        <div className="sm:col-span-2">
                            <InfoItem label="Address" value={userData.personalInfo?.address} />
                         </div>
                     </div>
@@ -215,7 +215,7 @@ export function AdminProfileView({ userId }: { userId: string }) {
                     </Dialog>
                 </CardHeader>
                 <CardContent>
-                     <div className="grid grid-cols-2 gap-6 md:grid-cols-3">
+                     <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
                          <InfoItem label="Salary" value={userData.salary?.amount} isCurrency />
                          <InfoItem label="Bank Details" value={userData.salary?.bankAccount} />
                          <InfoItem label="Payment Status" value={userData.salary?.paymentStatus} />
