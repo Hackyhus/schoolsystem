@@ -86,7 +86,7 @@ export function AddUserForm({ onUserAdded }: { onUserAdded: () => void }) {
   async function generateStaffId(department: string, employmentDate: Date) {
     const year = format(employmentDate, 'yy');
     const deptCode = departmentCodes[department] || 'GEN';
-    const prefix = "S";
+    const prefix = "GIIA";
 
     // Get the count of staff in the same department and year
     const usersRef = collection(db, 'users');
@@ -408,7 +408,7 @@ export function AddUserForm({ onUserAdded }: { onUserAdded: () => void }) {
                 <FormControl>
                   <SelectTrigger>
                     <SelectValue placeholder="Select a role" />
-                  </SelectTrigger>
+                  </Trigger>
                 </FormControl>
                 <SelectContent>
                   <SelectItem value="Staff">Staff</SelectItem>
