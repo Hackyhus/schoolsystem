@@ -155,7 +155,7 @@ export default function UsersPage() {
               <DialogHeader>
                 <DialogTitle>Add New Staff</DialogTitle>
                 <DialogDescription>
-                  Create a new account for a staff member. A secure, random password will be generated.
+                  Create a new account for a staff member. The default password is their State of Origin.
                 </DialogDescription>
               </DialogHeader>
               <AddUserForm onUserAdded={handleUserAdded} />
@@ -216,11 +216,6 @@ export default function UsersPage() {
                        </Select>
                     </TableCell>
                     <TableCell className="text-right space-x-2">
-                       <Button asChild variant="outline" size="icon">
-                         <Link href={`/dashboard/users/${user.id}`}>
-                            <Eye className="h-4 w-4" />
-                         </Link>
-                       </Button>
                       <Button
                         variant="ghost"
                         size="icon"

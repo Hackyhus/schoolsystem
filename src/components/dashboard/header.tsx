@@ -1,3 +1,4 @@
+
 'use client';
 import { Bell, ChevronDown, User as UserIcon, LogOut, Moon, Sun } from 'lucide-react';
 import {
@@ -28,10 +29,6 @@ export function DashboardHeader() {
     const segments = pathname.split('/').filter(Boolean);
     if (segments.length === 1) return 'Dashboard';
     const title = segments[segments.length-1].replace(/-/g, ' ');
-    // Capitalize and return, check if it's a dynamic route (like a user id)
-    if (segments.length > 2 && segments[segments.length - 2] === 'users') {
-        return 'Staff Profile'
-    }
     return title.charAt(0).toUpperCase() + title.slice(1);
   };
 
