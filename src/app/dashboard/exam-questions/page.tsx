@@ -13,7 +13,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import Link from 'next/link';
 import { useRole } from '@/context/role-context';
 import { Upload } from 'lucide-react';
-import { useState } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import {
   Dialog,
   DialogContent,
@@ -22,17 +22,56 @@ import {
   DialogTitle,
   DialogTrigger,
 } from '@/components/ui/dialog';
+import { collection, query, where, getDocs } from 'firebase/firestore';
+import { db } from '@/lib/firebase';
+import { useToast } from '@/hooks/use-toast';
+import { Skeleton } from '@/components/ui/skeleton';
 
-const mockQuestions = [
-    { id: 1, subject: 'Biology', class: 'SS1', status: 'Pending Review', submittedOn: '2024-05-27' },
-    { id: 2, subject: 'Physics', class: 'SS3', status: 'Approved', submittedOn: '2024-05-26' },
-    { id: 3, subject: 'Chemistry', class: 'SS1', status: 'Rejected', submittedOn: '2024-05-25' },
-];
-
+// Assuming an ExamQuestion type similar to MockLessonNote for now
+type ExamQuestion = {
+    id: string;
+    subject: string;
+    class: string;
+    status: string;
+    submittedOn: string;
+}
 
 export default function ExamQuestionsPage() {
-  const { role } = useRole();
+  const { role, user } = useRole();
+  const { toast } = useToast();
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [questions, setQuestions] = useState<ExamQuestion[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+
+  const fetchQuestions = useCallback(async () => {
+    if (!user) return;
+    setIsLoading(true);
+    try {
+        let q;
+        if (role === 'Teacher') {
+            q = query(collection(db, 'examQuestions'), where("teacherId", "==", user.uid));
+        } else {
+            // Exam Officer or Admin sees all
+            q = query(collection(db, 'examQuestions'));
+        }
+        const querySnapshot = await getDocs(q);
+        const questionList = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as ExamQuestion));
+        setQuestions(questionList);
+    } catch (error) {
+        console.error("Error fetching exam questions:", error);
+        toast({
+            variant: "destructive",
+            title: "Error",
+            description: "Could not fetch exam questions."
+        });
+    } finally {
+        setIsLoading(false);
+    }
+  }, [user, role, toast]);
+
+  useEffect(() => {
+    fetchQuestions();
+  }, [fetchQuestions]);
 
   const statusVariant = (status: string) => {
     if (status.includes('Approved')) return 'default';
@@ -96,7 +135,17 @@ export default function ExamQuestionsPage() {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {mockQuestions.map((q) => (
+              {isLoading ? (
+                  Array.from({ length: 3 }).map((_, i) => (
+                    <TableRow key={i}>
+                      <TableCell><Skeleton className="h-5 w-24" /></TableCell>
+                      <TableCell><Skeleton className="h-5 w-16" /></TableCell>
+                      <TableCell><Skeleton className="h-5 w-24" /></TableCell>
+                      <TableCell><Skeleton className="h-6 w-28" /></TableCell>
+                      <TableCell className="text-right"><Skeleton className="h-8 w-20" /></TableCell>
+                    </TableRow>
+                  ))
+              ) : questions.map((q) => (
                 <TableRow key={q.id}>
                   <TableCell className="font-medium">{q.subject}</TableCell>
                   <TableCell>{q.class}</TableCell>
@@ -112,7 +161,7 @@ export default function ExamQuestionsPage() {
                   </TableCell>
                 </TableRow>
               ))}
-               {mockQuestions.length === 0 && (
+               {!isLoading && questions.length === 0 && (
                     <TableRow>
                       <TableCell
                         colSpan={5}

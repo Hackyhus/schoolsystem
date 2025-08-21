@@ -29,38 +29,44 @@ import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 export function TeacherDashboard() {
   const { user } = useRole();
   const { toast } = useToast();
-  const [lessonNotes, setLessonNotes] = useState<MockLessonNote[]>([]);
   const [stats, setStats] = useState({
     pendingPlans: 0,
     pendingExams: 0,
   });
+  const [isLoading, setIsLoading] = useState(true);
 
-  const fetchNotes = useCallback(async () => {
+  const fetchData = useCallback(async () => {
     if (!user) return;
+    setIsLoading(true);
     try {
-      const q = query(collection(db, 'lessonNotes'), where('teacherId', '==', user.uid));
-      const querySnapshot = await getDocs(q);
-      const notesList = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as MockLessonNote));
-      setLessonNotes(notesList);
-
-      const pending = notesList.filter(n => n.status.includes('Pending')).length;
+      // Fetch lesson notes
+      const notesQuery = query(collection(db, 'lessonNotes'), where('teacherId', '==', user.uid), where('status', 'in', ['Pending HOD Approval', 'Pending Admin Approval']));
+      const notesSnapshot = await getDocs(notesQuery);
       
-      // Mock data for pending exams for now
-      setStats({ pendingPlans: pending, pendingExams: 2 });
+      // Fetch exam questions - assuming a similar structure
+      const examsQuery = query(collection(db, 'examQuestions'), where('teacherId', '==', user.uid), where('status', '==', 'Pending Review'));
+      const examsSnapshot = await getDocs(examsQuery);
+
+      setStats({
+        pendingPlans: notesSnapshot.size,
+        pendingExams: examsSnapshot.size,
+      });
 
     } catch (error) {
-      console.error("Error fetching lesson notes:", error);
+      console.error("Error fetching dashboard data:", error);
       toast({
         variant: "destructive",
         title: "Error",
-        description: "Could not fetch your lesson notes.",
+        description: "Could not fetch your dashboard data.",
       });
+    } finally {
+        setIsLoading(false);
     }
   }, [user, toast]);
 
   useEffect(() => {
-    fetchNotes();
-  }, [fetchNotes]);
+    fetchData();
+  }, [fetchData]);
 
   return (
     <div className="flex flex-col gap-8">
@@ -77,7 +83,7 @@ export function TeacherDashboard() {
             <Book className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{stats.pendingPlans}</div>
+            <div className="text-2xl font-bold">{isLoading ? '...' : stats.pendingPlans}</div>
             <p className="text-xs text-muted-foreground">awaiting review by HOD</p>
           </CardContent>
         </Card>
@@ -87,7 +93,7 @@ export function TeacherDashboard() {
             <FileQuestion className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{stats.pendingExams}</div>
+            <div className="text-2xl font-bold">{isLoading ? '...' : stats.pendingExams}</div>
             <p className="text-xs text-muted-foreground">awaiting review by Exam Officer</p>
           </CardContent>
         </Card>
@@ -101,20 +107,9 @@ export function TeacherDashboard() {
             </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
-          <Alert>
-              <CheckCircle className="h-4 w-4" />
-              <AlertTitle>Approved!</AlertTitle>
-              <AlertDescription>
-                Lesson Plan for JSS2 Mathematics approved by HOD.
-              </AlertDescription>
-          </Alert>
-           <Alert variant="destructive">
-              <XCircle className="h-4 w-4" />
-              <AlertTitle>Rejected!</AlertTitle>
-              <AlertDescription>
-               Exam Questions for SS1 Biology rejected by Exam Officer.
-              </AlertDescription>
-          </Alert>
+          <div className="rounded-md border p-4 text-center text-muted-foreground">
+            <p>No new notifications.</p>
+          </div>
         </CardContent>
       </Card>
     </div>
