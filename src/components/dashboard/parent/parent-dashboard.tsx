@@ -1,0 +1,127 @@
+'use client';
+import {
+  BarChart,
+  CalendarCheck,
+  Megaphone,
+} from 'lucide-react';
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from '@/components/ui/card';
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '@/components/ui/table';
+import { Badge } from '@/components/ui/badge';
+import { announcements, studentPerformance } from '@/lib/mock-data';
+import { Progress } from '@/components/ui/progress';
+
+export function ParentDashboard() {
+  const { studentName, attendance, grades } = studentPerformance;
+  const overallAttendance = attendance.reduce((acc, month) => acc + month.percentage, 0) / attendance.length;
+
+  const gradeColor = (grade: string) => {
+    if (grade === 'A') return 'bg-green-500';
+    if (grade === 'B') return 'bg-blue-500';
+    if (grade === 'C') return 'bg-yellow-500';
+    return 'bg-red-500';
+  }
+  
+  return (
+    <div className="flex flex-col gap-8">
+      <div>
+        <h1 className="font-headline text-3xl font-bold">Parent Dashboard</h1>
+        <p className="text-muted-foreground">
+          Welcome! Here's a summary of {studentName}'s performance.
+        </p>
+      </div>
+
+      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Overall Attendance</CardTitle>
+            <CalendarCheck className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{overallAttendance.toFixed(1)}%</div>
+            <Progress value={overallAttendance} className="mt-2 h-2" />
+          </CardContent>
+        </Card>
+         <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Average Grade</CardTitle>
+            <BarChart className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">
+              {(grades.reduce((acc, g) => acc+g.score, 0) / grades.length).toFixed(1)}%
+            </div>
+            <p className="text-xs text-muted-foreground">across all subjects</p>
+          </CardContent>
+        </Card>
+      </div>
+
+      <div className="grid gap-8 lg:grid-cols-2">
+        <Card>
+          <CardHeader>
+            <CardTitle>Recent Grades</CardTitle>
+            <CardDescription>
+              A snapshot of {studentName}'s latest academic results.
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Subject</TableHead>
+                  <TableHead>Score</TableHead>
+                  <TableHead className="text-right">Grade</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {grades.slice(0, 5).map((g) => (
+                  <TableRow key={g.subject}>
+                    <TableCell className="font-medium">{g.subject}</TableCell>
+                    <TableCell>{g.score}</TableCell>
+                    <TableCell className="text-right">
+                       <Badge className={`text-white ${gradeColor(g.grade)}`}>{g.grade}</Badge>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader>
+            <CardTitle>School Announcements</CardTitle>
+            <CardDescription>
+              Important updates from the school administration.
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            {announcements.map((ann) => (
+              <div key={ann.id} className="flex items-start gap-4 rounded-md border p-4">
+                <div className="flex h-8 w-8 items-center justify-center rounded-full bg-primary/10 text-primary">
+                    <Megaphone className="h-5 w-5" />
+                </div>
+                <div>
+                  <h3 className="font-semibold">{ann.title}</h3>
+                  <p className="text-sm text-muted-foreground">{ann.content}</p>
+                </div>
+              </div>
+            ))}
+          </CardContent>
+        </Card>
+      </div>
+    </div>
+  );
+}
