@@ -1,4 +1,3 @@
-import { School, ShieldCheck } from 'lucide-react';
 import { LoginForm } from '@/components/auth/login-form';
 import {
   Card,
@@ -10,6 +9,7 @@ import {
 } from '@/components/ui/card';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
+import Image from 'next/image';
 
 export default function AdminLoginPage() {
   return (
@@ -22,8 +22,14 @@ export default function AdminLoginPage() {
        <main className="relative z-10 flex min-h-screen flex-col items-center justify-center bg-transparent p-4 font-body">
         <Card className="w-full max-w-sm shadow-2xl">
           <CardHeader className="text-center">
-            <div className="mx-auto mb-4 inline-block rounded-full bg-primary p-4 text-primary-foreground">
-              <ShieldCheck className="h-8 w-8" />
+             <div className="mx-auto mb-4">
+               <Image
+                src="/school-logo.png"
+                alt="Great Insight International Academy Logo"
+                width={250}
+                height={60}
+                priority
+              />
             </div>
             <CardTitle className="font-headline text-3xl text-primary">
               Admin Portal

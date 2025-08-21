@@ -9,10 +9,10 @@ import {
   LayoutDashboard,
   LogOut,
   MessageSquare,
-  School,
   Settings,
   Users,
 } from 'lucide-react';
+import Image from 'next/image';
 
 import {
   Sidebar,
@@ -69,15 +69,16 @@ export function DashboardSidebar() {
   return (
     <Sidebar>
       <SidebarHeader className="border-b border-sidebar-border">
-        <div className="flex items-center gap-2 p-2">
-          <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-sidebar-primary text-sidebar-primary-foreground">
-            <School className="h-6 w-6" />
-          </div>
-          <div className="flex flex-col">
-            <h2 className="font-headline text-lg font-semibold text-sidebar-foreground">
-              InsightConnect
-            </h2>
-          </div>
+        <div className="flex items-center gap-2 p-4">
+          <Link href="/dashboard" className="flex items-center gap-2">
+             <Image
+              src="/school-logo.png"
+              alt="Great Insight International Academy Logo"
+              width={200}
+              height={48}
+              priority
+            />
+          </Link>
         </div>
       </SidebarHeader>
       <SidebarContent className="flex-1 p-2">
