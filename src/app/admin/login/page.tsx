@@ -1,4 +1,4 @@
-import { School } from 'lucide-react';
+import { School, ShieldCheck } from 'lucide-react';
 import { LoginForm } from '@/components/auth/login-form';
 import {
   Card,
@@ -11,19 +11,19 @@ import {
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 
-export default function Home() {
+export default function AdminLoginPage() {
   return (
     <main className="flex min-h-screen flex-col items-center justify-center bg-background p-4 font-body">
       <Card className="w-full max-w-sm shadow-2xl">
         <CardHeader className="text-center">
           <div className="mx-auto mb-4 inline-block rounded-full bg-primary p-4 text-primary-foreground">
-            <School className="h-8 w-8" />
+            <ShieldCheck className="h-8 w-8" />
           </div>
           <CardTitle className="font-headline text-3xl text-primary">
-            InsightConnect
+            Admin Portal
           </CardTitle>
           <CardDescription>
-            Great Insight International Academy Portal
+            Please enter your administrator credentials.
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -37,10 +37,10 @@ export default function Home() {
             </Button>
         </CardFooter>
       </Card>
-        <div className="mt-4 text-center">
+       <div className="mt-4 text-center">
         <Button variant="link" asChild className="text-xs text-muted-foreground">
-          <Link href="/admin/login">
-            Admin Login
+          <Link href="/">
+            Return to Staff Login
           </Link>
         </Button>
       </div>
