@@ -1,3 +1,4 @@
+
 'use client';
 import {
   Table,
@@ -78,6 +79,7 @@ export default function LessonNotesPage() {
     if (status.includes('Approved')) return 'default';
     if (status.includes('Pending')) return 'secondary';
     if (status.includes('Rejected')) return 'destructive';
+    if (status.includes('Revision')) return 'destructive';
     return 'outline';
   };
 
@@ -187,3 +189,5 @@ export default function LessonNotesPage() {
     </div>
   );
 }
+
+    
