@@ -42,8 +42,6 @@ const formSchema = z.object({
   department: z.string().min(1, { message: 'Department is required.' }),
   employmentDate: z.date({ required_error: "Employment date is required."}),
   role: z.enum(['Teacher', 'HOD', 'Bursar', 'Principal', 'Support Staff']),
-  salary: z.coerce.number().positive({ message: 'Salary must be a positive number.'}),
-  bankAccountNumber: z.string().min(10, { message: 'Enter a valid account number.'}).max(10, { message: 'Account number must be 10 digits.'}),
 });
 
 // A simple in-memory cache for department codes
@@ -73,8 +71,6 @@ export function AddUserForm({ onUserAdded }: { onUserAdded: () => void }) {
       department: 'Science',
       role: 'Teacher',
       employmentDate: new Date(),
-      salary: 0,
-      bankAccountNumber: ''
     },
   });
 
@@ -136,8 +132,6 @@ export function AddUserForm({ onUserAdded }: { onUserAdded: () => void }) {
         employmentYear: values.employmentDate.getFullYear(),
         role: values.role,
         status: 'active',
-        salary: values.salary,
-        bankAccountNumber: values.bankAccountNumber,
         createdAt: new Date()
       });
 
@@ -313,32 +307,6 @@ export function AddUserForm({ onUserAdded }: { onUserAdded: () => void }) {
                   <SelectItem value="Support Staff">Support Staff</SelectItem>
                 </SelectContent>
               </Select>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-        <FormField
-          control={form.control}
-          name="salary"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Salary</FormLabel>
-               <FormControl>
-                <Input type="number" placeholder="e.g. 50000" {...field} />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-         <FormField
-          control={form.control}
-          name="bankAccountNumber"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Bank Account Number</FormLabel>
-               <FormControl>
-                <Input placeholder="0123456789" {...field} />
-              </FormControl>
               <FormMessage />
             </FormItem>
           )}
