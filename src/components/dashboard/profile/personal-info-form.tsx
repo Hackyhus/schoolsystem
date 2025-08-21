@@ -5,20 +5,22 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
 import * as z from 'zod';
 import { doc, updateDoc } from 'firebase/firestore';
-import { db } from '@/lib/firebase';
+import { db, storage } from '@/lib/firebase';
 import { useToast } from '@/hooks/use-toast';
 import { Button } from '@/components/ui/button';
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
+import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import type { MockUser } from '@/lib/schema';
 import { Textarea } from '@/components/ui/textarea';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { getDownloadURL, ref, uploadBytes } from 'firebase/storage';
+import { useState } from 'react';
 
 const formSchema = z.object({
     address: z.string().min(1, 'Address is required.'),
     phone: z.string().min(1, 'Phone number is required.'),
     nextOfKin: z.string().optional(),
-    profilePicture: z.string().url().optional().or(z.literal('')),
+    profilePicture: z.instanceof(FileList).optional(),
 });
 
 type PersonalInfoFormValues = z.infer<typeof formSchema>;
@@ -30,28 +32,39 @@ interface PersonalInfoFormProps {
 
 export function PersonalInfoForm({ userData, onUpdate }: PersonalInfoFormProps) {
     const { toast } = useToast();
+    const [imagePreview, setImagePreview] = useState<string | null>(userData.personalInfo?.profilePicture || null);
+    const fileRef = React.useRef<HTMLInputElement>(null);
+
     const form = useForm<PersonalInfoFormValues>({
         resolver: zodResolver(formSchema),
         defaultValues: {
             address: userData.personalInfo?.address || '',
             phone: userData.phone || '',
             nextOfKin: userData.personalInfo?.nextOfKin || '',
-            profilePicture: userData.personalInfo?.profilePicture || '',
         }
     });
 
     const onSubmit = async (values: PersonalInfoFormValues) => {
         try {
             const userDocRef = doc(db, 'users', userData.id);
+            let downloadURL = userData.personalInfo?.profilePicture || null;
+            const file = values.profilePicture?.[0];
+
+            if (file) {
+                 const storageRef = ref(storage, `profile-pictures/${userData.id}/${file.name}`);
+                 const uploadResult = await uploadBytes(storageRef, file);
+                 downloadURL = await getDownloadURL(uploadResult.ref);
+            }
+
             const updatedData = {
                 'phone': values.phone,
                 'personalInfo.address': values.address,
                 'personalInfo.nextOfKin': values.nextOfKin,
-                'personalInfo.profilePicture': values.profilePicture,
+                'personalInfo.profilePicture': downloadURL,
             };
             await updateDoc(userDocRef, updatedData);
 
-            onUpdate({ phone: values.phone, personalInfo: { ...userData.personalInfo, address: values.address, nextOfKin: values.nextOfKin || null, profilePicture: values.profilePicture || null } });
+            onUpdate({ phone: values.phone, personalInfo: { ...userData.personalInfo, address: values.address, nextOfKin: values.nextOfKin || null, profilePicture: downloadURL } });
             toast({ title: 'Success', description: 'Personal information updated successfully.' });
         } catch (error) {
             console.error('Error updating profile:', error);
@@ -66,18 +79,30 @@ export function PersonalInfoForm({ userData, onUpdate }: PersonalInfoFormProps) 
             <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
                 <div className="flex flex-col items-center gap-4 sm:flex-row">
                     <Avatar className="h-20 w-20">
-                        <AvatarImage src={form.watch('profilePicture') || userData.personalInfo?.profilePicture || ''} alt={userData.name} />
+                        <AvatarImage src={imagePreview || ''} alt={userData.name} />
                         <AvatarFallback>{userInitials}</AvatarFallback>
                     </Avatar>
-                    <FormField
+                     <FormField
                         control={form.control}
                         name="profilePicture"
                         render={({ field }) => (
                             <FormItem className="w-full flex-1">
-                            <FormLabel>Profile Picture URL</FormLabel>
+                            <FormLabel>Change Profile Picture</FormLabel>
                             <FormControl>
-                                <Input placeholder="https://placehold.co/100x100.png" {...field} />
+                                <Input 
+                                 type="file" 
+                                 accept="image/*"
+                                 ref={fileRef}
+                                 onChange={(e) => {
+                                    const file = e.target.files?.[0];
+                                    if (file) {
+                                        setImagePreview(URL.createObjectURL(file));
+                                    }
+                                    field.onChange(e.target.files)
+                                 }}
+                                />
                             </FormControl>
+                             <FormDescription>Select a new image to upload.</FormDescription>
                             <FormMessage />
                             </FormItem>
                         )}
