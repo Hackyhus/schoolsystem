@@ -39,6 +39,7 @@ import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover
 import { Calendar } from '@/components/ui/calendar';
 import { cn } from '@/lib/utils';
 import { format } from 'date-fns';
+import { Combobox } from '@/components/ui/combobox';
 
 const availableRoles = [
   'Teacher',
@@ -57,7 +58,7 @@ const NIGERIAN_BANKS = [
   "Parallex Bank", "Polaris Bank", "PremiumTrust Bank", "Providus Bank Plc", "Stanbic IBTC Bank Nigeria Limited",
   "Standard Chartered", "Sterling Bank", "SunTrust Bank Nigeria Limited", "Titan Trust Bank Limited", "Union Bank of Nigeria",
   "United Bank for Africa", "Unity Bank Plc", "Wema Bank", "Zenith Bank"
-];
+].map(bank => ({ value: bank.toLowerCase(), label: bank }));
 
 
 const formSchema = z.object({
@@ -211,20 +212,14 @@ export function AddUserForm({ onUserAdded }: { onUserAdded: () => void }) {
             <FormField control={form.control} name="bankName" render={({ field }) => (
               <FormItem>
                 <FormLabel>Bank Name</FormLabel>
-                <Select onValueChange={field.onChange} defaultValue={field.value}>
-                  <FormControl>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select a bank" />
-                    </SelectTrigger>
-                  </FormControl>
-                  <SelectContent>
-                    {NIGERIAN_BANKS.map((bank) => (
-                      <SelectItem key={bank} value={bank}>
-                        {bank}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+                 <Combobox
+                    options={NIGERIAN_BANKS}
+                    value={field.value}
+                    onChange={field.onChange}
+                    placeholder="Select a bank"
+                    searchPlaceholder="Search banks..."
+                    notFoundText="No bank found."
+                  />
                 <FormMessage />
               </FormItem>
             )}/>

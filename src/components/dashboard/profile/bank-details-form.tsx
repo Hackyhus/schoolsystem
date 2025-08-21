@@ -21,7 +21,7 @@ import type { MockUser } from '@/lib/schema';
 import { Save } from 'lucide-react';
 import { useState } from 'react';
 import { useRole } from '@/context/role-context';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Combobox } from '@/components/ui/combobox';
 
 const NIGERIAN_BANKS = [
   "Access Bank", "Citibank", "Ecobank Nigeria", "Fidelity Bank Nigeria", "First Bank of Nigeria",
@@ -29,13 +29,13 @@ const NIGERIAN_BANKS = [
   "Parallex Bank", "Polaris Bank", "PremiumTrust Bank", "Providus Bank Plc", "Stanbic IBTC Bank Nigeria Limited",
   "Standard Chartered", "Sterling Bank", "SunTrust Bank Nigeria Limited", "Titan Trust Bank Limited", "Union Bank of Nigeria",
   "United Bank for Africa", "Unity Bank Plc", "Wema Bank", "Zenith Bank"
-];
+].map(bank => ({ value: bank.toLowerCase(), label: bank }));
 
 
 const formSchema = z.object({
   salaryAmount: z.string().optional(),
   bankName: z.string().min(1, 'Please select a bank.'),
-  accountNumber: z.string().min(10, 'Account number must be at least 10 digits.').max(10, 'Account number must be 10 digits.'),
+  accountNumber: z.string().min(10, 'Account number must be 10 digits.').max(10, 'Account number must be 10 digits.'),
   accountName: z.string().min(1, 'Account name is required.'),
 });
 
@@ -56,7 +56,7 @@ export function BankDetailsForm({
     resolver: zodResolver(formSchema),
     defaultValues: {
       salaryAmount: user.salary?.amount.toLocaleString() || '0',
-      bankName: user.salary?.bankName || '',
+      bankName: user.salary?.bankName?.toLowerCase() || '',
       accountNumber: user.salary?.accountNumber || '',
       accountName: user.salary?.accountName || '',
     },
@@ -82,8 +82,10 @@ export function BankDetailsForm({
     try {
       const userRef = doc(db, 'users', user.id);
       
+      const bankLabel = NIGERIAN_BANKS.find(b => b.value === values.bankName)?.label || values.bankName;
+
       const updateData: any = {
-        'salary.bankName': values.bankName,
+        'salary.bankName': bankLabel,
         'salary.accountNumber': values.accountNumber,
         'salary.accountName': values.accountName,
       };
@@ -140,20 +142,13 @@ export function BankDetailsForm({
             render={({ field }) => (
               <FormItem>
                 <FormLabel>Bank Name</FormLabel>
-                <Select onValueChange={field.onChange} defaultValue={field.value}>
-                  <FormControl>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select a bank" />
-                    </SelectTrigger>
-                  </FormControl>
-                  <SelectContent>
-                    {NIGERIAN_BANKS.map((bank) => (
-                      <SelectItem key={bank} value={bank}>
-                        {bank}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+                <Combobox
+                  options={NIGERIAN_BANKS}
+                  {...field}
+                  placeholder="Select a bank"
+                  searchPlaceholder="Search banks..."
+                  notFoundText="No bank found."
+                />
                 <FormMessage />
               </FormItem>
             )}
