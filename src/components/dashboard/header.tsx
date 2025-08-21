@@ -1,3 +1,4 @@
+
 'use client';
 import { Bell, ChevronDown, User as UserIcon, LogOut, Moon, Sun } from 'lucide-react';
 import {
@@ -16,6 +17,7 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { useRole } from '@/context/role-context';
 import { usePathname } from 'next/navigation';
 import { useTheme } from '@/context/theme-context';
+import Link from 'next/link';
 
 export function DashboardHeader() {
   const { role, logout } = useRole();
@@ -26,6 +28,10 @@ export function DashboardHeader() {
     const segments = pathname.split('/').filter(Boolean);
     if (segments.length === 1) return 'Dashboard';
     const title = segments[segments.length-1].replace(/-/g, ' ');
+    // Capitalize and return, check if it's a dynamic route (like a user id)
+    if (segments.length > 2 && segments[segments.length - 2] === 'users') {
+        return 'Staff Profile'
+    }
     return title.charAt(0).toUpperCase() + title.slice(1);
   };
 
@@ -67,10 +73,12 @@ export function DashboardHeader() {
           <DropdownMenuContent align="end">
             <DropdownMenuLabel>My Account</DropdownMenuLabel>
             <DropdownMenuSeparator />
-            <DropdownMenuItem>
-              <UserIcon className="mr-2 h-4 w-4" />
-              <span>Profile</span>
-            </DropdownMenuItem>
+             <Link href="/profile" passHref>
+                <DropdownMenuItem>
+                    <UserIcon className="mr-2 h-4 w-4" />
+                    <span>Profile</span>
+                </DropdownMenuItem>
+             </Link>
             <DropdownMenuItem onClick={logout}>
               <LogOut className="mr-2 h-4 w-4" />
               <span>Log out</span>

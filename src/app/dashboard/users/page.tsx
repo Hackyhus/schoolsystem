@@ -16,10 +16,9 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
-import { Badge } from '@/components/ui/badge';
 import { AddUserForm } from '@/components/dashboard/users/add-user-form';
 import { Button } from '@/components/ui/button';
-import { PlusCircle, Trash2 } from 'lucide-react';
+import { Eye, PlusCircle, Trash2 } from 'lucide-react';
 import { useEffect, useState, useCallback } from 'react';
 import { collection, getDocs, deleteDoc, doc, query, where, updateDoc } from 'firebase/firestore';
 import { auth, db } from '@/lib/firebase';
@@ -41,6 +40,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
+import Link from 'next/link';
 
 export default function UsersPage() {
   const [users, setUsers] = useState<MockUser[]>([]);
@@ -170,7 +170,7 @@ export default function UsersPage() {
                 <TableHead>Name</TableHead>
                 <TableHead>Email</TableHead>
                 <TableHead>Role</TableHead>
-                <TableHead className="text-right">Action</TableHead>
+                <TableHead className="text-right">Actions</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -215,7 +215,12 @@ export default function UsersPage() {
                         </SelectContent>
                        </Select>
                     </TableCell>
-                    <TableCell className="text-right">
+                    <TableCell className="text-right space-x-2">
+                       <Button asChild variant="outline" size="icon">
+                         <Link href={`/dashboard/users/${user.id}`}>
+                            <Eye className="h-4 w-4" />
+                         </Link>
+                       </Button>
                       <Button
                         variant="ghost"
                         size="icon"
