@@ -52,12 +52,12 @@ export default function UsersPage() {
     setIsLoading(true);
     try {
       const usersRef = collection(db, 'users');
-      // Fetch users that have a staffId and are not Admins
-      const q = query(usersRef, where('staffId', '!=', null), where('role', '!=', 'Admin'));
+      // Query for users that have a staffId. We will filter out the admin client-side.
+      const q = query(usersRef, where('staffId', '!=', null));
       const querySnapshot = await getDocs(q);
-      const usersList = querySnapshot.docs.map(
-        (doc) => ({ id: doc.id, ...doc.data() } as MockUser)
-      );
+      const usersList = querySnapshot.docs
+        .map((doc) => ({ id: doc.id, ...doc.data() } as MockUser))
+        .filter((user) => user.role !== 'Admin'); // Filter out Admins on the client
       setUsers(usersList);
     } catch (error) {
       console.error('Error fetching users:', error);
