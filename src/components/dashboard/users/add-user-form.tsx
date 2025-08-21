@@ -121,6 +121,17 @@ export function AddUserForm({ onUserAdded }: { onUserAdded: () => void }) {
       }
   };
 
+  const handleDateInputChange = (e: React.ChangeEvent<HTMLInputElement>, field: any) => {
+    let value = e.target.value.replace(/\D/g, ''); // Remove non-digit characters
+    if (value.length > 2) {
+      value = `${value.slice(0, 2)}/${value.slice(2)}`;
+    }
+    if (value.length > 5) {
+      value = `${value.slice(0, 5)}/${value.slice(5, 9)}`;
+    }
+    field.onChange(value);
+  };
+
 
   async function onSubmit(values: z.infer<typeof formSchema>) {
     try {
@@ -325,7 +336,12 @@ export function AddUserForm({ onUserAdded }: { onUserAdded: () => void }) {
             <FormItem>
               <FormLabel>Date of Birth</FormLabel>
               <FormControl>
-                <Input placeholder="DD/MM/YYYY" {...field} />
+                <Input
+                  placeholder="DD/MM/YYYY"
+                  {...field}
+                  onChange={(e) => handleDateInputChange(e, field)}
+                  maxLength={10}
+                />
               </FormControl>
               <FormMessage />
             </FormItem>
@@ -361,7 +377,12 @@ export function AddUserForm({ onUserAdded }: { onUserAdded: () => void }) {
             <FormItem>
               <FormLabel>Employment Date</FormLabel>
               <FormControl>
-                <Input placeholder="DD/MM/YYYY" {...field} />
+                 <Input
+                  placeholder="DD/MM/YYYY"
+                  {...field}
+                  onChange={(e) => handleDateInputChange(e, field)}
+                  maxLength={10}
+                />
               </FormControl>
               <FormMessage />
             </FormItem>
@@ -417,4 +438,3 @@ export function AddUserForm({ onUserAdded }: { onUserAdded: () => void }) {
     </Form>
   );
 }
-
