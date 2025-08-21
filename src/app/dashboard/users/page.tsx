@@ -20,7 +20,7 @@ import { AddUserForm } from '@/components/dashboard/users/add-user-form';
 import { Button } from '@/components/ui/button';
 import { PlusCircle, Trash2 } from 'lucide-react';
 import { useEffect, useState, useCallback } from 'react';
-import { collection, getDocs, deleteDoc, doc } from 'firebase/firestore';
+import { collection, getDocs, deleteDoc, doc, query, where } from 'firebase/firestore';
 import { auth, db } from '@/lib/firebase';
 import type { MockUser } from '@/lib/schema';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -43,7 +43,10 @@ export default function UsersPage() {
   const fetchUsers = useCallback(async () => {
     setIsLoading(true);
     try {
-      const querySnapshot = await getDocs(collection(db, 'users'));
+      const usersRef = collection(db, 'users');
+      // Query for documents where staffId exists and is not null
+      const q = query(usersRef, where('staffId', '!=', null));
+      const querySnapshot = await getDocs(q);
       const usersList = querySnapshot.docs.map(
         (doc) => ({ id: doc.id, ...doc.data() } as MockUser)
       );
