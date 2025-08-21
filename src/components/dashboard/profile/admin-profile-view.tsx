@@ -101,10 +101,8 @@ export function AdminProfileView({ userId }: { userId: string }) {
     setIsBankDetailsOpen(false);
   };
   
-  const canEdit =
-    currentUserRole === 'Admin' ||
-    currentUserRole === 'Super Admin' ||
-    (user && auth.currentUser?.uid === user.id);
+  const canEditAdminFields = currentUserRole === 'Admin' || currentUserRole === 'Super Admin';
+  const canEditPersonalFields = canEditAdminFields || (user && auth.currentUser?.uid === user.id);
 
   if (isLoading) {
     return (
@@ -147,26 +145,17 @@ export function AdminProfileView({ userId }: { userId: string }) {
                 />
                 <AvatarFallback>{userInitials}</AvatarFallback>
               </Avatar>
-              <Dialog
-                open={isPersonalInfoOpen}
-                onOpenChange={setIsPersonalInfoOpen}
-              >
                 <DialogTrigger asChild>
                   <Button
                     variant="outline"
                     size="icon"
                     className="absolute bottom-0 right-0 rounded-full"
+                    disabled={!canEditPersonalFields}
+                     onClick={() => setIsPersonalInfoOpen(true)}
                   >
                     <Camera className="h-4 w-4" />
                   </Button>
                 </DialogTrigger>
-                <DialogContent>
-                  <DialogHeader>
-                    <DialogTitle>Edit Personal Information</DialogTitle>
-                  </DialogHeader>
-                  <PersonalInfoForm user={user} onUpdate={handleUpdate} />
-                </DialogContent>
-              </Dialog>
             </div>
             <div className="space-y-1">
               <CardTitle className="text-3xl">{user.name}</CardTitle>
@@ -191,7 +180,7 @@ export function AdminProfileView({ userId }: { userId: string }) {
             onOpenChange={setIsProfessionalInfoOpen}
           >
             <DialogTrigger asChild>
-              <Button variant="outline" size="icon" disabled={!canEdit}>
+              <Button variant="outline" size="icon" disabled={!canEditAdminFields}>
                 <Edit className="h-4 w-4" />
               </Button>
             </DialogTrigger>
@@ -235,7 +224,7 @@ export function AdminProfileView({ userId }: { userId: string }) {
             onOpenChange={setIsPersonalInfoOpen}
           >
             <DialogTrigger asChild>
-              <Button variant="outline" size="icon" disabled={!canEdit}>
+              <Button variant="outline" size="icon" disabled={!canEditPersonalFields}>
                 <Edit className="h-4 w-4" />
               </Button>
             </DialogTrigger>
@@ -283,7 +272,7 @@ export function AdminProfileView({ userId }: { userId: string }) {
             onOpenChange={setIsBankDetailsOpen}
           >
             <DialogTrigger asChild>
-              <Button variant="outline" size="icon" disabled={!canEdit}>
+              <Button variant="outline" size="icon" disabled={!canEditAdminFields}>
                 <Edit className="h-4 w-4" />
               </Button>
             </DialogTrigger>
