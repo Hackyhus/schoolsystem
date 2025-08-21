@@ -1,4 +1,3 @@
-
 'use client';
 
 import {
@@ -45,8 +44,9 @@ export default function UsersPage() {
     setIsLoading(true);
     try {
       const usersRef = collection(db, 'users');
-      // Fetch all users
-      const querySnapshot = await getDocs(usersRef);
+      // Fetch users that have a staffId to filter out other project users
+      const q = query(usersRef, where('staffId', '!=', null));
+      const querySnapshot = await getDocs(q);
       const usersList = querySnapshot.docs.map(
         (doc) => ({ id: doc.id, ...doc.data() } as MockUser)
       );
