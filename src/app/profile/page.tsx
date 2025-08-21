@@ -2,53 +2,39 @@
 'use client';
 
 import { useRole } from '@/context/role-context';
-import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
 import { useRouter } from 'next/navigation';
 import { useEffect } from 'react';
+import { Skeleton } from '@/components/ui/skeleton';
 
 export default function ProfilePage() {
-    const { user, isLoading, logout } = useRole();
+    const { user, isLoading } = useRole();
     const router = useRouter();
 
     useEffect(() => {
-        if (!isLoading && !user) {
-            router.push('/');
+        if (!isLoading) {
+            if (user) {
+                // Redirect to the detailed user profile page for the current user
+                router.push(`/dashboard/users/${user.uid}`);
+            } else {
+                // If not logged in, go to the login page
+                router.push('/');
+            }
         }
     }, [isLoading, user, router]);
 
-    if (isLoading || !user) {
-        return <div>Loading...</div>;
-    }
-
-    const handleViewProfile = () => {
-        router.push(`/dashboard/users/${user.uid}`);
-    }
-
+    // Display a loading state while redirecting
     return (
-       <div className="mx-auto my-8 w-full max-w-lg">
-            <Card>
-                <CardHeader>
-                    <CardTitle>My Profile</CardTitle>
-                    <CardDescription>Basic account information.</CardDescription>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                    <div className="space-y-1">
-                        <p className="text-sm font-medium text-muted-foreground">Name</p>
-                        <p className="font-semibold">{user.displayName || 'Not set'}</p>
-                    </div>
-                     <div className="space-y-1">
-                        <p className="text-sm font-medium text-muted-foreground">Email</p>
-                        <p className="font-semibold">{user.email}</p>
-                    </div>
-                    <Button onClick={handleViewProfile} variant="outline" className="w-full">
-                        View/Edit Full Profile
-                    </Button>
-                    <Button onClick={logout} className="w-full">
-                        Log Out
-                    </Button>
-                </CardContent>
-            </Card>
-       </div>
+        <div className="flex h-screen w-full items-center justify-center">
+            <div className="w-full max-w-lg space-y-4 p-4">
+                <Skeleton className="h-12 w-1/2" />
+                <Skeleton className="h-8 w-3/4" />
+                <div className="space-y-2 pt-4">
+                    <Skeleton className="h-6 w-full" />
+                    <Skeleton className="h-6 w-full" />
+                    <Skeleton className="h-10 w-full mt-4" />
+                    <Skeleton className="h-10 w-full" />
+                </div>
+            </div>
+        </div>
     );
 }
