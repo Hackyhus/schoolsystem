@@ -16,6 +16,8 @@ export default function ProfilePage() {
     }
 
     return (
-       <AdminProfileView userId={user.uid} />
+       <div className="mx-auto w-full max-w-6xl">
+         <AdminProfileView userId={user.uid} />
+       </div>
     );
 }
