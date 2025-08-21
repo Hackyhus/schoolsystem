@@ -5,7 +5,7 @@ import { useForm } from 'react-hook-form';
 import * as z from 'zod';
 import { useRouter } from 'next/navigation';
 import { createUserWithEmailAndPassword } from 'firebase/auth';
-import { doc, setDoc } from 'firebase/firestore';
+import { collection, doc, getDocs, query, setDoc, where } from 'firebase/firestore';
 
 import { Button } from '@/components/ui/button';
 import {
@@ -51,6 +51,22 @@ export default function SetupAdminPage() {
 
   async function onSubmit(values: z.infer<typeof formSchema>) {
     try {
+      // Check if an admin account already exists
+      const usersRef = collection(db, 'users');
+      const adminQuery = query(usersRef, where('role', '==', 'Admin'));
+      const adminSnapshot = await getDocs(adminQuery);
+
+      if (!adminSnapshot.empty) {
+        toast({
+          variant: 'destructive',
+          title: 'Admin Account Exists',
+          description:
+            'An administrator account has already been created. Please log in.',
+        });
+        router.push('/admin/login');
+        return;
+      }
+
       const userCredential = await createUserWithEmailAndPassword(
         auth,
         values.email,
@@ -81,7 +97,7 @@ export default function SetupAdminPage() {
         title: 'Account Creation Failed',
         description:
           error.code === 'auth/email-already-in-use'
-            ? 'An admin account already exists. Please log in.'
+            ? 'This email is already in use by another account.'
             : error.message,
       });
     }
