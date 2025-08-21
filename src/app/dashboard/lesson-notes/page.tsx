@@ -14,7 +14,7 @@ import Link from 'next/link';
 import { useRole } from '@/context/role-context';
 import { Upload } from 'lucide-react';
 import { useEffect, useState, useCallback } from 'react';
-import { collection, query, where, getDocs } from 'firebase/firestore';
+import { collection, query, where, getDocs, orderBy } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import type { MockLessonNote } from '@/lib/schema';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -27,6 +27,7 @@ import {
   DialogTitle,
   DialogTrigger,
 } from '@/components/ui/dialog';
+import { AddLessonNoteForm } from '@/components/dashboard/lesson-notes/add-lesson-note-form';
 
 
 export default function LessonNotesPage() {
@@ -46,10 +47,10 @@ export default function LessonNotesPage() {
     try {
       let notesQuery;
       if (role === 'Teacher') {
-        notesQuery = query(collection(db, 'lessonNotes'), where("teacherId", "==", user?.uid));
+        notesQuery = query(collection(db, 'lessonNotes'), where("teacherId", "==", user?.uid), orderBy("submissionDate", "desc"));
       } else {
         // Admin and HOD see all for now. This could be scoped by department for HODs.
-        notesQuery = query(collection(db, 'lessonNotes'));
+        notesQuery = query(collection(db, 'lessonNotes'), orderBy("submissionDate", "desc"));
       }
       
       const querySnapshot = await getDocs(notesQuery);
@@ -123,8 +124,7 @@ export default function LessonNotesPage() {
                       Select the class, subject, and upload your lesson plan file.
                     </DialogDescription>
                  </DialogHeader>
-                 {/* Add form component here */}
-                 <p className="text-center text-muted-foreground py-8">Lesson plan upload form will be here.</p>
+                 <AddLessonNoteForm onNoteAdded={handleNoteAdded} />
               </DialogContent>
             </Dialog>
             

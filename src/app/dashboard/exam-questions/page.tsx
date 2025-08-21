@@ -22,18 +22,20 @@ import {
   DialogTitle,
   DialogTrigger,
 } from '@/components/ui/dialog';
-import { collection, query, where, getDocs } from 'firebase/firestore';
+import { collection, query, where, getDocs, orderBy } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import { useToast } from '@/hooks/use-toast';
 import { Skeleton } from '@/components/ui/skeleton';
+import { AddExamQuestionForm } from '@/components/dashboard/exam-questions/add-exam-question-form';
+import { format } from 'date-fns';
 
-// Assuming an ExamQuestion type similar to MockLessonNote for now
 type ExamQuestion = {
     id: string;
     subject: string;
     class: string;
     status: string;
-    submittedOn: string;
+    submittedOn: { seconds: number; nanoseconds: number; }; // Firestore Timestamp
+    teacherName: string;
 }
 
 export default function ExamQuestionsPage() {
@@ -49,10 +51,10 @@ export default function ExamQuestionsPage() {
     try {
         let q;
         if (role === 'Teacher') {
-            q = query(collection(db, 'examQuestions'), where("teacherId", "==", user.uid));
+            q = query(collection(db, 'examQuestions'), where("teacherId", "==", user.uid), orderBy("submittedOn", "desc"));
         } else {
             // Exam Officer or Admin sees all
-            q = query(collection(db, 'examQuestions'));
+            q = query(collection(db, 'examQuestions'), orderBy("submittedOn", "desc"));
         }
         const querySnapshot = await getDocs(q);
         const questionList = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as ExamQuestion));
@@ -72,6 +74,11 @@ export default function ExamQuestionsPage() {
   useEffect(() => {
     fetchQuestions();
   }, [fetchQuestions]);
+
+  const handleQuestionAdded = () => {
+    fetchQuestions();
+    setIsModalOpen(false);
+  }
 
   const statusVariant = (status: string) => {
     if (status.includes('Approved')) return 'default';
@@ -114,11 +121,10 @@ export default function ExamQuestionsPage() {
                  <DialogHeader>
                     <DialogTitle>Upload Exam Questions</DialogTitle>
                     <DialogDescription>
-                      Select the class, subject, and upload your questions file.
+                      Select the class, subject, and upload your questions file. This will be sent to the Exam Officer for review.
                     </DialogDescription>
                  </DialogHeader>
-                 {/* Add form component here */}
-                 <p className="text-center text-muted-foreground py-8">Exam question upload form will be here.</p>
+                 <AddExamQuestionForm onQuestionAdded={handleQuestionAdded} />
               </DialogContent>
             </Dialog>
           )}
@@ -129,6 +135,7 @@ export default function ExamQuestionsPage() {
               <TableRow>
                 <TableHead>Subject</TableHead>
                 <TableHead>Class</TableHead>
+                 {role !== 'Teacher' && <TableHead>Teacher</TableHead>}
                 <TableHead>Submitted On</TableHead>
                 <TableHead>Status</TableHead>
                 <TableHead className="text-right">Action</TableHead>
@@ -140,6 +147,7 @@ export default function ExamQuestionsPage() {
                     <TableRow key={i}>
                       <TableCell><Skeleton className="h-5 w-24" /></TableCell>
                       <TableCell><Skeleton className="h-5 w-16" /></TableCell>
+                      {role !== 'Teacher' && <TableCell><Skeleton className="h-5 w-24" /></TableCell>}
                       <TableCell><Skeleton className="h-5 w-24" /></TableCell>
                       <TableCell><Skeleton className="h-6 w-28" /></TableCell>
                       <TableCell className="text-right"><Skeleton className="h-8 w-20" /></TableCell>
@@ -149,7 +157,8 @@ export default function ExamQuestionsPage() {
                 <TableRow key={q.id}>
                   <TableCell className="font-medium">{q.subject}</TableCell>
                   <TableCell>{q.class}</TableCell>
-                  <TableCell>{q.submittedOn}</TableCell>
+                   {role !== 'Teacher' && <TableCell>{q.teacherName}</TableCell>}
+                  <TableCell>{format(new Date(q.submittedOn.seconds * 1000), 'PPP')}</TableCell>
                   <TableCell>
                     <Badge variant={statusVariant(q.status)}>{q.status}</Badge>
                   </TableCell>
@@ -164,7 +173,7 @@ export default function ExamQuestionsPage() {
                {!isLoading && questions.length === 0 && (
                     <TableRow>
                       <TableCell
-                        colSpan={5}
+                        colSpan={role !== 'Teacher' ? 6 : 5}
                         className="h-24 text-center text-muted-foreground"
                       >
                         No questions found.
