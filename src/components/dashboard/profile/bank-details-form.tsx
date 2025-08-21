@@ -15,7 +15,7 @@ import { useRole } from '@/context/role-context';
 
 const formSchema = z.object({
     bankName: z.string().min(1, 'Bank name is required.'),
-    accountNumber: z.string().min(10, 'Account number must be at least 10 digits.').max(10, 'Account number must be 10 digits.'),
+    accountNumber: z.string().length(10, 'Account number must be 10 digits.'),
     accountName: z.string().min(1, 'Account name is required.'),
     salaryAmount: z.string().optional(),
 });
@@ -38,7 +38,7 @@ export function BankDetailsForm({ userData, onUpdate }: BankDetailsFormProps) {
             bankName: bankAccountParts[0] || '',
             accountNumber: bankAccountParts[1] || '',
             accountName: bankAccountParts[2] || '',
-            salaryAmount: new Intl.NumberFormat('en-NG').format(userData.salary?.amount || 0)
+            salaryAmount: userData.salary?.amount ? new Intl.NumberFormat('en-NG').format(userData.salary.amount) : ''
         }
     });
 
@@ -80,13 +80,13 @@ export function BankDetailsForm({ userData, onUpdate }: BankDetailsFormProps) {
     return (
         <Form {...form}>
             <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-                 <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
+                 <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
                     {role === 'Admin' && (
                         <FormField
                             control={form.control}
                             name="salaryAmount"
                             render={({ field }) => (
-                                <FormItem className="md:col-span-2">
+                                <FormItem className="sm:col-span-2">
                                 <FormLabel>Salary (NGN)</FormLabel>
                                 <FormControl>
                                 <Input 
@@ -105,7 +105,7 @@ export function BankDetailsForm({ userData, onUpdate }: BankDetailsFormProps) {
                         control={form.control}
                         name="bankName"
                         render={({ field }) => (
-                            <FormItem className="md:col-span-2">
+                            <FormItem className="sm:col-span-2">
                                 <FormLabel>Bank Name</FormLabel>
                                 <FormControl>
                                     <Input placeholder="e.g. Guaranty Trust Bank" {...field} />
@@ -119,7 +119,7 @@ export function BankDetailsForm({ userData, onUpdate }: BankDetailsFormProps) {
                         name="accountNumber"
                         render={({ field }) => (
                             <FormItem>
-                                <FormLabel>Account Number (10 Digits)</FormLabel>
+                                <FormLabel>Account Number</FormLabel>
                                 <FormControl>
                                     <Input type="number" {...field} />
                                 </FormControl>
@@ -141,7 +141,7 @@ export function BankDetailsForm({ userData, onUpdate }: BankDetailsFormProps) {
                         )}
                     />
                 </div>
-                <div className="flex justify-end">
+                <div className="flex justify-end pt-4">
                      <Button type="submit" disabled={form.formState.isSubmitting}>
                         {form.formState.isSubmitting ? 'Saving...' : 'Save Changes'}
                     </Button>

@@ -64,7 +64,7 @@ export function PersonalInfoForm({ userData, onUpdate }: PersonalInfoFormProps) 
     return (
         <Form {...form}>
             <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-                <div className="flex items-center gap-4">
+                <div className="flex flex-col items-center gap-4 sm:flex-row">
                     <Avatar className="h-20 w-20">
                         <AvatarImage src={form.watch('profilePicture') || userData.personalInfo?.profilePicture || ''} alt={userData.name} />
                         <AvatarFallback>{userInitials}</AvatarFallback>
@@ -73,7 +73,7 @@ export function PersonalInfoForm({ userData, onUpdate }: PersonalInfoFormProps) 
                         control={form.control}
                         name="profilePicture"
                         render={({ field }) => (
-                            <FormItem className="flex-1">
+                            <FormItem className="w-full flex-1">
                             <FormLabel>Profile Picture URL</FormLabel>
                             <FormControl>
                                 <Input placeholder="https://placehold.co/100x100.png" {...field} />
@@ -84,7 +84,7 @@ export function PersonalInfoForm({ userData, onUpdate }: PersonalInfoFormProps) 
                         />
                 </div>
                 
-                <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
+                <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
                     <FormField
                         control={form.control}
                         name="phone"
@@ -115,7 +115,7 @@ export function PersonalInfoForm({ userData, onUpdate }: PersonalInfoFormProps) 
                         control={form.control}
                         name="address"
                         render={({ field }) => (
-                            <FormItem className="md:col-span-2">
+                            <FormItem className="sm:col-span-2">
                                 <FormLabel>Home Address</FormLabel>
                                 <FormControl>
                                     <Textarea {...field} />
@@ -126,7 +126,7 @@ export function PersonalInfoForm({ userData, onUpdate }: PersonalInfoFormProps) 
                     />
                 </div>
 
-                <div className="flex justify-end">
+                <div className="flex justify-end pt-4">
                     <Button type="submit" disabled={form.formState.isSubmitting}>
                         {form.formState.isSubmitting ? 'Saving...' : 'Save Changes'}
                     </Button>
