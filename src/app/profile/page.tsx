@@ -21,6 +21,10 @@ export default function ProfilePage() {
         return <div>Loading...</div>;
     }
 
+    const handleViewProfile = () => {
+        router.push(`/dashboard/users/${user.uid}`);
+    }
+
     return (
        <div className="mx-auto my-8 w-full max-w-lg">
             <Card>
@@ -37,6 +41,9 @@ export default function ProfilePage() {
                         <p className="text-sm font-medium text-muted-foreground">Email</p>
                         <p className="font-semibold">{user.email}</p>
                     </div>
+                    <Button onClick={handleViewProfile} variant="outline" className="w-full">
+                        View/Edit Full Profile
+                    </Button>
                     <Button onClick={logout} className="w-full">
                         Log Out
                     </Button>
