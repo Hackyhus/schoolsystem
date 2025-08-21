@@ -93,7 +93,7 @@ export function AddUserForm({ onUserAdded }: { onUserAdded: () => void }) {
     const querySnapshot = await getDocs(q);
     const serialNumber = (querySnapshot.size + 1).toString().padStart(4, '0');
 
-    return `${prefix}-${year}-${deptCode}-${serialNumber}`;
+    return `${prefix}${year}${deptCode}${serialNumber}`;
   }
 
   async function onSubmit(values: z.infer<typeof formSchema>) {
