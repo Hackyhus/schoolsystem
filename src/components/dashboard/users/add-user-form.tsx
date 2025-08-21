@@ -1,3 +1,4 @@
+
 'use client';
 
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -32,6 +33,7 @@ import { CalendarIcon } from 'lucide-react';
 import { Calendar } from '@/components/ui/calendar';
 import { cn } from '@/lib/utils';
 import { format } from 'date-fns';
+import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 
 const formSchema = z.object({
   firstName: z.string().min(1, { message: 'First name is required.' }),
@@ -41,7 +43,11 @@ const formSchema = z.object({
   stateOfOrigin: z.string().min(1, { message: 'State of Origin is required.' }),
   department: z.string().min(1, { message: 'Department is required.' }),
   employmentDate: z.date({ required_error: "Employment date is required."}),
-  role: z.enum(['Teacher', 'HOD', 'Bursar', 'Principal', 'Support Staff']),
+  role: z.enum(['Teacher', 'HOD', 'Bursar', 'Principal', 'Support Staff', 'Staff']),
+  address: z.string().min(1, { message: "Address is required."}),
+  gender: z.enum(['Male', 'Female'], { required_error: 'Gender is required.'}),
+  dob: z.date({ required_error: "Date of birth is required."}),
+  salaryAmount: z.coerce.number().min(1, { message: "Initial salary is required." }),
 });
 
 // A simple in-memory cache for department codes
@@ -69,15 +75,18 @@ export function AddUserForm({ onUserAdded }: { onUserAdded: () => void }) {
       phone: '',
       stateOfOrigin: '',
       department: 'Science',
-      role: 'Teacher',
+      role: 'Staff',
       employmentDate: new Date(),
+      address: '',
+      dob: new Date(),
+      salaryAmount: 0,
     },
   });
 
   async function generateStaffId(department: string, employmentDate: Date) {
     const year = format(employmentDate, 'yy');
     const deptCode = departmentCodes[department] || 'GEN';
-    const prefix = "GIIA";
+    const prefix = "S";
 
     // Get the count of staff in the same department and year
     const usersRef = collection(db, 'users');
@@ -94,7 +103,7 @@ export function AddUserForm({ onUserAdded }: { onUserAdded: () => void }) {
 
   async function onSubmit(values: z.infer<typeof formSchema>) {
     try {
-      const { email, stateOfOrigin, department, employmentDate, role } = values;
+      const { email, stateOfOrigin, department, employmentDate } = values;
 
       // Check for uniqueness
       const emailQuery = query(collection(db, 'users'), where('email', '==', email));
@@ -121,17 +130,34 @@ export function AddUserForm({ onUserAdded }: { onUserAdded: () => void }) {
       await setDoc(doc(db, "users", user.uid), {
         uid: user.uid,
         staffId: staffId,
-        name: `${values.firstName} ${values.lastName}`,
         firstName: values.firstName,
         lastName: values.lastName,
+        name: `${values.firstName} ${values.lastName}`,
         email: values.email,
         phone: values.phone,
         stateOfOrigin: values.stateOfOrigin,
         department: values.department,
+        role: values.role,
         employmentDate: values.employmentDate,
         employmentYear: values.employmentDate.getFullYear(),
-        role: values.role,
-        status: 'active',
+        salary: {
+            amount: values.salaryAmount,
+            bankAccount: null,
+            paymentStatus: "Active"
+        },
+        personalInfo: {
+            address: values.address,
+            gender: values.gender,
+            dob: values.dob,
+            nextOfKin: null,
+            profilePicture: null
+        },
+        permissions: {
+            canUploadLessonNotes: true,
+            canViewSalary: true,
+            canAccessPortal: true
+        },
+        status: "Active",
         createdAt: new Date()
       });
 
@@ -225,6 +251,91 @@ export function AddUserForm({ onUserAdded }: { onUserAdded: () => void }) {
           )}
         />
         <FormField
+            control={form.control}
+            name="address"
+            render={({ field }) => (
+                <FormItem>
+                <FormLabel>Address</FormLabel>
+                <FormControl>
+                    <Input placeholder="123 Main St, Kaduna" {...field} />
+                </FormControl>
+                <FormMessage />
+                </FormItem>
+            )}
+        />
+        <FormField
+            control={form.control}
+            name="gender"
+            render={({ field }) => (
+                <FormItem className="space-y-3">
+                <FormLabel>Gender</FormLabel>
+                <FormControl>
+                    <RadioGroup
+                    onValueChange={field.onChange}
+                    defaultValue={field.value}
+                    className="flex space-x-4"
+                    >
+                    <FormItem className="flex items-center space-x-2 space-y-0">
+                        <FormControl>
+                        <RadioGroupItem value="Male" />
+                        </FormControl>
+                        <FormLabel className="font-normal">Male</FormLabel>
+                    </FormItem>
+                    <FormItem className="flex items-center space-x-2 space-y-0">
+                        <FormControl>
+                        <RadioGroupItem value="Female" />
+                        </FormControl>
+                        <FormLabel className="font-normal">Female</FormLabel>
+                    </FormItem>
+                    </RadioGroup>
+                </FormControl>
+                <FormMessage />
+                </FormItem>
+            )}
+        />
+         <FormField
+          control={form.control}
+          name="dob"
+          render={({ field }) => (
+            <FormItem className="flex flex-col">
+              <FormLabel>Date of Birth</FormLabel>
+              <Popover>
+                <PopoverTrigger asChild>
+                  <FormControl>
+                    <Button
+                      variant={"outline"}
+                      className={cn(
+                        "w-full pl-3 text-left font-normal",
+                        !field.value && "text-muted-foreground"
+                      )}
+                    >
+                      {field.value ? (
+                        format(field.value, "PPP")
+                      ) : (
+                        <span>Pick a date</span>
+                      )}
+                      <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
+                    </Button>
+                  </FormControl>
+                </PopoverTrigger>
+                <PopoverContent className="w-auto p-0" align="start">
+                  <Calendar
+                    mode="single"
+                    selected={field.value}
+                    onSelect={field.onChange}
+                    disabled={(date) =>
+                      date > new Date() || date < new Date("1950-01-01")
+                    }
+                    initialFocus
+                  />
+                </PopoverContent>
+              </Popover>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+
+        <FormField
           control={form.control}
           name="department"
           render={({ field }) => (
@@ -300,6 +411,7 @@ export function AddUserForm({ onUserAdded }: { onUserAdded: () => void }) {
                   </SelectTrigger>
                 </FormControl>
                 <SelectContent>
+                  <SelectItem value="Staff">Staff</SelectItem>
                   <SelectItem value="Teacher">Teacher</SelectItem>
                   <SelectItem value="HOD">HOD</SelectItem>
                   <SelectItem value="Bursar">Bursar</SelectItem>
@@ -310,6 +422,19 @@ export function AddUserForm({ onUserAdded }: { onUserAdded: () => void }) {
               <FormMessage />
             </FormItem>
           )}
+        />
+         <FormField
+            control={form.control}
+            name="salaryAmount"
+            render={({ field }) => (
+                <FormItem>
+                <FormLabel>Initial Salary (NGN)</FormLabel>
+                <FormControl>
+                    <Input type="number" placeholder="e.g. 150000" {...field} />
+                </FormControl>
+                <FormMessage />
+                </FormItem>
+            )}
         />
         <Button type="submit" className="w-full" disabled={form.formState.isSubmitting}>
            {form.formState.isSubmitting ? 'Adding...' : <> <PlusCircle className="mr-2 h-4 w-4" /> Add Staff</>}

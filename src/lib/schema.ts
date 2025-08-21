@@ -1,3 +1,4 @@
+
 export type User = {
   _id: string;
   firstName: string;
@@ -68,21 +69,39 @@ export type Student = {
   createdAt: Date;
 };
 
-// Merging old and new mock data structures for compatibility
-// This will be updated as we build out the full application
+
 export type MockUser = {
-  id: string; // Changed to string to match Firestore UID
+  id: string;
   staffId: string;
-  name: string;
+  firstName: string;
+  lastName: string;
   email: string;
-  role: string;
+  phone: string;
   stateOfOrigin: string;
-  department?: string;
-  subject?: string;
-  children?: string[];
-  salary?: number;
-  bankAccountNumber?: string;
+  department: string;
+  role: string;
+  employmentDate: Date;
+  salary: {
+    amount: number;
+    bankAccount: string | null;
+    paymentStatus: string;
+  };
+  personalInfo: {
+    address: string;
+    gender: string;
+    dob: Date;
+    nextOfKin: string | null;
+    profilePicture: string | null;
+  };
+  permissions: {
+    canUploadLessonNotes: boolean;
+    canViewSalary: boolean;
+    canAccessPortal: boolean;
+  };
+  status: string;
+  createdAt: Date;
 };
+
 
 export type MockLessonNote = {
     id: string;

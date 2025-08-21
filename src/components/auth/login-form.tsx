@@ -1,3 +1,4 @@
+
 'use client';
 
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -104,7 +105,7 @@ export function LoginForm() {
             <FormItem>
               <FormLabel>Staff ID</FormLabel>
               <FormControl>
-                <Input placeholder="e.g. GIIA24SCI0001" {...field} />
+                <Input placeholder="e.g. S24SCI0001" {...field} />
               </FormControl>
               <FormMessage />
             </FormItem>
