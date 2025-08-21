@@ -11,8 +11,7 @@ import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 import { Check, Send, ThumbsDown, ThumbsUp, User } from 'lucide-react';
 import { LessonNoteSummarizer } from '@/components/lesson-note-summarizer';
-import { Button } from '@/components/ui/button';
-import { Textarea } from '@/components/ui/textarea';
+import { ReviewForm } from '@/components/dashboard/lesson-notes/review-form';
 
 export default function LessonNoteDetailPage({ params }: { params: { id: string } }) {
   const note = lessonNotes.find((n) => n.id === params.id);
@@ -53,11 +52,7 @@ export default function LessonNoteDetailPage({ params }: { params: { id: string 
                     <CardDescription>Provide feedback for the teacher.</CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-4">
-                  <Textarea placeholder="Type your review here..." />
-                  <div className="flex justify-end gap-2">
-                    <Button variant="destructive"><ThumbsDown className="mr-2 h-4 w-4"/>Reject</Button>
-                    <Button><ThumbsUp className="mr-2 h-4 w-4"/>Approve</Button>
-                  </div>
+                  <ReviewForm />
                 </CardContent>
             </Card>
         </div>
