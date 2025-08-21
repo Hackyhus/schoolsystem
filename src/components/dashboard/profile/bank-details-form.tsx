@@ -80,13 +80,13 @@ export function BankDetailsForm({ userData, onUpdate }: BankDetailsFormProps) {
     return (
         <Form {...form}>
             <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                 <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
                     {role === 'Admin' && (
                         <FormField
                             control={form.control}
                             name="salaryAmount"
                             render={({ field }) => (
-                                <FormItem>
+                                <FormItem className="md:col-span-2">
                                 <FormLabel>Salary (NGN)</FormLabel>
                                 <FormControl>
                                 <Input 
@@ -105,7 +105,7 @@ export function BankDetailsForm({ userData, onUpdate }: BankDetailsFormProps) {
                         control={form.control}
                         name="bankName"
                         render={({ field }) => (
-                            <FormItem>
+                            <FormItem className="md:col-span-2">
                                 <FormLabel>Bank Name</FormLabel>
                                 <FormControl>
                                     <Input placeholder="e.g. Guaranty Trust Bank" {...field} />

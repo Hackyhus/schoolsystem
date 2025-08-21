@@ -13,7 +13,6 @@ import { Input } from '@/components/ui/input';
 import type { MockUser } from '@/lib/schema';
 import { Textarea } from '@/components/ui/textarea';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { Card, CardContent } from '@/components/ui/card';
 
 const formSchema = z.object({
     address: z.string().min(1, 'Address is required.'),
@@ -85,7 +84,7 @@ export function PersonalInfoForm({ userData, onUpdate }: PersonalInfoFormProps) 
                         />
                 </div>
                 
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
                     <FormField
                         control={form.control}
                         name="phone"
@@ -112,7 +111,7 @@ export function PersonalInfoForm({ userData, onUpdate }: PersonalInfoFormProps) 
                             </FormItem>
                         )}
                     />
-                        <FormField
+                    <FormField
                         control={form.control}
                         name="address"
                         render={({ field }) => (
