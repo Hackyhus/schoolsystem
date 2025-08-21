@@ -1,3 +1,4 @@
+
 'use client';
 
 import {
@@ -20,7 +21,7 @@ import { AddUserForm } from '@/components/dashboard/users/add-user-form';
 import { Button } from '@/components/ui/button';
 import { PlusCircle, Trash2 } from 'lucide-react';
 import { useEffect, useState, useCallback } from 'react';
-import { collection, getDocs, deleteDoc, doc, query, where } from 'firebase/firestore';
+import { collection, getDocs, deleteDoc, doc, query, where, updateDoc } from 'firebase/firestore';
 import { auth, db } from '@/lib/firebase';
 import type { MockUser } from '@/lib/schema';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -33,6 +34,13 @@ import {
   DialogTitle,
   DialogTrigger,
 } from '@/components/ui/dialog';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 
 export default function UsersPage() {
   const [users, setUsers] = useState<MockUser[]>([]);
@@ -44,8 +52,8 @@ export default function UsersPage() {
     setIsLoading(true);
     try {
       const usersRef = collection(db, 'users');
-      // Fetch users that have a staffId to filter out other project users
-      const q = query(usersRef, where('staffId', '!=', null));
+      // Fetch users that have a staffId and are not Admins
+      const q = query(usersRef, where('staffId', '!=', null), where('role', '!=', 'Admin'));
       const querySnapshot = await getDocs(q);
       const usersList = querySnapshot.docs.map(
         (doc) => ({ id: doc.id, ...doc.data() } as MockUser)
@@ -66,6 +74,26 @@ export default function UsersPage() {
   useEffect(() => {
     fetchUsers();
   }, [fetchUsers]);
+
+  const handleRoleChange = async (userId: string, newRole: string) => {
+    try {
+      const userDocRef = doc(db, 'users', userId);
+      await updateDoc(userDocRef, { role: newRole });
+      toast({
+        title: 'Role Updated',
+        description: `The user's role has been successfully updated to ${newRole}.`,
+      });
+      fetchUsers(); // Refresh the list to show the new role
+    } catch (error) {
+       console.error('Error updating role:', error);
+       toast({
+        variant: 'destructive',
+        title: 'Error',
+        description: 'Could not update the user role.',
+      });
+    }
+  };
+
 
   const removeUser = async (userId: string) => {
     if (
@@ -98,6 +126,9 @@ export default function UsersPage() {
     setIsModalOpen(false); // Close the modal
   };
 
+  const availableRoles = ['Principal', 'Director', 'HeadOfDepartment', 'Teacher', 'Accountant', 'ExamOfficer', 'Parent', 'Student'];
+
+
   return (
     <div className="space-y-8">
       <div>
@@ -111,7 +142,7 @@ export default function UsersPage() {
           <div>
             <CardTitle>All Users</CardTitle>
             <CardDescription>
-              A list of all users in the system.
+              A list of all non-admin users in the system.
             </CardDescription>
           </div>
           <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
@@ -156,7 +187,7 @@ export default function UsersPage() {
                       <Skeleton className="h-5 w-36" />
                     </TableCell>
                     <TableCell>
-                      <Skeleton className="h-5 w-16" />
+                      <Skeleton className="h-5 w-24" />
                     </TableCell>
                     <TableCell className="text-right">
                       <Skeleton className="h-8 w-8 inline-block" />
@@ -170,7 +201,19 @@ export default function UsersPage() {
                     <TableCell className="font-medium">{user.name}</TableCell>
                     <TableCell>{user.email}</TableCell>
                     <TableCell>
-                      <Badge variant="outline">{user.role}</Badge>
+                       <Select
+                        value={user.role}
+                        onValueChange={(newRole) => handleRoleChange(user.id, newRole)}
+                       >
+                        <SelectTrigger className="w-[180px]">
+                            <SelectValue placeholder="Select role" />
+                        </SelectTrigger>
+                        <SelectContent>
+                            {availableRoles.map(role => (
+                               <SelectItem key={role} value={role}>{role}</SelectItem>
+                            ))}
+                        </SelectContent>
+                       </Select>
                     </TableCell>
                     <TableCell className="text-right">
                       <Button
