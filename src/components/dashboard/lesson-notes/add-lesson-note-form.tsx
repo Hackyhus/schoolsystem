@@ -29,12 +29,12 @@ import { useToast } from '@/hooks/use-toast';
 import { db, storage } from '@/lib/firebase';
 import { UploadCloud, Loader2 } from 'lucide-react';
 import { useRole } from '@/context/role-context';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useAcademicData } from '@/hooks/use-academic-data';
 
 const formSchema = z.object({
   title: z.string().min(1, { message: 'Title is required.' }),
-  type: z.enum(['Lesson Plan', 'Exam Question', 'Scores']),
+  type: z.enum(['Lesson Plan', 'Exam Question']),
   class: z.string().min(1, { message: 'Please select a class.' }),
   subject: z.string().min(1, { message: 'Please select a subject.' }),
   file: z
@@ -44,8 +44,10 @@ const formSchema = z.object({
 
 export function AddLessonNoteForm({
   onNoteAdded,
+  documentType,
 }: {
   onNoteAdded: () => void;
+  documentType?: 'Lesson Plan' | 'Exam Question';
 }) {
   const { user } = useRole();
   const { toast } = useToast();
@@ -59,10 +61,17 @@ export function AddLessonNoteForm({
     resolver: zodResolver(formSchema),
     defaultValues: {
       title: '',
+      type: documentType || 'Lesson Plan',
       class: '',
       subject: '',
     },
   });
+
+  useEffect(() => {
+    if (documentType) {
+        form.setValue('type', documentType);
+    }
+  }, [documentType, form]);
 
   async function onSubmit(values: z.infer<typeof formSchema>) {
     if (!user) {
@@ -85,10 +94,6 @@ export function AddLessonNoteForm({
 
       if (type === 'Exam Question') {
         collectionName = 'examQuestions';
-        status = 'Pending Review';
-        reviewer = 'Exam Officer';
-      } else if (type === 'Scores') {
-        collectionName = 'scores';
         status = 'Pending Review';
         reviewer = 'Exam Officer';
       }
@@ -162,7 +167,7 @@ export function AddLessonNoteForm({
             render={({ field }) => (
               <FormItem>
                 <FormLabel>Document Type</FormLabel>
-                 <Select onValueChange={field.onChange} defaultValue={field.value}>
+                 <Select onValueChange={field.onChange} defaultValue={field.value} disabled={!!documentType}>
                     <FormControl>
                       <SelectTrigger>
                         <SelectValue placeholder="Select document type" />
@@ -171,7 +176,6 @@ export function AddLessonNoteForm({
                     <SelectContent>
                         <SelectItem value="Lesson Plan">Lesson Plan</SelectItem>
                         <SelectItem value="Exam Question">Exam Question</SelectItem>
-                        <SelectItem value="Scores">Scores</SelectItem>
                     </SelectContent>
                   </Select>
                 <FormMessage />

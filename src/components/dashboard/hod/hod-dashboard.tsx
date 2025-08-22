@@ -61,6 +61,7 @@ export function HodDashboard() {
       const pending = notesList.filter(n => n.status.includes('Pending')).length;
       const rejected = notesList.filter(n => n.status.includes('Rejected') || n.status.includes('Revision')).length;
 
+      // In a real app, this should filter by the HOD's department
       const staffQuery = query(collection(db, 'users'), where('role', '==', 'Teacher'));
       const staffSnapshot = await getDocs(staffQuery);
       const staffList = staffSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as unknown as MockUser));

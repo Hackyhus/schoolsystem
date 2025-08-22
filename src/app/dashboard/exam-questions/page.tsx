@@ -1,3 +1,4 @@
+
 'use client';
 import {
   Table,
@@ -28,6 +29,7 @@ import { useToast } from '@/hooks/use-toast';
 import { Skeleton } from '@/components/ui/skeleton';
 import { AddLessonNoteForm } from '@/components/dashboard/lesson-notes/add-lesson-note-form'; // Re-using the unified form
 import { format } from 'date-fns';
+import type { AppNotification } from '@/lib/schema';
 
 type ExamQuestion = {
     id: string;
@@ -36,6 +38,8 @@ type ExamQuestion = {
     status: string;
     submittedOn: { seconds: number; nanoseconds: number; }; // Firestore Timestamp
     teacherName: string;
+    teacherId: string;
+    title: string;
 }
 
 export default function ExamQuestionsPage() {
@@ -80,10 +84,14 @@ export default function ExamQuestionsPage() {
     setIsModalOpen(false);
   }
 
-  const handleReview = async (questionId: string, newStatus: 'Approved' | 'Rejected') => {
+  const handleReview = async (question: ExamQuestion, newStatus: 'Approved' | 'Rejected') => {
     try {
-        const questionRef = doc(db, 'examQuestions', questionId);
+        const questionRef = doc(db, 'examQuestions', question.id);
         await updateDoc(questionRef, { status: newStatus });
+        
+        // You would typically create a notification here for the teacher
+        // await createNotification(question.teacherId, question.id, question.title, newStatus);
+        
         toast({
             title: `Question ${newStatus}`,
             description: "The submission has been updated.",
@@ -110,16 +118,16 @@ export default function ExamQuestionsPage() {
      if (role === 'Teacher') {
          return (
              <Button asChild variant="outline" size="sm">
-                <Link href="#">View</Link>
+                <Link href={`/dashboard/exam-questions/${q.id}`}>View</Link>
              </Button>
          )
      }
      return (
         <div className="flex gap-2">
-            <Button size="sm" variant="outline" onClick={() => handleReview(q.id, 'Approved')}>
+            <Button size="sm" variant="outline" onClick={() => handleReview(q, 'Approved')}>
                 <ThumbsUp className="mr-2 h-4 w-4" /> Approve
             </Button>
-            <Button size="sm" variant="destructive" onClick={() => handleReview(q.id, 'Rejected')}>
+            <Button size="sm" variant="destructive" onClick={() => handleReview(q, 'Rejected')}>
                 <ThumbsDown className="mr-2 h-4 w-4" /> Reject
             </Button>
         </div>
@@ -157,7 +165,7 @@ export default function ExamQuestionsPage() {
                       Select the class, subject, and upload your file. It will be routed to the correct reviewer.
                     </DialogDescription>
                  </DialogHeader>
-                 <AddLessonNoteForm onNoteAdded={handleSubmissionAdded} />
+                 <AddLessonNoteForm onNoteAdded={handleSubmissionAdded} documentType="Exam Question" />
               </DialogContent>
             </Dialog>
           )}

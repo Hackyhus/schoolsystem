@@ -76,6 +76,19 @@ export default function NotificationsPage() {
             default: return <Mail className="h-5 w-5 text-muted-foreground" />;
         }
     }
+    
+    const getLinkForNotif = (notif: AppNotification) => {
+        const { collection: refCollection, id: refId } = notif.ref;
+        if (refCollection === 'lessonNotes') {
+            return `/dashboard/lesson-notes/${refId}`;
+        }
+        if (refCollection === 'examQuestions') {
+            return `/dashboard/exam-questions/${refId}`;
+        }
+        // Fallback or other collections
+        return '/dashboard';
+    };
+
 
     return (
         <div className="space-y-8">
@@ -124,7 +137,7 @@ export default function NotificationsPage() {
                                     </div>
                                     <div className="flex flex-col items-end gap-2">
                                        <Button asChild variant="outline" size="sm">
-                                            <Link href={`/dashboard/lesson-notes/${notif.ref.id}`}>View</Link>
+                                            <Link href={getLinkForNotif(notif)}>View</Link>
                                        </Button>
                                        {!notif.read && (
                                             <Button variant="ghost" size="sm" onClick={() => markAsRead(notif.id)}>Mark as read</Button>

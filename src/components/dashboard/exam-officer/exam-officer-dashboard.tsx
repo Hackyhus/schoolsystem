@@ -45,7 +45,7 @@ export function ExamOfficerDashboard() {
   const { toast } = useToast();
   const [questions, setQuestions] = useState<ExamQuestion[]>([]);
   const [stats, setStats] = useState({
-    subjects: 15, // Placeholder
+    subjects: 0,
     teachers: 0,
     pending: 0,
   });
@@ -55,16 +55,23 @@ export function ExamOfficerDashboard() {
     if (!user) return;
     setIsLoading(true);
     try {
+      // Fetch pending exam questions
       const questionsQuery = query(collection(db, 'examQuestions'), where('status', '==', 'Pending Review'), orderBy('submittedOn', 'desc'));
       const questionsSnapshot = await getDocs(questionsQuery);
       const questionsList = questionsSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as ExamQuestion));
-      setQuestions(questionsList.slice(0, 5)); 
+      setQuestions(questionsList.slice(0, 5)); // Show recent 5
 
+      // Fetch teacher and subject counts
       const teachersQuery = query(collection(db, 'users'), where('role', '==', 'Teacher'));
-      const teachersSnapshot = await getDocs(teachersQuery);
+      const subjectsQuery = query(collection(db, 'subjects'));
+      
+      const [teachersSnapshot, subjectsSnapshot] = await Promise.all([
+          getDocs(teachersQuery),
+          getDocs(subjectsQuery),
+      ]);
       
       setStats({
-        subjects: 15, // Replace with actual logic later
+        subjects: subjectsSnapshot.size,
         teachers: teachersSnapshot.size,
         pending: questionsList.length,
       });
@@ -138,7 +145,7 @@ export function ExamOfficerDashboard() {
       <div className="grid grid-cols-1">
         <Card>
             <CardHeader>
-                <CardTitle>Exam Question Review</CardTitle>
+                <CardTitle>Exam Question Review Queue</CardTitle>
                 <CardDescription>Review and approve exam questions from teachers.</CardDescription>
             </CardHeader>
             <CardContent>
@@ -175,7 +182,7 @@ export function ExamOfficerDashboard() {
                         </TableCell>
                         <TableCell className="text-right">
                         <Button asChild variant="outline" size="sm">
-                           <Link href="/dashboard/exam-questions">Review</Link>
+                           <Link href="/dashboard/exam-questions">Review All</Link>
                         </Button>
                         </TableCell>
                     </TableRow>

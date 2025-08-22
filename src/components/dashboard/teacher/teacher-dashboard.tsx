@@ -25,7 +25,6 @@ import { collection, query, where, getDocs, orderBy } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import type { MockLessonNote } from '@/lib/schema';
 import { useToast } from '@/hooks/use-toast';
-import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import {
   Dialog,
   DialogContent,
@@ -137,15 +136,25 @@ export function TeacherDashboard() {
             <p className="text-xs text-muted-foreground">Exam questions awaiting review</p>
           </CardContent>
         </Card>
+         <Card>
+          <CardHeader className="flex-row items-center justify-between pb-2">
+            <CardTitle className="text-sm font-medium">Rejected/Revision</CardTitle>
+            <XCircle className="h-6 w-6 text-destructive" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{isLoading ? '...' : stats.rejectedPlans}</div>
+            <p className="text-xs text-muted-foreground">Plans returned for correction</p>
+          </CardContent>
+        </Card>
       </div>
 
        <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
         <div className="lg:col-span-2">
             <Card>
                 <CardHeader>
-                    <CardTitle>Recent Submissions</CardTitle>
+                    <CardTitle>Recent Lesson Plan Submissions</CardTitle>
                     <CardDescription>
-                    Track the status of your recent lesson plan uploads.
+                    Track the status of your recent uploads.
                     </CardDescription>
                 </CardHeader>
                 <CardContent>
@@ -212,19 +221,6 @@ export function TeacherDashboard() {
                             Enter Student Scores
                         </Link>
                     </Button>
-                </CardContent>
-            </Card>
-             <Card>
-                <CardHeader>
-                    <CardTitle>Notifications</CardTitle>
-                    <CardDescription>
-                    Recent updates on your submissions.
-                    </CardDescription>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                <div className="rounded-md border border-dashed p-8 text-center text-muted-foreground">
-                    <p>No new notifications.</p>
-                </div>
                 </CardContent>
             </Card>
         </div>

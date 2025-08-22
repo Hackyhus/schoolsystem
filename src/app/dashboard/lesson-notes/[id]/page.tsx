@@ -15,14 +15,12 @@ import {
 } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
-import { Check, Send, ThumbsDown, ThumbsUp, User, File as FileIcon, MessageCircle, AlertTriangle, Upload } from 'lucide-react';
-import { LessonNoteSummarizer } from '@/components/lesson-note-summarizer';
+import { Check, Send, ThumbsDown, ThumbsUp, User, File as FileIcon, AlertTriangle, Upload } from 'lucide-react';
 import { ReviewForm } from '@/components/dashboard/lesson-notes/review-form';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useToast } from '@/hooks/use-toast';
 import { useRole } from '@/context/role-context';
 import { Button } from '@/components/ui/button';
-import Link from 'next/link';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 
 
@@ -30,7 +28,7 @@ async function createNotification(teacherId: string, noteId: string, noteTitle: 
   try {
     let type: 'APPROVAL' | 'REJECTION' | 'INFO' = 'INFO';
     if (action === 'Approved') type = 'APPROVAL';
-    if (action === 'Rejected') type = 'REJECTION';
+    if (action === 'Rejected' || action === 'Needs Revision') type = 'REJECTION';
     
     await addDoc(collection(db, "notifications"), {
       toUserId: teacherId,
@@ -46,7 +44,6 @@ async function createNotification(teacherId: string, noteId: string, noteTitle: 
     });
   } catch (error) {
     console.error("Error creating notification:", error);
-    // Optionally, handle this error (e.g., log to a monitoring service)
   }
 }
 
@@ -102,7 +99,7 @@ export default function LessonNoteDetailPage() {
         else if(action === 'Reject') newStatus = 'Rejected by HOD';
         else if(action === 'Revision') newStatus = 'Needs Revision';
       reviewData = { status: newStatus, hod_review: reviewComment };
-    } else if (role === 'Admin') {
+    } else if (role === 'Admin' || role === 'Principal' || role === 'Director') {
         if(action === 'Approve') newStatus = 'Approved';
         else if(action === 'Reject') newStatus = 'Rejected by Admin';
         else if(action === 'Revision') newStatus = 'Needs Revision';
@@ -172,7 +169,7 @@ export default function LessonNoteDetailPage() {
   
   const reviewerFeedback = getReviewerFeedback();
   const canTeacherResubmit = role === 'Teacher' && note.status === 'Needs Revision';
-  const canReview = role === 'Admin' || role === 'HeadOfDepartment';
+  const canReview = role === 'Admin' || role === 'HeadOfDepartment' || role === 'Principal' || role === 'Director';
 
   return (
     <div className="space-y-8">
@@ -285,10 +282,6 @@ export default function LessonNoteDetailPage() {
                     </ul>
                 </CardContent>
             </Card>
-            {/* The summarizer expects text content, which we no longer have. 
-                We can adapt this later to maybe summarize the text extracted from the uploaded file.
-            <LessonNoteSummarizer lessonNotes={note.content} /> 
-            */}
         </div>
       </div>
     </div>

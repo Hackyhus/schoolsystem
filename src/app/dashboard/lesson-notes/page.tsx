@@ -39,7 +39,7 @@ export default function LessonNotesPage() {
   const [isModalOpen, setIsModalOpen] = useState(false);
 
   const fetchNotes = useCallback(async () => {
-    if (!user && role !== 'Admin' && role !== 'HeadOfDepartment') {
+    if (!user) {
       setIsLoading(false);
       return;
     }
@@ -48,9 +48,9 @@ export default function LessonNotesPage() {
     try {
       let notesQuery;
       if (role === 'Teacher') {
-        notesQuery = query(collection(db, 'lessonNotes'), where("teacherId", "==", user?.uid));
+        notesQuery = query(collection(db, 'lessonNotes'), where("teacherId", "==", user.uid));
       } else {
-        // Admin and HOD see all for now. This could be scoped by department for HODs.
+        // Admin, HOD, Principal etc. see all. This could be scoped by department for HODs.
         notesQuery = query(collection(db, 'lessonNotes'), orderBy("submissionDate", "desc"));
       }
       
@@ -82,15 +82,13 @@ export default function LessonNotesPage() {
   const statusVariant = (status: string) => {
     if (status.includes('Approved')) return 'default';
     if (status.includes('Pending')) return 'secondary';
-    if (status.includes('Rejected')) return 'destructive';
-    if (status.includes('Revision')) return 'destructive';
+    if (status.includes('Rejected') || status.includes('Revision')) return 'destructive';
     return 'outline';
   };
 
   const getActionText = () => {
     if (role === 'Teacher') return 'View';
-    if (role === 'HeadOfDepartment') return 'Review';
-    if (role === 'Admin') return 'Approve';
+    if (role === 'HeadOfDepartment' || role === 'Admin' || role === 'Principal' || role === 'Director') return 'Review';
     return 'View';
   }
 
@@ -130,7 +128,7 @@ export default function LessonNotesPage() {
                       Select the class, subject, document type, and upload your file. It will be routed to the correct reviewer.
                     </DialogDescription>
                  </DialogHeader>
-                 <AddLessonNoteForm onNoteAdded={handleNoteAdded} />
+                 <AddLessonNoteForm onNoteAdded={handleNoteAdded} documentType="Lesson Plan" />
               </DialogContent>
             </Dialog>
             
@@ -193,5 +191,3 @@ export default function LessonNotesPage() {
     </div>
   );
 }
-
-    
