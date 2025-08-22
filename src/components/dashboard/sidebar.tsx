@@ -10,6 +10,7 @@ import {
   BarChart2,
   Bell,
   Book,
+  BookCopy,
   BookOpen,
   Building,
   Calendar,
@@ -38,12 +39,12 @@ import Image from 'next/image';
 
 import {
   Sidebar,
-  SidebarHeader,
   SidebarContent,
-  SidebarMenu,
-  SidebarMenuItem,
-  SidebarMenuButton,
   SidebarFooter,
+  SidebarHeader,
+  SidebarMenu,
+  SidebarMenuButton,
+  SidebarMenuItem,
 } from '@/components/ui/sidebar';
 import { useRole } from '@/context/role-context';
 
@@ -72,6 +73,7 @@ const iconMap: { [key: string]: React.ElementType } = {
   bell: Bell,
   MessageSquare: MessageSquare,
   'file-question': FileQuestion,
+  'book-copy': BookCopy
 };
 
 
@@ -88,48 +90,45 @@ const navConfig = {
   },
   Principal: {
     sidebar_extra: [
-      { "icon": "users", "label": "Teachers", "path": "/dashboard/teachers" },
-      { "icon": "book", "label": "Classes", "path": "/dashboard/classes" },
-      { "icon": "clipboard-list", "label": "Attendance", "path": "/dashboard/attendance" },
+      { "icon": "book", "label": "Lesson Plans", "path": "/dashboard/lesson-notes" },
+      { "icon": "file-question", "label": "Exam Questions", "path": "/dashboard/exam-questions" },
       { "icon": "file-text", "label": "Reports", "path": "/dashboard/reports" }
     ],
   },
-  HeadOfDepartment: { // Using Principal for HOD
+  HeadOfDepartment: { 
     sidebar_extra: [
-      { "icon": "users", "label": "Teachers", "path": "/dashboard/teachers" },
-      { "icon": "book", "label": "Classes", "path": "/dashboard/classes" },
-      { "icon": "clipboard-list", "label": "Attendance", "path": "/dashboard/attendance" },
-      { "icon": "file-text", "label": "Reports", "path": "/dashboard/reports" }
+      { "icon": "book-copy", "label": "Lesson Plans", "path": "/dashboard/lesson-notes" },
+      { "icon": "users", "label": "Department Staff", "path": "/dashboard/users" },
+      { "icon": "file-text", "label": "Department Reports", "path": "/dashboard/reports" }
     ],
   },
   Director: {
     sidebar_extra: [
-      { "icon": "bar-chart", "label": "Analytics", "path": "/dashboard/analytics" },
-      { "icon": "users", "label": "Staff Overview", "path": "/dashboard/staff-overview" },
-      { "icon": "file-text", "label": "School Reports", "path": "/dashboard/school-reports" }
+      { "icon": "bar-chart", "label": "Analytics", "path": "/dashboard/reports" },
+      { "icon": "users", "label": "Staff Overview", "path": "/dashboard/users" },
+      { "icon": "dollar-sign", "label": "Financials", "path": "/dashboard/system/fees" }
     ],
   },
   ExamOfficer: {
     sidebar_extra: [
-      { "icon": "edit", "label": "Enter Results", "path": "/dashboard/results-entry" },
-      { "icon": "check-square", "label": "Approve Grades", "path": "/dashboard/grade-approval" },
-      { "icon": "book-open", "label": "Exams", "path": "/dashboard/exams" }
+      { "icon": "file-question", "label": "Review Questions", "path": "/dashboard/exam-questions" },
+      { "icon": "edit-3", "label": "Review Scores", "path": "/dashboard/scores" },
+      { "icon": "check-square", "label": "Generate Results", "path": "/dashboard/reports" },
     ],
   },
   Teacher: {
     sidebar_extra: [
-      { "icon": "book", "label": "Lesson Plans", "path": "/dashboard/lesson-notes" },
+      { "icon": "book-copy", "label": "Lesson Plans", "path": "/dashboard/lesson-notes" },
       { "icon": "file-question", "label": "Exam Questions", "path": "/dashboard/exam-questions" },
-      { "icon": "clipboard-list", "label": "Attendance", "path": "/dashboard/teacher-attendance" },
       { "icon": "edit-3", "label": "Enter Scores", "path": "/dashboard/scores" },
-      { "icon": "users", "label": "My Students", "path": "/dashboard/performance" }
+      { "icon": "users-round", "label": "My Students", "path": "/dashboard/performance" }
     ],
   },
   Accountant: {
     sidebar_extra: [
-      { "icon": "dollar-sign", "label": "Fees", "path": "/dashboard/fees" },
-      { "icon": "credit-card", "label": "Payments", "path": "/dashboard/payments" },
-      { "icon": "file-invoice", "label": "Invoices", "path": "/dashboard/invoices" }
+      { "icon": "dollar-sign", "label": "Fees", "path": "/dashboard/system/fees" },
+      { "icon": "credit-card", "label": "Payments", "path": "/dashboard/system/fees" },
+      { "icon": "file-invoice", "label": "Invoices", "path": "/dashboard/system/fees" }
     ],
   },
   Parent: {
@@ -164,8 +163,6 @@ const baseNav = [
 export function DashboardSidebar() {
   const pathname = usePathname();
   const { role, logout } = useRole();
-
-  const currentNav = role ? (navConfig as any)[role]?.sidebar_extra || [] : [];
   
   const renderNav = () => {
     const roleSpecificNav = role ? (navConfig as any)[role]?.sidebar_extra || [] : [];

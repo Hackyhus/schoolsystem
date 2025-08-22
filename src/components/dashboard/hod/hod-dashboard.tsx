@@ -1,7 +1,7 @@
 
 'use client';
 import {
-  BookCheck,
+  BookCopy,
   CheckCircle,
   Clock,
   Users,
@@ -31,6 +31,7 @@ import { db } from '@/lib/firebase';
 import type { MockLessonNote, MockUser } from '@/lib/schema';
 import { useToast } from '@/hooks/use-toast';
 import { useRole } from '@/context/role-context';
+import { Skeleton } from '@/components/ui/skeleton';
 
 export function HodDashboard() {
   const { user } = useRole();
@@ -63,7 +64,7 @@ export function HodDashboard() {
       const staffQuery = query(collection(db, 'users'), where('role', '==', 'Teacher'));
       const staffSnapshot = await getDocs(staffQuery);
       const staffList = staffSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as unknown as MockUser));
-      setStaff(staffList);
+      setStaff(staffList.slice(0, 5));
       
       setStats({
         pending,
@@ -112,7 +113,7 @@ export function HodDashboard() {
             <Clock className="h-6 w-6 text-primary" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{isLoading ? '...' : stats.pending}</div>
+            <div className="text-2xl font-bold">{isLoading ? <Skeleton className='w-10 h-8'/> : stats.pending}</div>
             <p className="text-xs text-muted-foreground">notes awaiting your approval</p>
           </CardContent>
         </Card>
@@ -122,7 +123,7 @@ export function HodDashboard() {
             <CheckCircle className="h-6 w-6 text-primary" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{isLoading ? '...' : stats.approved}</div>
+            <div className="text-2xl font-bold">{isLoading ? <Skeleton className='w-10 h-8'/> : stats.approved}</div>
              <p className="text-xs text-muted-foreground">total notes approved</p>
           </CardContent>
         </Card>
@@ -132,7 +133,7 @@ export function HodDashboard() {
             <XCircle className="h-6 w-6 text-primary" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{isLoading ? '...' : stats.rejected}</div>
+            <div className="text-2xl font-bold">{isLoading ? <Skeleton className='w-10 h-8'/> : stats.rejected}</div>
             <p className="text-xs text-muted-foreground">for revision or rejected</p>
           </CardContent>
         </Card>
@@ -142,7 +143,7 @@ export function HodDashboard() {
             <Users className="h-6 w-6 text-primary" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{isLoading ? '...' : stats.staffCount}</div>
+            <div className="text-2xl font-bold">{isLoading ? <Skeleton className='w-10 h-8'/> : stats.staffCount}</div>
             <p className="text-xs text-muted-foreground">teachers in your department</p>
           </CardContent>
         </Card>
@@ -152,8 +153,8 @@ export function HodDashboard() {
         <div className="lg:col-span-2">
             <Card>
                 <CardHeader>
-                    <CardTitle>Lesson Note Approval Queue</CardTitle>
-                    <CardDescription>Review and approve lesson notes from your department.</CardDescription>
+                    <CardTitle>Lesson Plan Approval Queue</CardTitle>
+                    <CardDescription>Review and approve lesson plans from your department.</CardDescription>
                 </CardHeader>
                 <CardContent>
                     <Table>
@@ -166,7 +167,14 @@ export function HodDashboard() {
                         </TableRow>
                     </TableHeader>
                     <TableBody>
-                        {notes.map((note) => (
+                        {isLoading ? Array.from({length: 3}).map((_, i) => (
+                           <TableRow key={i}>
+                                <TableCell><Skeleton className="h-5 w-24" /></TableCell>
+                                <TableCell><Skeleton className="h-5 w-20" /></TableCell>
+                                <TableCell><Skeleton className="h-6 w-28" /></TableCell>
+                                <TableCell className="text-right"><Skeleton className="h-8 w-20" /></TableCell>
+                           </TableRow>
+                        )) : notes.map((note) => (
                         <TableRow key={note.id}>
                             <TableCell>
                             <div className="font-medium">{note.teacherName}</div>
@@ -183,9 +191,9 @@ export function HodDashboard() {
                             </TableCell>
                         </TableRow>
                         ))}
-                        {notes.length === 0 && !isLoading && (
+                        {!isLoading && notes.length === 0 && (
                             <TableRow>
-                            <TableCell colSpan={4} className="h-24 text-center">No notes in the queue.</TableCell>
+                            <TableCell colSpan={4} className="h-24 text-center">No lesson plans in the queue.</TableCell>
                             </TableRow>
                         )}
                     </TableBody>
@@ -209,13 +217,18 @@ export function HodDashboard() {
                         </TableRow>
                     </TableHeader>
                     <TableBody>
-                        {staff.slice(0, 5).map((s) => (
+                        {isLoading ? Array.from({length: 3}).map((_, i) => (
+                           <TableRow key={i}>
+                                <TableCell><Skeleton className="h-5 w-24" /></TableCell>
+                                <TableCell><Skeleton className="h-5 w-32" /></TableCell>
+                           </TableRow>
+                        )) : staff.map((s) => (
                             <TableRow key={s.id}>
                             <TableCell className="font-medium">{s.name}</TableCell>
                             <TableCell>{s.email}</TableCell>
                             </TableRow>
                         ))}
-                        {staff.length === 0 && !isLoading && (
+                        {!isLoading && staff.length === 0 && (
                             <TableRow>
                             <TableCell colSpan={2} className="h-24 text-center">No staff found.</TableCell>
                             </TableRow>

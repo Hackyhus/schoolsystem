@@ -7,6 +7,7 @@ import { NewAdminDashboard } from '@/components/dashboard/admin/new-admin-dashbo
 import { HodDashboard } from '@/components/dashboard/hod/hod-dashboard';
 import { TeacherDashboard } from '@/components/dashboard/teacher/teacher-dashboard';
 import { ParentDashboard } from '@/components/dashboard/parent/parent-dashboard';
+import { ExamOfficerDashboard } from '@/components/dashboard/exam-officer/exam-officer-dashboard';
 
 export default function DashboardPage() {
   const { role, isLoading } = useRole();
@@ -32,8 +33,11 @@ export default function DashboardPage() {
     case 'Director':
       return <NewAdminDashboard />;
     case 'HeadOfDepartment':
+      return <HodDashboard />;
     case 'ExamOfficer':
+        return <ExamOfficerDashboard />;
     case 'Accountant':
+      // Using HOD dashboard as a placeholder for now
       return <HodDashboard />;
     case 'Teacher':
       return <TeacherDashboard />;
