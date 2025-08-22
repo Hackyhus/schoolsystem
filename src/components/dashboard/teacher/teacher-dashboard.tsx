@@ -1,3 +1,4 @@
+
 'use client';
 import { Book, CheckCircle, Clock, FileQuestion, Upload, XCircle } from 'lucide-react';
 import {
@@ -20,7 +21,7 @@ import { Button } from '@/components/ui/button';
 import Link from 'next/link';
 import { useRole } from '@/context/role-context';
 import { useEffect, useState, useCallback } from 'react';
-import { collection, query, where, getDocs } from 'firebase/firestore';
+import { collection, query, where, getDocs, orderBy } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import type { MockLessonNote } from '@/lib/schema';
 import { useToast } from '@/hooks/use-toast';
@@ -31,8 +32,11 @@ export function TeacherDashboard() {
   const { toast } = useToast();
   const [stats, setStats] = useState({
     pendingPlans: 0,
+    approvedPlans: 0,
+    rejectedPlans: 0,
     pendingExams: 0,
   });
+  const [recentNotes, setRecentNotes] = useState<MockLessonNote[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
   const fetchData = useCallback(async () => {
@@ -40,15 +44,19 @@ export function TeacherDashboard() {
     setIsLoading(true);
     try {
       // Fetch lesson notes
-      const notesQuery = query(collection(db, 'lessonNotes'), where('teacherId', '==', user.uid), where('status', 'in', ['Pending HOD Approval', 'Pending Admin Approval']));
+      const notesQuery = query(collection(db, 'lessonNotes'), where('teacherId', '==', user.uid), orderBy('submissionDate', 'desc'));
       const notesSnapshot = await getDocs(notesQuery);
+      const notesList = notesSnapshot.docs.map(doc => ({id: doc.id, ...doc.data() as MockLessonNote}));
+      setRecentNotes(notesList.slice(0, 3));
       
-      // Fetch exam questions - assuming a similar structure
+      // Fetch exam questions
       const examsQuery = query(collection(db, 'examQuestions'), where('teacherId', '==', user.uid), where('status', '==', 'Pending Review'));
       const examsSnapshot = await getDocs(examsQuery);
 
       setStats({
-        pendingPlans: notesSnapshot.size,
+        pendingPlans: notesList.filter(n => n.status.includes('Pending')).length,
+        approvedPlans: notesList.filter(n => n.status.includes('Approved')).length,
+        rejectedPlans: notesList.filter(n => n.status.includes('Rejected') || n.status.includes('Revision')).length,
         pendingExams: examsSnapshot.size,
       });
 
@@ -68,50 +76,138 @@ export function TeacherDashboard() {
     fetchData();
   }, [fetchData]);
 
+  const statusVariant = (status: string) => {
+    if (status.includes('Approved')) return 'default';
+    if (status.includes('Pending')) return 'secondary';
+    if (status.includes('Rejected') || status.includes('Revision')) return 'destructive';
+    return 'outline';
+  };
+
   return (
-    <div className="flex flex-col gap-8">
+    <div className="flex flex-col gap-6">
       <div>
         <h1 className="font-headline text-3xl font-bold">Teacher Dashboard</h1>
         <p className="text-muted-foreground">
-          Welcome, {user?.displayName || 'Teacher'}. Manage your lesson notes and performance data.
+          Welcome, {user?.displayName || 'Teacher'}. Manage your submissions and data.
         </p>
       </div>
-      <div className="grid gap-4 md:grid-cols-2">
+      <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">
         <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Pending Lesson Plans</CardTitle>
-            <Book className="h-4 w-4 text-muted-foreground" />
+          <CardHeader className="flex-row items-center justify-between pb-2">
+            <CardTitle className="text-sm font-medium">Pending Plans</CardTitle>
+            <Clock className="h-6 w-6 text-primary" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{isLoading ? '...' : stats.pendingPlans}</div>
-            <p className="text-xs text-muted-foreground">awaiting review by HOD</p>
+            <p className="text-xs text-muted-foreground">Lesson plans awaiting review</p>
           </CardContent>
         </Card>
         <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Pending Exam Questions</CardTitle>
-            <FileQuestion className="h-4 w-4 text-muted-foreground" />
+          <CardHeader className="flex-row items-center justify-between pb-2">
+            <CardTitle className="text-sm font-medium">Approved Plans</CardTitle>
+            <CheckCircle className="h-6 w-6 text-primary" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{isLoading ? '...' : stats.approvedPlans}</div>
+             <p className="text-xs text-muted-foreground">Total plans approved</p>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardHeader className="flex-row items-center justify-between pb-2">
+            <CardTitle className="text-sm font-medium">Pending Questions</CardTitle>
+            <FileQuestion className="h-6 w-6 text-primary" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{isLoading ? '...' : stats.pendingExams}</div>
-            <p className="text-xs text-muted-foreground">awaiting review by Exam Officer</p>
+            <p className="text-xs text-muted-foreground">Exam questions awaiting review</p>
           </CardContent>
         </Card>
       </div>
 
-      <Card>
-        <CardHeader>
-            <CardTitle>Notifications</CardTitle>
-            <CardDescription>
-             Recent updates on your submissions.
-            </CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="rounded-md border p-4 text-center text-muted-foreground">
-            <p>No new notifications.</p>
-          </div>
-        </CardContent>
-      </Card>
+       <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
+        <div className="lg:col-span-2">
+            <Card>
+                <CardHeader>
+                    <CardTitle>Recent Submissions</CardTitle>
+                    <CardDescription>
+                    Track the status of your recent lesson plan uploads.
+                    </CardDescription>
+                </CardHeader>
+                <CardContent>
+                    <Table>
+                    <TableHeader>
+                        <TableRow>
+                        <TableHead>Title</TableHead>
+                        <TableHead>Subject</TableHead>
+                        <TableHead>Status</TableHead>
+                        <TableHead className="text-right">Action</TableHead>
+                        </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                        {!isLoading && recentNotes.length > 0 ? recentNotes.map((note) => (
+                        <TableRow key={note.id}>
+                            <TableCell className="font-medium">{note.title}</TableCell>
+                            <TableCell>{note.subject}</TableCell>
+                            <TableCell>
+                               <Badge variant={statusVariant(note.status)}>{note.status}</Badge>
+                            </TableCell>
+                            <TableCell className="text-right">
+                            <Button asChild variant="outline" size="sm">
+                                <Link href={`/dashboard/lesson-notes/${note.id}`}>View</Link>
+                            </Button>
+                            </TableCell>
+                        </TableRow>
+                        )) : (
+                            <TableRow>
+                                <TableCell colSpan={4} className="h-24 text-center text-muted-foreground">
+                                    {isLoading ? "Loading submissions..." : "No recent submissions."}
+                                </TableCell>
+                            </TableRow>
+                        )}
+                    </TableBody>
+                    </Table>
+                </CardContent>
+            </Card>
+        </div>
+        <div className="lg:col-span-1 space-y-6">
+            <Card>
+                <CardHeader>
+                    <CardTitle>Quick Actions</CardTitle>
+                    <CardDescription>Jump right into your tasks.</CardDescription>
+                </CardHeader>
+                <CardContent className="flex flex-col gap-3">
+                    <Button asChild size="lg">
+                        <Link href="/dashboard/lesson-notes">
+                            <Upload className="mr-2"/> Upload Lesson Plan
+                        </Link>
+                    </Button>
+                     <Button asChild variant="outline" size="lg">
+                        <Link href="/dashboard/exam-questions">
+                            <Upload className="mr-2"/> Upload Exam Questions
+                        </Link>
+                    </Button>
+                    <Button asChild variant="outline" size="lg">
+                        <Link href="/dashboard/scores">
+                            Enter Student Scores
+                        </Link>
+                    </Button>
+                </CardContent>
+            </Card>
+             <Card>
+                <CardHeader>
+                    <CardTitle>Notifications</CardTitle>
+                    <CardDescription>
+                    Recent updates on your submissions.
+                    </CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                <div className="rounded-md border border-dashed p-8 text-center text-muted-foreground">
+                    <p>No new notifications.</p>
+                </div>
+                </CardContent>
+            </Card>
+        </div>
+      </div>
     </div>
   );
 }
