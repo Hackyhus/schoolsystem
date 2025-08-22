@@ -48,9 +48,10 @@ export default function LessonNotesPage() {
     try {
       let notesQuery;
       if (role === 'Teacher') {
+        // Query only by teacherId to avoid needing a composite index. Sorting is handled client-side.
         notesQuery = query(collection(db, 'lessonNotes'), where("teacherId", "==", user.uid));
       } else {
-        // Admin, HOD, Principal etc. see all. This could be scoped by department for HODs.
+        // Admin, HOD, Principal etc. see all. This can be ordered because it's a simple query.
         notesQuery = query(collection(db, 'lessonNotes'), orderBy("submissionDate", "desc"));
       }
       
@@ -59,7 +60,7 @@ export default function LessonNotesPage() {
         (doc) => ({ id: doc.id, ...doc.data() } as MockLessonNote)
       );
 
-      // Sort on the client-side
+      // Sort on the client-side to ensure consistent ordering.
       notesList.sort((a, b) => new Date(b.submissionDate).getTime() - new Date(a.submissionDate).getTime());
 
       setNotes(notesList);
