@@ -33,14 +33,8 @@ import {
   DialogTitle,
   DialogTrigger,
 } from '@/components/ui/dialog';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
 import Link from 'next/link';
+import { Badge } from '@/components/ui/badge';
 
 export default function UsersPage() {
   const [users, setUsers] = useState<MockUser[]>([]);
@@ -74,26 +68,6 @@ export default function UsersPage() {
     fetchUsers();
   }, [fetchUsers]);
 
-  const handleRoleChange = async (userId: string, newRole: string) => {
-    try {
-      const userDocRef = doc(db, 'users', userId);
-      await updateDoc(userDocRef, { role: newRole });
-      toast({
-        title: 'Role Updated',
-        description: `The user's role has been successfully updated to ${newRole}.`,
-      });
-      fetchUsers(); // Refresh the list to show the new role
-    } catch (error) {
-       console.error('Error updating role:', error);
-       toast({
-        variant: 'destructive',
-        title: 'Error',
-        description: 'Could not update the user role.',
-      });
-    }
-  };
-
-
   const removeUser = async (userId: string) => {
     if (
       !confirm(
@@ -124,9 +98,6 @@ export default function UsersPage() {
     fetchUsers();
     setIsModalOpen(false); // Close the modal
   };
-
-  const availableRoles = ['Principal', 'Director', 'HeadOfDepartment', 'Teacher', 'Accountant', 'ExamOfficer', 'Parent', 'Admin'];
-
 
   return (
     <div className="space-y-8">
@@ -186,7 +157,7 @@ export default function UsersPage() {
                       <Skeleton className="h-5 w-36" />
                     </TableCell>
                     <TableCell>
-                      <Skeleton className="h-5 w-24" />
+                      <Skeleton className="h-6 w-24" />
                     </TableCell>
                     <TableCell className="text-right">
                       <Skeleton className="h-8 w-8 inline-block" />
@@ -200,19 +171,7 @@ export default function UsersPage() {
                     <TableCell className="font-medium">{user.name}</TableCell>
                     <TableCell>{user.email}</TableCell>
                     <TableCell>
-                       <Select
-                        value={user.role}
-                        onValueChange={(newRole) => handleRoleChange(user.id, newRole)}
-                       >
-                        <SelectTrigger className="w-[180px]">
-                            <SelectValue placeholder="Select role" />
-                        </SelectTrigger>
-                        <SelectContent>
-                            {availableRoles.map(role => (
-                               <SelectItem key={role} value={role}>{role}</SelectItem>
-                            ))}
-                        </SelectContent>
-                       </Select>
+                       <Badge variant="outline">{user.role}</Badge>
                     </TableCell>
                     <TableCell className="text-right space-x-2">
                        <Button asChild variant="outline" size="icon">
