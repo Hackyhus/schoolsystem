@@ -15,7 +15,7 @@ import {
 } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
-import { Check, Send, ThumbsDown, ThumbsUp, User, File as FileIcon, MessageCircle, AlertTriangle } from 'lucide-react';
+import { Check, Send, ThumbsDown, ThumbsUp, User, File as FileIcon, MessageCircle, AlertTriangle, Upload } from 'lucide-react';
 import { LessonNoteSummarizer } from '@/components/lesson-note-summarizer';
 import { ReviewForm } from '@/components/dashboard/lesson-notes/review-form';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -172,6 +172,7 @@ export default function LessonNoteDetailPage() {
   
   const reviewerFeedback = getReviewerFeedback();
   const canTeacherResubmit = role === 'Teacher' && note.status === 'Needs Revision';
+  const canReview = role === 'Admin' || role === 'HeadOfDepartment';
 
   return (
     <div className="space-y-8">
@@ -226,15 +227,17 @@ export default function LessonNoteDetailPage() {
                     )}
                 </CardContent>
             </Card>
-             <Card>
-                <CardHeader>
-                    <CardTitle>Review & Approval</CardTitle>
-                    <CardDescription>Provide feedback for the teacher.</CardDescription>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  <ReviewForm onSubmit={handleReview} />
-                </CardContent>
-            </Card>
+            {canReview && (
+              <Card>
+                  <CardHeader>
+                      <CardTitle>Review & Approval</CardTitle>
+                      <CardDescription>Provide feedback for the teacher.</CardDescription>
+                  </CardHeader>
+                  <CardContent className="space-y-4">
+                    <ReviewForm onSubmit={handleReview} />
+                  </CardContent>
+              </Card>
+            )}
         </div>
         <div className="lg:col-span-1 space-y-8">
             <Card>
@@ -291,5 +294,3 @@ export default function LessonNoteDetailPage() {
     </div>
   );
 }
-
-    
