@@ -52,7 +52,7 @@ export function LoginForm() {
       
       if (isEmail) {
         // If it's an email, we already have it. Find the user doc to get the role.
-        userEmail = values.identifier;
+        userEmail = values.identifier.toLowerCase(); // Standardize email to lowercase
         const q = query(usersRef, where('email', '==', userEmail));
         const querySnapshot = await getDocs(q);
         if (querySnapshot.empty) {
@@ -62,7 +62,8 @@ export function LoginForm() {
 
       } else {
         // If it's a Staff/Student ID, find the user doc to get the email.
-        const q = query(usersRef, where('staffId', '==', values.identifier));
+        const staffId = values.identifier.toUpperCase(); // Standardize staffId to uppercase
+        const q = query(usersRef, where('staffId', '==', staffId));
         const querySnapshot = await getDocs(q);
         if (querySnapshot.empty) {
            throw new Error("Invalid credentials");
