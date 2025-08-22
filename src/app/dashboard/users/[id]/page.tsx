@@ -23,6 +23,7 @@ import { PersonalInfoForm } from '@/components/dashboard/profile/personal-info-f
 import { ProfessionalInfoForm } from '@/components/dashboard/profile/professional-info-form';
 import { BankDetailsForm } from '@/components/dashboard/profile/bank-details-form';
 import { Dialog, DialogTrigger, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
+import { cn } from '@/lib/utils';
 
 export default function UserProfilePage() {
   const params = useParams();
@@ -113,9 +114,9 @@ export default function UserProfilePage() {
             </Avatar>
             <div className="flex-1">
                 <CardTitle className="text-3xl">{user.name}</CardTitle>
-                <CardDescription className="flex items-center justify-center gap-2 md:justify-start">
+                <div className={cn("text-sm text-muted-foreground", "flex items-center justify-center gap-2 md:justify-start")}>
                   {user.email} <Badge variant="outline">{user.role}</Badge>
-                </CardDescription>
+                </div>
             </div>
              {canEdit && (
                <Dialog open={personalInfoModalOpen} onOpenChange={setPersonalInfoModalOpen}>
