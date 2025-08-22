@@ -2,7 +2,7 @@
 
 import { useRole } from '@/context/role-context';
 import { Skeleton } from '@/components/ui/skeleton';
-import { AdminDashboard } from '@/components/dashboard/admin/admin-dashboard';
+import { NewAdminDashboard } from '@/components/dashboard/admin/new-admin-dashboard';
 import { HodDashboard } from '@/components/dashboard/hod/hod-dashboard';
 import { TeacherDashboard } from '@/components/dashboard/teacher/teacher-dashboard';
 import { ParentDashboard } from '@/components/dashboard/parent/parent-dashboard';
@@ -27,7 +27,7 @@ export default function DashboardPage() {
 
   switch (role) {
     case 'Admin':
-      return <AdminDashboard />;
+      return <NewAdminDashboard />;
     case 'HeadOfDepartment':
       return <HodDashboard />;
     case 'Teacher':
