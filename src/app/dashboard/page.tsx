@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useRole } from '@/context/role-context';
@@ -27,12 +28,17 @@ export default function DashboardPage() {
 
   switch (role) {
     case 'Admin':
+    case 'Principal':
+    case 'Director':
       return <NewAdminDashboard />;
     case 'HeadOfDepartment':
+    case 'ExamOfficer':
+    case 'Accountant':
       return <HodDashboard />;
     case 'Teacher':
       return <TeacherDashboard />;
     case 'Parent':
+    case 'Student': // Students use the Parent dashboard
       return <ParentDashboard />;
     default:
       return <div>Invalid role. Please log out and try again.</div>;
