@@ -5,7 +5,7 @@ import {
   Utensils,
   BookUser,
   Clock,
-  Heartbeat,
+  Activity,
   GraduationCap,
 } from 'lucide-react';
 import {
@@ -137,7 +137,7 @@ export function NewAdminDashboard() {
           </CardContent>
         </Card>
         <Card>
-          <CardHeader className="flex-row items-center justify-between pb-2">
+          <CardHeader className="flex flex-row items-center justify-between pb-2">
             <CardTitle className="text-sm font-medium text-gray-600">Pending Approvals</CardTitle>
             <div className="w-12 h-12 bg-orange-500 rounded-lg flex items-center justify-center">
                 <Clock className="text-white" />
@@ -151,7 +151,7 @@ export function NewAdminDashboard() {
           <CardHeader className="flex flex-row items-center justify-between pb-2">
             <CardTitle className="text-sm font-medium text-gray-600">System Health</CardTitle>
              <div className="w-12 h-12 bg-purple-500 rounded-lg flex items-center justify-center">
-                <Heartbeat className="text-white" />
+                <Activity className="text-white" />
             </div>
           </CardHeader>
           <CardContent>
