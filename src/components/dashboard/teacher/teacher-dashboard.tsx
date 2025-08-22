@@ -26,6 +26,15 @@ import { db } from '@/lib/firebase';
 import type { MockLessonNote } from '@/lib/schema';
 import { useToast } from '@/hooks/use-toast';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from '@/components/ui/dialog';
+import { AddLessonNoteForm } from '../lesson-notes/add-lesson-note-form';
 
 export function TeacherDashboard() {
   const { user } = useRole();
@@ -38,6 +47,7 @@ export function TeacherDashboard() {
   });
   const [recentNotes, setRecentNotes] = useState<MockLessonNote[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [isModalOpen, setIsModalOpen] = useState(false);
 
   const fetchData = useCallback(async () => {
     if (!user) return;
@@ -75,6 +85,11 @@ export function TeacherDashboard() {
   useEffect(() => {
     fetchData();
   }, [fetchData]);
+
+  const handleSubmissionAdded = () => {
+    fetchData();
+    setIsModalOpen(false);
+  }
 
   const statusVariant = (status: string) => {
     if (status.includes('Approved')) return 'default';
@@ -176,16 +191,22 @@ export function TeacherDashboard() {
                     <CardDescription>Jump right into your tasks.</CardDescription>
                 </CardHeader>
                 <CardContent className="flex flex-col gap-3">
-                    <Button asChild size="lg">
-                        <Link href="/dashboard/lesson-notes">
-                            <Upload className="mr-2"/> Upload Lesson Plan
-                        </Link>
-                    </Button>
-                     <Button asChild variant="outline" size="lg">
-                        <Link href="/dashboard/exam-questions">
-                            <Upload className="mr-2"/> Upload Exam Questions
-                        </Link>
-                    </Button>
+                     <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
+                        <DialogTrigger asChild>
+                           <Button size="lg">
+                             <Upload className="mr-2"/> Upload Document
+                           </Button>
+                        </DialogTrigger>
+                        <DialogContent>
+                            <DialogHeader>
+                                <DialogTitle>Upload Document</DialogTitle>
+                                <DialogDescription>
+                                Select the class, subject, document type, and upload your file. It will be routed to the correct reviewer.
+                                </DialogDescription>
+                            </DialogHeader>
+                            <AddLessonNoteForm onNoteAdded={handleSubmissionAdded} />
+                        </DialogContent>
+                    </Dialog>
                     <Button asChild variant="outline" size="lg">
                         <Link href="/dashboard/scores">
                             Enter Student Scores

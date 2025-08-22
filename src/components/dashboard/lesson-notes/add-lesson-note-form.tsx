@@ -5,12 +5,7 @@ import React from 'react';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
 import * as z from 'zod';
-import {
-  collection,
-  doc,
-  setDoc,
-  serverTimestamp,
-} from 'firebase/firestore';
+import { collection, doc, setDoc } from 'firebase/firestore';
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { Button } from '@/components/ui/button';
 import {
@@ -25,7 +20,9 @@ import {
 import {
   Select,
   SelectContent,
+  SelectGroup,
   SelectItem,
+  SelectLabel,
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
@@ -38,12 +35,32 @@ import { useState } from 'react';
 
 const formSchema = z.object({
   title: z.string().min(1, { message: 'Title is required.' }),
+  type: z.enum(['Lesson Plan', 'Exam Question', 'Scores']),
   class: z.string().min(1, { message: 'Please select a class.' }),
   subject: z.string().min(1, { message: 'Please select a subject.' }),
   file: z
     .instanceof(FileList)
     .refine((files) => files?.length === 1, 'File is required.'),
 });
+
+const classLevels = [
+  {
+    category: 'Nursery',
+    values: ['Nursery 1', 'Nursery 2', 'Nursery 3'],
+  },
+  {
+    category: 'Primary',
+    values: ['Primary 1', 'Primary 2', 'Primary 3', 'Primary 4', 'Primary 5'],
+  },
+  {
+    category: 'Junior Secondary',
+    values: ['JSS1', 'JSS2', 'JSS3'],
+  },
+  {
+    category: 'Senior Secondary',
+    values: ['SS1', 'SS2', 'SS3'],
+  },
+];
 
 export function AddLessonNoteForm({
   onNoteAdded,
@@ -70,7 +87,7 @@ export function AddLessonNoteForm({
       toast({
         variant: 'destructive',
         title: 'Error',
-        description: 'You must be logged in to submit a lesson note.',
+        description: 'You must be logged in to submit a document.',
       });
       return;
     }
@@ -78,17 +95,33 @@ export function AddLessonNoteForm({
 
     try {
       const file = values.file[0];
+      const { type } = values;
+      
+      let collectionName = 'lessonNotes';
+      let status = 'Pending HOD Approval';
+      let reviewer = 'HOD';
+
+      if (type === 'Exam Question') {
+        collectionName = 'examQuestions';
+        status = 'Pending Review';
+        reviewer = 'Exam Officer';
+      } else if (type === 'Scores') {
+        collectionName = 'scores';
+        status = 'Pending Review';
+        reviewer = 'Exam Officer';
+      }
+
       const storageRef = ref(
         storage,
-        `lessonNotes/${user.uid}/${Date.now()}-${file.name}`
+        `${collectionName}/${user.uid}/${Date.now()}-${file.name}`
       );
 
       const uploadResult = await uploadBytes(storageRef, file);
       const downloadURL = await getDownloadURL(uploadResult.ref);
 
-      const newNoteRef = doc(collection(db, 'lessonNotes'));
-      await setDoc(newNoteRef, {
-        id: newNoteRef.id,
+      const newDocRef = doc(collection(db, collectionName));
+      await setDoc(newDocRef, {
+        id: newDocRef.id,
         title: values.title,
         class: values.class,
         subject: values.subject,
@@ -96,13 +129,15 @@ export function AddLessonNoteForm({
         storagePath: uploadResult.ref.fullPath,
         teacherId: user.uid,
         teacherName: user.displayName || 'Unknown Teacher',
-        status: 'Pending HOD Approval',
-        submissionDate: new Date().toLocaleDateString('en-CA'),
+        status: status,
+        submissionDate: new Date().toLocaleDateString('en-CA'), // YYYY-MM-DD
+        submittedOn: new Date(),
+        reviewer: reviewer,
       });
 
       toast({
-        title: 'Lesson Plan Submitted',
-        description: 'Your lesson plan has been sent to your HOD for review.',
+        title: 'Document Submitted',
+        description: `Your ${type} has been sent to the ${reviewer} for review.`,
       });
       form.reset();
       if (fileRef.current) {
@@ -110,12 +145,12 @@ export function AddLessonNoteForm({
       }
       onNoteAdded();
     } catch (e: any) {
-      console.error('Error submitting lesson note: ', e);
+      console.error('Error submitting document: ', e);
       toast({
         variant: 'destructive',
         title: 'Submission Failed',
         description:
-          e.message || 'There was a problem submitting your lesson note.',
+          e.message || 'There was a problem submitting your document.',
       });
     } finally {
       setIsSubmitting(false);
@@ -130,9 +165,9 @@ export function AddLessonNoteForm({
           name="title"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Lesson Title</FormLabel>
+              <FormLabel>Document Title</FormLabel>
               <FormControl>
-                <Input placeholder="e.g. Introduction to Algebra" {...field} />
+                <Input placeholder="e.g. Week 1 - Introduction to Algebra" {...field} />
               </FormControl>
               <FormMessage />
             </FormItem>
@@ -141,31 +176,27 @@ export function AddLessonNoteForm({
         <div className="grid grid-cols-2 gap-4">
           <FormField
             control={form.control}
-            name="class"
+            name="type"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Class</FormLabel>
-                <Select
-                  onValueChange={field.onChange}
-                  defaultValue={field.value}
-                >
-                  <FormControl>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select Class" />
-                    </SelectTrigger>
-                  </FormControl>
-                  <SelectContent>
-                    <SelectItem value="JSS 1">JSS 1</SelectItem>
-                    <SelectItem value="JSS 2">JSS 2</SelectItem>
-                    <SelectItem value="SS 1">SS 1</SelectItem>
-                    <SelectItem value="SS 2">SS 2</SelectItem>
-                  </SelectContent>
-                </Select>
+                <FormLabel>Document Type</FormLabel>
+                 <Select onValueChange={field.onChange} defaultValue={field.value}>
+                    <FormControl>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select document type" />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                        <SelectItem value="Lesson Plan">Lesson Plan</SelectItem>
+                        <SelectItem value="Exam Question">Exam Question</SelectItem>
+                        <SelectItem value="Scores">Scores</SelectItem>
+                    </SelectContent>
+                  </Select>
                 <FormMessage />
               </FormItem>
             )}
           />
-          <FormField
+           <FormField
             control={form.control}
             name="subject"
             render={({ field }) => (
@@ -195,22 +226,52 @@ export function AddLessonNoteForm({
             )}
           />
         </div>
+         <FormField
+            control={form.control}
+            name="class"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Class Level</FormLabel>
+                <Select
+                  onValueChange={field.onChange}
+                  defaultValue={field.value}
+                >
+                  <FormControl>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select Class" />
+                    </SelectTrigger>
+                  </FormControl>
+                  <SelectContent>
+                    {classLevels.map(group => (
+                        <SelectGroup key={group.category}>
+                            <SelectLabel>{group.category}</SelectLabel>
+                            {group.values.map(value => (
+                                <SelectItem key={value} value={value}>{value}</SelectItem>
+                            ))}
+                        </SelectGroup>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
         <FormField
           control={form.control}
           name="file"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Lesson Plan Document</FormLabel>
+              <FormLabel>Document File</FormLabel>
               <FormControl>
                 <Input
                   type="file"
-                  accept=".pdf, .doc, .docx"
+                  accept=".pdf, .doc, .docx, .xls, .xlsx"
                   ref={fileRef}
                   onChange={(e) => field.onChange(e.target.files)}
                 />
               </FormControl>
               <FormDescription>
-                Upload your lesson plan in PDF or Word format.
+                Upload your document here. It will be routed to the correct reviewer.
               </FormDescription>
               <FormMessage />
             </FormItem>

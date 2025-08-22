@@ -120,14 +120,14 @@ export default function LessonNotesPage() {
             <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
               <DialogTrigger asChild>
                 <Button>
-                  <Upload className="mr-2 h-4 w-4" /> Upload New Plan
+                  <Upload className="mr-2 h-4 w-4" /> Upload Document
                 </Button>
               </DialogTrigger>
               <DialogContent>
                  <DialogHeader>
-                    <DialogTitle>Upload Lesson Plan</DialogTitle>
+                    <DialogTitle>Upload Document</DialogTitle>
                     <DialogDescription>
-                      Select the class, subject, and upload your lesson plan file.
+                      Select the class, subject, document type, and upload your file. It will be routed to the correct reviewer.
                     </DialogDescription>
                  </DialogHeader>
                  <AddLessonNoteForm onNoteAdded={handleNoteAdded} />

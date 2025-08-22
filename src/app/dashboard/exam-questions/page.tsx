@@ -26,7 +26,7 @@ import { collection, query, where, getDocs, orderBy, doc, updateDoc } from 'fire
 import { db } from '@/lib/firebase';
 import { useToast } from '@/hooks/use-toast';
 import { Skeleton } from '@/components/ui/skeleton';
-import { AddExamQuestionForm } from '@/components/dashboard/exam-questions/add-exam-question-form';
+import { AddLessonNoteForm } from '@/components/dashboard/lesson-notes/add-lesson-note-form'; // Re-using the unified form
 import { format } from 'date-fns';
 
 type ExamQuestion = {
@@ -75,7 +75,7 @@ export default function ExamQuestionsPage() {
     fetchQuestions();
   }, [fetchQuestions]);
 
-  const handleQuestionAdded = () => {
+  const handleSubmissionAdded = () => {
     fetchQuestions();
     setIsModalOpen(false);
   }
@@ -147,17 +147,17 @@ export default function ExamQuestionsPage() {
              <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
               <DialogTrigger asChild>
                 <Button>
-                  <Upload className="mr-2 h-4 w-4" /> Upload Questions
+                  <Upload className="mr-2 h-4 w-4" /> Upload Document
                 </Button>
               </DialogTrigger>
               <DialogContent>
                  <DialogHeader>
-                    <DialogTitle>Upload Exam Questions</DialogTitle>
+                    <DialogTitle>Upload Document</DialogTitle>
                     <DialogDescription>
-                      Select the class, subject, and upload your questions file. This will be sent to the Exam Officer for review.
+                      Select the class, subject, and upload your file. It will be routed to the correct reviewer.
                     </DialogDescription>
                  </DialogHeader>
-                 <AddExamQuestionForm onQuestionAdded={handleQuestionAdded} />
+                 <AddLessonNoteForm onNoteAdded={handleSubmissionAdded} />
               </DialogContent>
             </Dialog>
           )}
