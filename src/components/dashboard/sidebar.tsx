@@ -156,8 +156,7 @@ const baseNav = [
   { "group": "Main", "links": [{ "icon": "home", "label": "Dashboard", "path": "/dashboard" }] },
   { "group": "User", "links": [
       { "icon": "user", "label": "Profile", "path": "/profile" },
-      { "icon": "bell", "label": "Notifications", "path": "/dashboard/notifications" },
-      { "icon": "lock", "label": "Change Password", "path": "/settings" }
+      { "icon": "bell", "label": "Notifications", "path": "/dashboard/notifications" }
   ]}
 ];
 
@@ -220,10 +219,12 @@ export function DashboardSidebar() {
       <SidebarFooter className="p-2">
         <SidebarMenu>
           <SidebarMenuItem>
-            <SidebarMenuButton tooltip="Settings">
-              <Settings />
-              <span>Settings</span>
-            </SidebarMenuButton>
+            <Link href="/dashboard/settings">
+              <SidebarMenuButton isActive={pathname === '/dashboard/settings'} tooltip="Settings">
+                <Settings />
+                <span>Settings</span>
+              </SidebarMenuButton>
+            </Link>
           </SidebarMenuItem>
           <SidebarMenuItem>
             <SidebarMenuButton onClick={logout} tooltip="Log Out">
