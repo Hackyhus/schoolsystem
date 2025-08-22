@@ -53,9 +53,13 @@ export function TeacherDashboard() {
     setIsLoading(true);
     try {
       // Fetch lesson notes
-      const notesQuery = query(collection(db, 'lessonNotes'), where('teacherId', '==', user.uid), orderBy('submissionDate', 'desc'));
+      const notesQuery = query(collection(db, 'lessonNotes'), where('teacherId', '==', user.uid));
       const notesSnapshot = await getDocs(notesQuery);
       const notesList = notesSnapshot.docs.map(doc => ({id: doc.id, ...doc.data() as MockLessonNote}));
+      
+      // Sort client-side to avoid index errors
+      notesList.sort((a, b) => new Date(b.submissionDate).getTime() - new Date(a.submissionDate).getTime());
+      
       setRecentNotes(notesList.slice(0, 3));
       
       // Fetch exam questions

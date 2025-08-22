@@ -22,6 +22,8 @@ import { useToast } from '@/hooks/use-toast';
 import { useRole } from '@/context/role-context';
 import { Button } from '@/components/ui/button';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
+import { Dialog, DialogTrigger, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
+import { AddLessonNoteForm } from '@/components/dashboard/lesson-notes/add-lesson-note-form';
 
 
 async function createNotification(teacherId: string, noteId: string, noteTitle: string, action: 'Approved' | 'Rejected' | 'Needs Revision') {
@@ -54,6 +56,7 @@ export default function LessonNoteDetailPage() {
   const [isLoading, setIsLoading] = useState(true);
   const { toast } = useToast();
   const { role, user } = useRole();
+  const [isResubmitModalOpen, setIsResubmitModalOpen] = useState(false);
 
   const fetchNote = useCallback(async () => {
     if (typeof id !== 'string') return;
@@ -126,6 +129,11 @@ export default function LessonNoteDetailPage() {
         });
     }
   }
+
+  const handleResubmission = () => {
+    fetchNote();
+    setIsResubmitModalOpen(false);
+  };
 
   const statusVariant = (status: string) => {
     if (status.includes('Approved')) return 'default';
@@ -217,10 +225,27 @@ export default function LessonNoteDetailPage() {
                     <p className="text-muted-foreground">No file was uploaded for this lesson note.</p>
                   )}
                    {canTeacherResubmit && (
-                      <Button className="w-full">
-                        <Upload className="mr-2 h-4 w-4" />
-                        Re-upload Corrected File
-                      </Button>
+                      <Dialog open={isResubmitModalOpen} onOpenChange={setIsResubmitModalOpen}>
+                        <DialogTrigger asChild>
+                          <Button className="w-full">
+                            <Upload className="mr-2 h-4 w-4" />
+                            Re-upload Corrected File
+                          </Button>
+                        </DialogTrigger>
+                        <DialogContent>
+                          <DialogHeader>
+                            <DialogTitle>Resubmit Corrected Document</DialogTitle>
+                            <DialogDescription>
+                              Upload the new version of your file. This will replace the previous one and restart the review process.
+                            </DialogDescription>
+                          </DialogHeader>
+                          <AddLessonNoteForm
+                            onNoteAdded={handleResubmission}
+                            existingNoteData={note}
+                            isResubmission={true}
+                          />
+                        </DialogContent>
+                      </Dialog>
                     )}
                 </CardContent>
             </Card>

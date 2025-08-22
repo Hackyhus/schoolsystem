@@ -127,6 +127,7 @@ export type MockLessonNote = {
     id: string;
     title: string;
     subject: string;
+    class: string;
     teacherId: string;
     teacherName: string;
     status: string;

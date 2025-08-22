@@ -25,13 +25,18 @@ export default function NotificationsPage() {
         if (!user) return;
         setIsLoading(true);
         try {
+            // Firestore doesn't support inequality filters on multiple properties.
+            // We fetch filtered by user and sort client-side to avoid needing a composite index.
             const q = query(
                 collection(db, 'notifications'),
-                where('toUserId', '==', user.uid),
-                orderBy('createdAt', 'desc')
+                where('toUserId', '==', user.uid)
             );
             const querySnapshot = await getDocs(q);
             const notifs = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as AppNotification));
+
+            // Sort client-side
+            notifs.sort((a, b) => b.createdAt.seconds - a.createdAt.seconds);
+            
             setNotifications(notifs);
         } catch (error) {
             console.error('Error fetching notifications:', error);

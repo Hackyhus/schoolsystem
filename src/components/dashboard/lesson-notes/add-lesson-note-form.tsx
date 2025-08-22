@@ -5,7 +5,7 @@ import React from 'react';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
 import * as z from 'zod';
-import { collection, doc, setDoc } from 'firebase/firestore';
+import { collection, doc, setDoc, updateDoc } from 'firebase/firestore';
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { Button } from '@/components/ui/button';
 import {
@@ -31,6 +31,7 @@ import { UploadCloud, Loader2 } from 'lucide-react';
 import { useRole } from '@/context/role-context';
 import { useState, useEffect } from 'react';
 import { useAcademicData } from '@/hooks/use-academic-data';
+import type { MockLessonNote } from '@/lib/schema';
 
 const formSchema = z.object({
   title: z.string().min(1, { message: 'Title is required.' }),
@@ -39,31 +40,33 @@ const formSchema = z.object({
   subject: z.string().min(1, { message: 'Please select a subject.' }),
   file: z
     .instanceof(FileList)
-    .refine((files) => files?.length === 1, 'File is required.'),
+    .refine((files) => files?.length >= 1, 'File is required.'),
 });
 
 export function AddLessonNoteForm({
   onNoteAdded,
   documentType,
+  existingNoteData,
+  isResubmission = false,
 }: {
   onNoteAdded: () => void;
   documentType?: 'Lesson Plan' | 'Exam Question';
+  existingNoteData?: MockLessonNote | null;
+  isResubmission?: boolean;
 }) {
   const { user } = useRole();
   const { toast } = useToast();
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const fileRef =
-    React.useRef<HTMLInputElement>() as React.MutableRefObject<HTMLInputElement>;
+  const fileRef = React.useRef<HTMLInputElement>() as React.MutableRefObject<HTMLInputElement>;
   const { classes, subjects, isLoading: isAcademicDataLoading } = useAcademicData();
-
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      title: '',
+      title: existingNoteData?.title || '',
       type: documentType || 'Lesson Plan',
-      class: '',
-      subject: '',
+      class: existingNoteData?.class || '',
+      subject: existingNoteData?.subject || '',
     },
   });
 
@@ -71,7 +74,15 @@ export function AddLessonNoteForm({
     if (documentType) {
         form.setValue('type', documentType);
     }
-  }, [documentType, form]);
+     if (isResubmission && existingNoteData) {
+      form.reset({
+        title: existingNoteData.title,
+        class: existingNoteData.class,
+        subject: existingNoteData.subject,
+        type: 'Lesson Plan', // Assuming resubmission is for lesson plans
+      });
+    }
+  }, [documentType, form, isResubmission, existingNoteData]);
 
   async function onSubmit(values: z.infer<typeof formSchema>) {
     if (!user) {
@@ -106,26 +117,44 @@ export function AddLessonNoteForm({
       const uploadResult = await uploadBytes(storageRef, file);
       const downloadURL = await getDownloadURL(uploadResult.ref);
 
-      const newDocRef = doc(collection(db, collectionName));
-      await setDoc(newDocRef, {
-        id: newDocRef.id,
-        title: values.title,
-        class: values.class,
-        subject: values.subject,
-        fileUrl: downloadURL,
-        storagePath: uploadResult.ref.fullPath,
-        teacherId: user.uid,
-        teacherName: user.displayName || 'Unknown Teacher',
-        status: status,
-        submissionDate: new Date().toLocaleDateString('en-CA'), // YYYY-MM-DD
-        submittedOn: new Date(),
-        reviewer: reviewer,
-      });
+      if (isResubmission && existingNoteData) {
+        // Update the existing document
+        const docRef = doc(db, collectionName, existingNoteData.id);
+        await updateDoc(docRef, {
+          fileUrl: downloadURL,
+          storagePath: uploadResult.ref.fullPath,
+          status: status, // Reset status for re-review
+          submittedOn: new Date(), // Update submission date
+          admin_review: null, // Clear previous reviews
+          hod_review: null,
+        });
+        toast({
+          title: 'Document Resubmitted',
+          description: `Your corrected ${type} has been sent for review.`,
+        });
+      } else {
+        // Create a new document
+         const newDocRef = doc(collection(db, collectionName));
+        await setDoc(newDocRef, {
+          id: newDocRef.id,
+          title: values.title,
+          class: values.class,
+          subject: values.subject,
+          fileUrl: downloadURL,
+          storagePath: uploadResult.ref.fullPath,
+          teacherId: user.uid,
+          teacherName: user.displayName || 'Unknown Teacher',
+          status: status,
+          submissionDate: new Date().toLocaleDateString('en-CA'), // YYYY-MM-DD
+          submittedOn: new Date(),
+          reviewer: reviewer,
+        });
 
-      toast({
-        title: 'Document Submitted',
-        description: `Your ${type} has been sent to the ${reviewer} for review.`,
-      });
+        toast({
+          title: 'Document Submitted',
+          description: `Your ${type} has been sent to the ${reviewer} for review.`,
+        });
+      }
       form.reset();
       if (fileRef.current) {
         fileRef.current.value = '';
@@ -154,7 +183,7 @@ export function AddLessonNoteForm({
             <FormItem>
               <FormLabel>Document Title</FormLabel>
               <FormControl>
-                <Input placeholder="e.g. Week 1 - Introduction to Algebra" {...field} />
+                <Input placeholder="e.g. Week 1 - Introduction to Algebra" {...field} disabled={isResubmission} />
               </FormControl>
               <FormMessage />
             </FormItem>
@@ -167,7 +196,7 @@ export function AddLessonNoteForm({
             render={({ field }) => (
               <FormItem>
                 <FormLabel>Document Type</FormLabel>
-                 <Select onValueChange={field.onChange} defaultValue={field.value} disabled={!!documentType}>
+                 <Select onValueChange={field.onChange} defaultValue={field.value} disabled={!!documentType || isResubmission}>
                     <FormControl>
                       <SelectTrigger>
                         <SelectValue placeholder="Select document type" />
@@ -191,7 +220,7 @@ export function AddLessonNoteForm({
                 <Select
                   onValueChange={field.onChange}
                   defaultValue={field.value}
-                  disabled={isAcademicDataLoading}
+                  disabled={isAcademicDataLoading || isResubmission}
                 >
                   <FormControl>
                     <SelectTrigger>
@@ -218,7 +247,7 @@ export function AddLessonNoteForm({
                 <Select
                   onValueChange={field.onChange}
                   defaultValue={field.value}
-                   disabled={isAcademicDataLoading}
+                   disabled={isAcademicDataLoading || isResubmission}
                 >
                   <FormControl>
                     <SelectTrigger>
@@ -240,7 +269,7 @@ export function AddLessonNoteForm({
           name="file"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Document File</FormLabel>
+              <FormLabel>{isResubmission ? 'New Document File' : 'Document File'}</FormLabel>
               <FormControl>
                 <Input
                   type="file"
@@ -250,7 +279,7 @@ export function AddLessonNoteForm({
                 />
               </FormControl>
               <FormDescription>
-                Upload your document here. It will be routed to the correct reviewer.
+                {isResubmission ? 'Upload the corrected version of your document.' : 'Upload your document here. It will be routed to the correct reviewer.'}
               </FormDescription>
               <FormMessage />
             </FormItem>
@@ -264,7 +293,7 @@ export function AddLessonNoteForm({
             </>
           ) : (
             <>
-              <UploadCloud className="mr-2 h-4 w-4" /> Submit for Review
+              <UploadCloud className="mr-2 h-4 w-4" /> {isResubmission ? 'Resubmit for Review' : 'Submit for Review'}
             </>
           )}
         </Button>
