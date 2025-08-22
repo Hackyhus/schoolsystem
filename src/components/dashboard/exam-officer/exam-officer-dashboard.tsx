@@ -1,9 +1,9 @@
 
 'use client';
 import {
+  Book,
   CheckSquare,
   Clock,
-  Edit3,
   FileQuestion,
   Users,
 } from 'lucide-react';
@@ -45,9 +45,9 @@ export function ExamOfficerDashboard() {
   const { toast } = useToast();
   const [questions, setQuestions] = useState<ExamQuestion[]>([]);
   const [stats, setStats] = useState({
-    pendingQuestions: 0,
-    approvedQuestions: 0,
-    pendingScores: 0, 
+    subjects: 15, // Placeholder
+    teachers: 0,
+    pending: 0,
   });
   const [isLoading, setIsLoading] = useState(true);
 
@@ -55,21 +55,18 @@ export function ExamOfficerDashboard() {
     if (!user) return;
     setIsLoading(true);
     try {
-      const questionsQuery = query(collection(db, 'examQuestions'), orderBy('submittedOn', 'desc'));
+      const questionsQuery = query(collection(db, 'examQuestions'), where('status', '==', 'Pending Review'), orderBy('submittedOn', 'desc'));
       const questionsSnapshot = await getDocs(questionsQuery);
       const questionsList = questionsSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as ExamQuestion));
       setQuestions(questionsList.slice(0, 5)); 
 
-      const pending = questionsList.filter(n => n.status.includes('Pending')).length;
-      const approved = questionsList.filter(n => n.status.includes('Approved')).length;
+      const teachersQuery = query(collection(db, 'users'), where('role', '==', 'Teacher'));
+      const teachersSnapshot = await getDocs(teachersQuery);
       
-      // Placeholder for scores logic
-      const pendingScores = 0; 
-
       setStats({
-        pendingQuestions: pending,
-        approvedQuestions: approved,
-        pendingScores,
+        subjects: 15, // Replace with actual logic later
+        teachers: teachersSnapshot.size,
+        pending: questionsList.length,
       });
 
     } catch (error) {
@@ -101,38 +98,39 @@ export function ExamOfficerDashboard() {
        <div>
         <h1 className="font-headline text-3xl font-bold">Exam Officer Dashboard</h1>
         <p className="text-muted-foreground">
-          Review questions, manage scores, and generate results.
+          Manage academic assessments, from question review to final results.
         </p>
       </div>
 
       <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
         <Card>
           <CardHeader className="flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium">Pending Questions</CardTitle>
-            <FileQuestion className="h-6 w-6 text-primary" />
+            <CardTitle className="text-sm font-medium">Total Subjects</CardTitle>
+            <Book className="h-6 w-6 text-primary" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{isLoading ? <Skeleton className='w-10 h-8'/> : stats.pendingQuestions}</div>
-            <p className="text-xs text-muted-foreground">submissions awaiting review</p>
+            <div className="text-2xl font-bold">{isLoading ? <Skeleton className='w-10 h-8'/> : stats.subjects}</div>
+            <p className="text-xs text-muted-foreground">subjects offered</p>
           </CardContent>
         </Card>
         <Card>
           <CardHeader className="flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium">Scores to Process</CardTitle>
-            <Edit3 className="h-6 w-6 text-primary" />
+            <CardTitle className="text-sm font-medium">Total Teachers</CardTitle>
+            <Users className="h-6 w-6 text-primary" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{isLoading ? <Skeleton className='w-10 h-8'/> : stats.pendingScores}</div>
-             <p className="text-xs text-muted-foreground">score sheets awaiting processing</p>
+            <div className="text-2xl font-bold">{isLoading ? <Skeleton className='w-10 h-8'/> : stats.teachers}</div>
+             <p className="text-xs text-muted-foreground">currently active</p>
           </CardContent>
         </Card>
         <Card>
           <CardHeader className="flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium">Results Generation</CardTitle>
-            <CheckSquare className="h-6 w-6 text-primary" />
+            <CardTitle className="text-sm font-medium">Pending Approvals</CardTitle>
+            <Clock className="h-6 w-6 text-primary" />
           </CardHeader>
           <CardContent>
-             <Button className='mt-3'>Generate Term Results</Button>
+             <div className="text-2xl font-bold">{isLoading ? <Skeleton className='w-10 h-8'/> : stats.pending}</div>
+             <p className="text-xs text-muted-foreground">questions & scores</p>
           </CardContent>
         </Card>
       </div>
@@ -140,7 +138,7 @@ export function ExamOfficerDashboard() {
       <div className="grid grid-cols-1">
         <Card>
             <CardHeader>
-                <CardTitle>Exam Question Review Queue</CardTitle>
+                <CardTitle>Exam Question Review</CardTitle>
                 <CardDescription>Review and approve exam questions from teachers.</CardDescription>
             </CardHeader>
             <CardContent>
@@ -177,8 +175,7 @@ export function ExamOfficerDashboard() {
                         </TableCell>
                         <TableCell className="text-right">
                         <Button asChild variant="outline" size="sm">
-                           {/* This will link to a dynamic page later */}
-                          <Link href="#">Review</Link>
+                           <Link href="/dashboard/exam-questions">Review</Link>
                         </Button>
                         </TableCell>
                     </TableRow>

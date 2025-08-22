@@ -12,7 +12,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import Link from 'next/link';
 import { useRole } from '@/context/role-context';
-import { Upload } from 'lucide-react';
+import { Upload, ThumbsUp, ThumbsDown } from 'lucide-react';
 import { useState, useEffect, useCallback } from 'react';
 import {
   Dialog,
@@ -22,7 +22,7 @@ import {
   DialogTitle,
   DialogTrigger,
 } from '@/components/ui/dialog';
-import { collection, query, where, getDocs, orderBy } from 'firebase/firestore';
+import { collection, query, where, getDocs, orderBy, doc, updateDoc } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import { useToast } from '@/hooks/use-toast';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -80,6 +80,25 @@ export default function ExamQuestionsPage() {
     setIsModalOpen(false);
   }
 
+  const handleReview = async (questionId: string, newStatus: 'Approved' | 'Rejected') => {
+    try {
+        const questionRef = doc(db, 'examQuestions', questionId);
+        await updateDoc(questionRef, { status: newStatus });
+        toast({
+            title: `Question ${newStatus}`,
+            description: "The submission has been updated.",
+        });
+        fetchQuestions(); // Refresh list
+    } catch (error) {
+        console.error("Error updating question status:", error);
+        toast({
+            variant: "destructive",
+            title: "Error",
+            description: "Could not update the submission.",
+        });
+    }
+  };
+
   const statusVariant = (status: string) => {
     if (status.includes('Approved')) return 'default';
     if (status.includes('Pending')) return 'secondary';
@@ -87,10 +106,24 @@ export default function ExamQuestionsPage() {
     return 'outline';
   };
 
-  const getActionText = () => {
-    if (role === 'Teacher') return 'View';
-    if (role === 'ExamOfficer') return 'Review';
-    return 'View';
+  const getActionButtons = (q: ExamQuestion) => {
+     if (role === 'Teacher') {
+         return (
+             <Button asChild variant="outline" size="sm">
+                <Link href="#">View</Link>
+             </Button>
+         )
+     }
+     return (
+        <div className="flex gap-2">
+            <Button size="sm" variant="outline" onClick={() => handleReview(q.id, 'Approved')}>
+                <ThumbsUp className="mr-2 h-4 w-4" /> Approve
+            </Button>
+            <Button size="sm" variant="destructive" onClick={() => handleReview(q.id, 'Rejected')}>
+                <ThumbsDown className="mr-2 h-4 w-4" /> Reject
+            </Button>
+        </div>
+     );
   }
 
   return (
@@ -150,7 +183,7 @@ export default function ExamQuestionsPage() {
                       {role !== 'Teacher' && <TableCell><Skeleton className="h-5 w-24" /></TableCell>}
                       <TableCell><Skeleton className="h-5 w-24" /></TableCell>
                       <TableCell><Skeleton className="h-6 w-28" /></TableCell>
-                      <TableCell className="text-right"><Skeleton className="h-8 w-20" /></TableCell>
+                      <TableCell className="text-right"><Skeleton className="h-8 w-40" /></TableCell>
                     </TableRow>
                   ))
               ) : questions.map((q) => (
@@ -163,10 +196,7 @@ export default function ExamQuestionsPage() {
                     <Badge variant={statusVariant(q.status)}>{q.status}</Badge>
                   </TableCell>
                   <TableCell className="text-right">
-                    <Button asChild variant="outline" size="sm">
-                       {/* This will link to a dynamic page later */}
-                      <Link href="#">{getActionText()}</Link>
-                    </Button>
+                    {getActionButtons(q)}
                   </TableCell>
                 </TableRow>
               ))}

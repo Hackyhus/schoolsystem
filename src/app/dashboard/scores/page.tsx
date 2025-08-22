@@ -24,21 +24,26 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Input } from '@/components/ui/input';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import type { MockUser } from '@/lib/schema';
 import { useToast } from '@/hooks/use-toast';
 import { Skeleton } from '@/components/ui/skeleton';
-import { collection, getDocs, query, where } from 'firebase/firestore';
+import { collection, getDocs, query, where, doc, updateDoc, writeBatch } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
+import { useRole } from '@/context/role-context';
+import { Badge } from '@/components/ui/badge';
+import { ThumbsDown, ThumbsUp } from 'lucide-react';
 
 type Score = {
   ca1: number;
   ca2: number;
   exam: number;
   total: number;
+  status: 'Pending' | 'Approved' | 'Rejected';
 };
 
 export default function ScoresPage() {
+  const { role } = useRole();
   const [selectedClass, setSelectedClass] = useState('');
   const [selectedSubject, setSelectedSubject] = useState('');
   const [students, setStudents] = useState<MockUser[]>([]);
@@ -70,7 +75,7 @@ export default function ScoresPage() {
       // Initialize scores for the loaded students
       const initialScores: Record<string, Score> = {};
       studentsList.forEach((student) => {
-        initialScores[student.id] = { ca1: 0, ca2: 0, exam: 0, total: 0 };
+        initialScores[student.id] = { ca1: 0, ca2: 0, exam: 0, total: 0, status: 'Pending' };
       });
       setScores(initialScores);
 
@@ -86,7 +91,7 @@ export default function ScoresPage() {
     }
   };
 
-  const handleScoreChange = (studentId: string, field: keyof Omit<Score, 'total'>, value: string) => {
+  const handleScoreChange = (studentId: string, field: keyof Omit<Score, 'total' | 'status'>, value: string) => {
     const numericValue = Number(value) || 0;
     setScores(prevScores => {
       const newScores = { ...prevScores };
@@ -107,15 +112,184 @@ export default function ScoresPage() {
       });
   }
 
+  const handleReview = async (studentId: string, newStatus: 'Approved' | 'Rejected') => {
+    setScores(prev => ({...prev, [studentId]: {...prev[studentId], status: newStatus}}));
+    // In a real app, this would also update the database
+    toast({ title: `Score ${newStatus}` });
+  }
+
+  const handleApproveAll = async () => {
+    // This is a placeholder for a batch update
+    const updatedScores = { ...scores };
+    Object.keys(updatedScores).forEach(studentId => {
+        if(updatedScores[studentId].status === 'Pending') {
+            updatedScores[studentId].status = 'Approved';
+        }
+    });
+    setScores(updatedScores);
+    toast({ title: 'All Pending Scores Approved' });
+  };
+  
+  const statusVariant = (status: string) => {
+    if (status.includes('Approved')) return 'default';
+    if (status.includes('Pending')) return 'secondary';
+    if (status.includes('Rejected')) return 'destructive';
+    return 'outline';
+  };
+
+  const renderRoleSpecificContent = () => {
+    if (role === 'Teacher') {
+        return (
+             <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Student Name</TableHead>
+                    <TableHead className="w-[120px]">CA 1 (20%)</TableHead>
+                    <TableHead className="w-[120px]">CA 2 (20%)</TableHead>
+                    <TableHead className="w-[120px]">Exam (60%)</TableHead>
+                    <TableHead className="w-[100px] text-right">Total</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {isLoading ? (
+                    Array.from({ length: 3 }).map((_, i) => (
+                        <TableRow key={i}>
+                            <TableCell><Skeleton className="h-5 w-32" /></TableCell>
+                            <TableCell><Skeleton className="h-8 w-full" /></TableCell>
+                            <TableCell><Skeleton className="h-8 w-full" /></TableCell>
+                            <TableCell><Skeleton className="h-8 w-full" /></TableCell>
+                            <TableCell className="text-right"><Skeleton className="h-5 w-12" /></TableCell>
+                        </TableRow>
+                    ))
+                  ) : students.length > 0 ? (
+                    students.map((student) => (
+                      <TableRow key={student.id}>
+                        <TableCell className="font-medium">{student.name}</TableCell>
+                        <TableCell>
+                          <Input
+                            type="number"
+                            max={20}
+                            onChange={(e) => handleScoreChange(student.id, 'ca1', e.target.value)}
+                          />
+                        </TableCell>
+                        <TableCell>
+                          <Input
+                            type="number"
+                            max={20}
+                            onChange={(e) => handleScoreChange(student.id, 'ca2', e.target.value)}
+                          />
+                        </TableCell>
+                        <TableCell>
+                          <Input
+                            type="number"
+                            max={60}
+                            onChange={(e) => handleScoreChange(student.id, 'exam', e.target.value)}
+                          />
+                        </TableCell>
+                        <TableCell className="text-right font-medium">
+                            {scores[student.id]?.total || 0}
+                        </TableCell>
+                      </TableRow>
+                    ))
+                  ) : (
+                    <TableRow>
+                      <TableCell
+                        colSpan={5}
+                        className="h-24 text-center text-muted-foreground"
+                      >
+                        Select a class and subject to load students.
+                      </TableCell>
+                    </TableRow>
+                  )}
+                </TableBody>
+            </Table>
+        )
+    }
+
+    if (role === 'ExamOfficer') {
+        return (
+             <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Student Name</TableHead>
+                    <TableHead>Score</TableHead>
+                    <TableHead>Status</TableHead>
+                    <TableHead className="text-right">Action</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                   {isLoading ? (
+                     Array.from({ length: 3 }).map((_, i) => (
+                        <TableRow key={i}>
+                            <TableCell><Skeleton className="h-5 w-32" /></TableCell>
+                            <TableCell><Skeleton className="h-5 w-16" /></TableCell>
+                            <TableCell><Skeleton className="h-6 w-24" /></TableCell>
+                            <TableCell className="text-right"><Skeleton className="h-8 w-40" /></TableCell>
+                        </TableRow>
+                    ))
+                  ) : students.length > 0 ? (
+                    students.map((student) => (
+                      <TableRow key={student.id}>
+                        <TableCell className="font-medium">{student.name}</TableCell>
+                        <TableCell>{scores[student.id]?.total || 0}</TableCell>
+                        <TableCell>
+                            <Badge variant={statusVariant(scores[student.id]?.status)}>{scores[student.id]?.status}</Badge>
+                        </TableCell>
+                        <TableCell className="text-right space-x-2">
+                             <Button size="sm" variant="outline" onClick={() => handleReview(student.id, 'Approved')} disabled={scores[student.id]?.status === 'Approved'}>
+                                <ThumbsUp className="mr-2 h-4 w-4" /> Approve
+                            </Button>
+                            <Button size="sm" variant="destructive" onClick={() => handleReview(student.id, 'Rejected')} disabled={scores[student.id]?.status === 'Rejected'}>
+                                <ThumbsDown className="mr-2 h-4 w-4" /> Reject
+                            </Button>
+                        </TableCell>
+                      </TableRow>
+                    ))
+                  ) : (
+                    <TableRow>
+                      <TableCell
+                        colSpan={4}
+                        className="h-24 text-center text-muted-foreground"
+                      >
+                        Select a class and subject to load scores.
+                      </TableCell>
+                    </TableRow>
+                  )}
+                </TableBody>
+            </Table>
+        )
+    }
+    return null;
+  }
+
+  const renderFooter = () => {
+    if (students.length === 0) return null;
+    if (role === 'Teacher') {
+        return (
+            <div className="mt-6 flex justify-end">
+              <Button onClick={handleSaveScores}>Submit Scores to Exam Officer</Button>
+            </div>
+        )
+    }
+    if (role === 'ExamOfficer') {
+         return (
+            <div className="mt-6 flex justify-end">
+              <Button onClick={handleApproveAll}>Approve All Pending</Button>
+            </div>
+        )
+    }
+    return null;
+  }
+
 
   return (
     <div className="space-y-8">
       <div>
         <h1 className="font-headline text-3xl font-bold">
-          Enter Student Scores
+          {role === 'Teacher' ? 'Enter Student Scores' : 'Validate Student Scores'}
         </h1>
         <p className="text-muted-foreground">
-          Input Continuous Assessment (CA) and exam scores for your students.
+          {role === 'Teacher' ? 'Input Continuous Assessment (CA) and exam scores for your students.' : 'Validate scores submitted by teachers before result generation.'}
         </p>
       </div>
 
@@ -148,79 +322,13 @@ export default function ScoresPage() {
               </SelectContent>
             </Select>
             <Button onClick={handleLoadStudents} disabled={isLoading}>
-              {isLoading ? 'Loading...' : 'Load Students'}
+              {isLoading ? 'Loading...' : 'Load Data'}
             </Button>
           </div>
         </CardHeader>
         <CardContent>
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Student Name</TableHead>
-                <TableHead className="w-[120px]">CA 1 (20%)</TableHead>
-                <TableHead className="w-[120px]">CA 2 (20%)</TableHead>
-                <TableHead className="w-[120px]">Exam (60%)</TableHead>
-                <TableHead className="w-[100px] text-right">Total</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {isLoading ? (
-                 Array.from({ length: 3 }).map((_, i) => (
-                    <TableRow key={i}>
-                        <TableCell><Skeleton className="h-5 w-32" /></TableCell>
-                        <TableCell><Skeleton className="h-8 w-full" /></TableCell>
-                        <TableCell><Skeleton className="h-8 w-full" /></TableCell>
-                        <TableCell><Skeleton className="h-8 w-full" /></TableCell>
-                        <TableCell className="text-right"><Skeleton className="h-5 w-12" /></TableCell>
-                    </TableRow>
-                ))
-              ) : students.length > 0 ? (
-                students.map((student) => (
-                  <TableRow key={student.id}>
-                    <TableCell className="font-medium">{student.name}</TableCell>
-                    <TableCell>
-                      <Input
-                        type="number"
-                        max={20}
-                        onChange={(e) => handleScoreChange(student.id, 'ca1', e.target.value)}
-                      />
-                    </TableCell>
-                     <TableCell>
-                      <Input
-                        type="number"
-                        max={20}
-                         onChange={(e) => handleScoreChange(student.id, 'ca2', e.target.value)}
-                      />
-                    </TableCell>
-                     <TableCell>
-                      <Input
-                        type="number"
-                        max={60}
-                         onChange={(e) => handleScoreChange(student.id, 'exam', e.target.value)}
-                      />
-                    </TableCell>
-                    <TableCell className="text-right font-medium">
-                        {scores[student.id]?.total || 0}
-                    </TableCell>
-                  </TableRow>
-                ))
-              ) : (
-                <TableRow>
-                  <TableCell
-                    colSpan={5}
-                    className="h-24 text-center text-muted-foreground"
-                  >
-                    Select a class and subject to load students.
-                  </TableCell>
-                </TableRow>
-              )}
-            </TableBody>
-          </Table>
-          {students.length > 0 && (
-            <div className="mt-6 flex justify-end">
-              <Button onClick={handleSaveScores}>Submit Scores to Exam Officer</Button>
-            </div>
-          )}
+          {renderRoleSpecificContent()}
+          {renderFooter()}
         </CardContent>
       </Card>
     </div>
