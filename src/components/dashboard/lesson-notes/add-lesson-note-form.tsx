@@ -43,6 +43,13 @@ const formSchema = z.object({
     .refine((files) => files?.length >= 1, 'File is required.'),
 });
 
+// Update the schema for resubmissions, where the file is optional initially
+// but we will still require it in the logic. This is for the form state.
+const resubmissionSchema = formSchema.extend({
+  file: z.instanceof(FileList).optional(),
+});
+
+
 export function AddLessonNoteForm({
   onNoteAdded,
   documentType,
@@ -60,8 +67,10 @@ export function AddLessonNoteForm({
   const fileRef = React.useRef<HTMLInputElement>() as React.MutableRefObject<HTMLInputElement>;
   const { classes, subjects, isLoading: isAcademicDataLoading } = useAcademicData();
 
-  const form = useForm<z.infer<typeof formSchema>>({
-    resolver: zodResolver(formSchema),
+  const currentSchema = isResubmission ? resubmissionSchema : formSchema;
+
+  const form = useForm<z.infer<typeof currentSchema>>({
+    resolver: zodResolver(currentSchema),
     defaultValues: {
       title: existingNoteData?.title || '',
       type: documentType || 'Lesson Plan',
@@ -84,7 +93,7 @@ export function AddLessonNoteForm({
     }
   }, [documentType, form, isResubmission, existingNoteData]);
 
-  async function onSubmit(values: z.infer<typeof formSchema>) {
+  async function onSubmit(values: z.infer<typeof currentSchema>) {
     if (!user) {
       toast({
         variant: 'destructive',
@@ -93,6 +102,17 @@ export function AddLessonNoteForm({
       });
       return;
     }
+
+    if (!values.file || values.file.length === 0) {
+      toast({
+        variant: 'destructive',
+        title: 'Error',
+        description: 'A file is required for submission.',
+      });
+      return;
+    }
+
+
     setIsSubmitting(true);
 
     try {

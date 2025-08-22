@@ -88,35 +88,34 @@ export default function LessonNoteDetailPage() {
   const handleReview = async (action: 'Approve' | 'Reject' | 'Revision', comment: string) => {
     if (typeof id !== 'string' || !note || !user) return;
 
-    let actionPastTense: 'Approved' | 'Rejected' | 'Needs Revision' = 'Approved';
-    if (action === 'Reject') actionPastTense = 'Rejected';
-    if (action === 'Revision') actionPastTense = 'Needs Revision';
+    let newStatus: 'Approved' | 'Rejected' | 'Needs Revision' = 'Approved';
+    if (action === 'Reject') newStatus = 'Rejected';
+    if (action === 'Revision') newStatus = 'Needs Revision';
 
-    let newStatus = note.status;
-    let reviewData = {};
     const reviewerName = user.displayName || 'Reviewer';
-    const reviewComment = `${actionPastTense} by ${reviewerName}: ${comment}`;
+    const reviewComment = `${newStatus} by ${reviewerName}: ${comment}`;
+    
+    let reviewData = {};
 
     if (role === 'HeadOfDepartment') {
-        if(action === 'Approve') newStatus = 'Pending Admin Approval';
-        else if(action === 'Reject') newStatus = 'Rejected by HOD';
-        else if(action === 'Revision') newStatus = 'Needs Revision';
-      reviewData = { status: newStatus, hod_review: reviewComment };
+      reviewData = { status: newStatus, hod_review: reviewComment, admin_review: null }; // HOD is final approver now
     } else if (role === 'Admin' || role === 'Principal' || role === 'Director') {
-        if(action === 'Approve') newStatus = 'Approved';
-        else if(action === 'Reject') newStatus = 'Rejected by Admin';
-        else if(action === 'Revision') newStatus = 'Needs Revision';
-       reviewData = { status: newStatus, admin_review: reviewComment };
+      // Admins can also review, their review is final.
+       reviewData = { status: newStatus, admin_review: reviewComment, hod_review: note.hod_review };
+    } else {
+      toast({ variant: "destructive", title: "Unauthorized", description: "You do not have permission to review this."});
+      return;
     }
+
 
     try {
         const docRef = doc(db, 'lessonNotes', id);
         await updateDoc(docRef, reviewData);
         
-        await createNotification(note.teacherId, note.id, note.title, actionPastTense);
+        await createNotification(note.teacherId, note.id, note.title, newStatus);
 
         toast({
-            title: `Lesson Note ${actionPastTense}`,
+            title: `Lesson Note ${newStatus}`,
             description: "The status has been updated and the teacher has been notified.",
         });
         fetchNote(); // Re-fetch the note to show updated status
@@ -145,6 +144,7 @@ export default function LessonNoteDetailPage() {
   
   const getReviewerFeedback = () => {
     if (note?.status.includes('Needs Revision')) {
+      // Show the most recent feedback
       return note.admin_review || note.hod_review;
     }
     return null;
@@ -177,7 +177,7 @@ export default function LessonNoteDetailPage() {
   
   const reviewerFeedback = getReviewerFeedback();
   const canTeacherResubmit = role === 'Teacher' && note.status === 'Needs Revision';
-  const canReview = role === 'Admin' || role === 'HeadOfDepartment' || role === 'Principal' || role === 'Director';
+  const canReview = (role === 'Admin' || role === 'HeadOfDepartment' || role === 'Principal' || role === 'Director') && !note.status.includes('Approved');
 
   return (
     <div className="space-y-8">
@@ -299,8 +299,19 @@ export default function LessonNoteDetailPage() {
                                     <Check className="h-4 w-4"/>
                                 </div>
                                 <div>
-                                    <p className="font-medium">Final Approval</p>
+                                    <p className="font-medium">Admin Review</p>
                                     <p className="text-sm text-muted-foreground">{note.admin_review}</p>
+                                </div>
+                            </li>
+                         )}
+                         {note.status.includes('Approved') && (
+                             <li className="flex gap-4">
+                                <div className="flex h-8 w-8 items-center justify-center rounded-full bg-green-100 text-green-600">
+                                    <Check className="h-4 w-4"/>
+                                </div>
+                                <div>
+                                    <p className="font-medium">Approved & Archived</p>
+                                    <p className="text-sm text-muted-foreground">This lesson note is now official.</p>
                                 </div>
                             </li>
                          )}
