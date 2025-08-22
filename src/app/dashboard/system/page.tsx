@@ -1,7 +1,7 @@
 'use client';
 
 import { Card, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { ArrowRight, Calendar, DollarSign, GraduationCap, School, ShieldCheck } from "lucide-react";
+import { ArrowRight, Calendar, DollarSign, GraduationCap, School, ShieldCheck, BookMarked } from "lucide-react";
 import Link from "next/link";
 
 
@@ -35,6 +35,12 @@ const settingsCards = [
         description: 'Manage user roles and what they can access in the portal.',
         icon: ShieldCheck,
         href: '/dashboard/system/roles'
+    },
+    {
+        title: 'Classes & Subjects',
+        description: 'Manage school classes and the subjects offered.',
+        icon: BookMarked,
+        href: '/dashboard/system/classes-subjects'
     }
 ]
 
