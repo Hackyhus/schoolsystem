@@ -1,7 +1,6 @@
 
 'use client';
 import { Bar, BarChart, ResponsiveContainer, XAxis, YAxis } from 'recharts';
-
 import {
   Card,
   CardContent,
@@ -14,14 +13,34 @@ import {
   ChartTooltip,
   ChartTooltipContent,
 } from '@/components/ui/chart';
-import { lessonNotes } from '@/lib/mock-data';
 import { BookCheck, Clock, FileWarning, TrendingUp } from 'lucide-react';
+import { collection, getDocs, query } from 'firebase/firestore';
+import { db } from '@/lib/firebase';
+import { useEffect, useState } from 'react';
+import type { MockLessonNote } from '@/lib/schema';
+import { Skeleton } from '@/components/ui/skeleton';
+
 
 export default function ReportsPage() {
-  const totalNotes = lessonNotes.length;
-  const approvedCount = totalNotes > 0 ? lessonNotes.filter(n => n.status.includes('Approved')).length : 0;
-  const pendingCount = totalNotes > 0 ? lessonNotes.filter(n => n.status.includes('Pending')).length : 0;
-  const rejectedCount = totalNotes > 0 ? lessonNotes.filter(n => n.status.includes('Rejected')).length : 0;
+  const [notes, setNotes] = useState<MockLessonNote[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchNotes = async () => {
+      setIsLoading(true);
+      const notesQuery = query(collection(db, 'lessonNotes'));
+      const querySnapshot = await getDocs(notesQuery);
+      const notesList = querySnapshot.docs.map(doc => doc.data() as MockLessonNote);
+      setNotes(notesList);
+      setIsLoading(false);
+    };
+    fetchNotes();
+  }, []);
+
+  const totalNotes = notes.length;
+  const approvedCount = totalNotes > 0 ? notes.filter(n => n.status.includes('Approved')).length : 0;
+  const pendingCount = totalNotes > 0 ? notes.filter(n => n.status.includes('Pending')).length : 0;
+  const rejectedCount = totalNotes > 0 ? notes.filter(n => n.status.includes('Rejected')).length : 0;
 
   const submissionStatusData = [
     { name: 'Approved', value: approvedCount, fill: 'var(--color-approved)' },
@@ -64,7 +83,7 @@ export default function ReportsPage() {
             <TrendingUp className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{totalNotes}</div>
+            {isLoading ? <Skeleton className="h-7 w-12" /> : <div className="text-2xl font-bold">{totalNotes}</div>}
             <p className="text-xs text-muted-foreground">
               lesson notes this term
             </p>
@@ -76,7 +95,7 @@ export default function ReportsPage() {
             <BookCheck className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{approvedCount}</div>
+             {isLoading ? <Skeleton className="h-7 w-12" /> : <div className="text-2xl font-bold">{approvedCount}</div>}
             <p className="text-xs text-muted-foreground">
               {totalNotes > 0 ? ((approvedCount / totalNotes) * 100).toFixed(0) : 0}% approval rate
             </p>
@@ -88,7 +107,7 @@ export default function ReportsPage() {
             <Clock className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{pendingCount}</div>
+            {isLoading ? <Skeleton className="h-7 w-12" /> : <div className="text-2xl font-bold">{pendingCount}</div>}
             <p className="text-xs text-muted-foreground">
               awaiting review
             </p>
@@ -100,7 +119,7 @@ export default function ReportsPage() {
             <FileWarning className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{rejectedCount}</div>
+            {isLoading ? <Skeleton className="h-7 w-12" /> : <div className="text-2xl font-bold">{rejectedCount}</div>}
             <p className="text-xs text-muted-foreground">
              {totalNotes > 0 ? ((rejectedCount / totalNotes) * 100).toFixed(0) : 0}% rejection rate
             </p>
@@ -117,7 +136,7 @@ export default function ReportsPage() {
           </CardDescription>
         </CardHeader>
         <CardContent>
-          {totalNotes > 0 ? (
+          {isLoading ? <Skeleton className="h-[200px] w-full" /> : (totalNotes > 0 ? (
             <ChartContainer
               config={chartConfig}
               className="h-[200px] w-full"
@@ -146,7 +165,7 @@ export default function ReportsPage() {
             <div className="flex h-[200px] items-center justify-center text-muted-foreground">
               No data to display.
             </div>
-          )}
+          ))}
         </CardContent>
       </Card>
     </div>

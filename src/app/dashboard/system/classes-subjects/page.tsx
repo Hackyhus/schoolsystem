@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState } from 'react';
@@ -8,61 +9,52 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { PlusCircle, Trash2 } from 'lucide-react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { useToast } from '@/hooks/use-toast';
-
-// Mock data - replace with database calls
-const initialClasses = [
-    { id: 1, name: 'JSS 1' },
-    { id: 2, name: 'JSS 2' },
-    { id: 3, name: 'SS 1' },
-];
-
-const initialSubjects = [
-    { id: 1, name: 'Mathematics' },
-    { id: 2, name: 'English Language' },
-    { id: 3, name: 'Physics' },
-];
+import { useAcademicData, ClassData, SubjectData } from '@/hooks/use-academic-data';
+import { addDoc, collection, deleteDoc, doc } from 'firebase/firestore';
+import { db } from '@/lib/firebase';
+import { Skeleton } from '@/components/ui/skeleton';
 
 export default function ClassesSubjectsPage() {
-    const [classes, setClasses] = useState(initialClasses);
-    const [subjects, setSubjects] = useState(initialSubjects);
-    const [newClassName, setNewClassName] = useState('');
-    const [newSubjectName, setNewSubjectName] = useState('');
+    const { classes, subjects, isLoading, refetch } = useAcademicData();
+    const [newItemName, setNewItemName] = useState('');
     const [isClassModalOpen, setIsClassModalOpen] = useState(false);
     const [isSubjectModalOpen, setIsSubjectModalOpen] = useState(false);
     const { toast } = useToast();
 
-    const handleAddClass = () => {
-        if (newClassName.trim() === '') {
-            toast({ variant: 'destructive', title: 'Error', description: 'Class name cannot be empty.' });
+    const handleAddItem = async (type: 'class' | 'subject') => {
+        if (newItemName.trim() === '') {
+            toast({ variant: 'destructive', title: 'Error', description: 'Name cannot be empty.' });
             return;
         }
-        setClasses([...classes, { id: Date.now(), name: newClassName }]);
-        toast({ title: 'Success', description: `Class "${newClassName}" has been added.` });
-        setNewClassName('');
-        setIsClassModalOpen(false);
+
+        const collectionName = type === 'class' ? 'classes' : 'subjects';
+        
+        try {
+            await addDoc(collection(db, collectionName), { name: newItemName });
+            toast({ title: 'Success', description: `${type.charAt(0).toUpperCase() + type.slice(1)} "${newItemName}" has been added.` });
+            setNewItemName('');
+            refetch(); // Refetch data
+            if (type === 'class') setIsClassModalOpen(false);
+            else setIsSubjectModalOpen(false);
+        } catch (error) {
+            console.error(`Error adding ${type}:`, error);
+            toast({ variant: 'destructive', title: 'Error', description: `Could not add ${type}.` });
+        }
     };
 
-    const handleRemoveClass = (id: number) => {
-        const className = classes.find(c => c.id === id)?.name;
-        setClasses(classes.filter(c => c.id !== id));
-        toast({ title: 'Success', description: `Class "${className}" has been removed.` });
-    };
-    
-    const handleAddSubject = () => {
-        if (newSubjectName.trim() === '') {
-            toast({ variant: 'destructive', title: 'Error', description: 'Subject name cannot be empty.' });
+    const handleRemoveItem = async (type: 'class' | 'subject', item: ClassData | SubjectData) => {
+         if (!confirm(`Are you sure you want to remove "${item.name}"? This could affect existing records.`)) {
             return;
         }
-        setSubjects([...subjects, { id: Date.now(), name: newSubjectName }]);
-        toast({ title: 'Success', description: `Subject "${newSubjectName}" has been added.` });
-        setNewSubjectName('');
-        setIsSubjectModalOpen(false);
-    };
-
-    const handleRemoveSubject = (id: number) => {
-        const subjectName = subjects.find(s => s.id === id)?.name;
-        setSubjects(subjects.filter(s => s.id !== id));
-        toast({ title: 'Success', description: `Subject "${subjectName}" has been removed.` });
+        const collectionName = type === 'class' ? 'classes' : 'subjects';
+        try {
+            await deleteDoc(doc(db, collectionName, item.id));
+            toast({ title: 'Success', description: `${type.charAt(0).toUpperCase() + type.slice(1)} "${item.name}" has been removed.` });
+            refetch(); // Refetch data
+        } catch (error) {
+            console.error(`Error removing ${type}:`, error);
+            toast({ variant: 'destructive', title: 'Error', description: `Could not remove ${type}.` });
+        }
     };
 
     return (
@@ -91,10 +83,10 @@ export default function ClassesSubjectsPage() {
                                 <div className="space-y-4 py-4">
                                     <Input 
                                         placeholder="e.g., SS 3" 
-                                        value={newClassName}
-                                        onChange={(e) => setNewClassName(e.target.value)}
+                                        value={newItemName}
+                                        onChange={(e) => setNewItemName(e.target.value)}
                                     />
-                                    <Button onClick={handleAddClass} className="w-full">Add Class</Button>
+                                    <Button onClick={() => handleAddItem('class')} className="w-full">Add Class</Button>
                                 </div>
                             </DialogContent>
                         </Dialog>
@@ -108,11 +100,18 @@ export default function ClassesSubjectsPage() {
                                 </TableRow>
                             </TableHeader>
                             <TableBody>
-                                {classes.map((c) => (
+                                {isLoading ? (
+                                    Array.from({ length: 3 }).map((_, i) => (
+                                        <TableRow key={i}>
+                                            <TableCell><Skeleton className="h-5 w-24" /></TableCell>
+                                            <TableCell className="text-right"><Skeleton className="h-8 w-8" /></TableCell>
+                                        </TableRow>
+                                    ))
+                                ) : classes.map((c) => (
                                     <TableRow key={c.id}>
                                         <TableCell className="font-medium">{c.name}</TableCell>
                                         <TableCell className="text-right">
-                                            <Button variant="ghost" size="icon" onClick={() => handleRemoveClass(c.id)}>
+                                            <Button variant="ghost" size="icon" onClick={() => handleRemoveItem('class', c)}>
                                                 <Trash2 className="h-4 w-4" />
                                             </Button>
                                         </TableCell>
@@ -139,10 +138,10 @@ export default function ClassesSubjectsPage() {
                                 <div className="space-y-4 py-4">
                                     <Input 
                                         placeholder="e.g., Further Mathematics" 
-                                        value={newSubjectName}
-                                        onChange={(e) => setNewSubjectName(e.target.value)}
+                                        value={newItemName}
+                                        onChange={(e) => setNewItemName(e.target.value)}
                                     />
-                                    <Button onClick={handleAddSubject} className="w-full">Add Subject</Button>
+                                    <Button onClick={() => handleAddItem('subject')} className="w-full">Add Subject</Button>
                                 </div>
                             </DialogContent>
                         </Dialog>
@@ -156,11 +155,18 @@ export default function ClassesSubjectsPage() {
                                 </TableRow>
                             </TableHeader>
                             <TableBody>
-                                {subjects.map((s) => (
+                                {isLoading ? (
+                                    Array.from({ length: 3 }).map((_, i) => (
+                                        <TableRow key={i}>
+                                            <TableCell><Skeleton className="h-5 w-32" /></TableCell>
+                                            <TableCell className="text-right"><Skeleton className="h-8 w-8" /></TableCell>
+                                        </TableRow>
+                                    ))
+                                ) : subjects.map((s) => (
                                     <TableRow key={s.id}>
                                         <TableCell className="font-medium">{s.name}</TableCell>
                                         <TableCell className="text-right">
-                                            <Button variant="ghost" size="icon" onClick={() => handleRemoveSubject(s.id)}>
+                                            <Button variant="ghost" size="icon" onClick={() => handleRemoveItem('subject', s)}>
                                                 <Trash2 className="h-4 w-4" />
                                             </Button>
                                         </TableCell>

@@ -1,16 +1,13 @@
+
 'use client'
 
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 
-const logs = [
-    { id: 1, level: 'info', message: 'Admin logged in successfully', timestamp: '2024-05-28 10:00:15', user: 'admin@giia.com.ng' },
-    { id: 2, level: 'warning', message: 'Failed login attempt for user: teacher@giia.com.ng', timestamp: '2024-05-28 09:45:30', user: 'system' },
-    { id: 3, level: 'info', message: 'Lesson note "Algebraic Equations" approved by HOD', timestamp: '2024-05-28 09:30:00', user: 'hod.science@giia.com.ng' },
-    { id: 4, level: 'error', message: 'Failed to connect to payment gateway', timestamp: '2024-05-28 09:15:22', user: 'system' },
-    { id: 5, level: 'info', message: 'New staff "Bello Musa" created', timestamp: '2024-05-27 15:20:10', user: 'admin@giia.com.ng' },
-]
+// This data is now empty as per the requirement to remove mock data.
+// This component should be connected to a live logging backend.
+const logs: { id: number; level: string; message: string; timestamp: string; user: string; }[] = []
 
 export default function LogsPage() {
 
@@ -46,7 +43,7 @@ export default function LogsPage() {
                             </TableRow>
                         </TableHeader>
                         <TableBody>
-                            {logs.map((log) => (
+                            {logs.length > 0 ? logs.map((log) => (
                                 <TableRow key={log.id}>
                                     <TableCell>
                                         <Badge variant={levelVariant(log.level)} className="capitalize">{log.level}</Badge>
@@ -55,7 +52,13 @@ export default function LogsPage() {
                                     <TableCell>{log.user}</TableCell>
                                     <TableCell>{log.message}</TableCell>
                                 </TableRow>
-                            ))}
+                            )) : (
+                                <TableRow>
+                                    <TableCell colSpan={4} className="h-24 text-center">
+                                        No log entries found.
+                                    </TableCell>
+                                </TableRow>
+                            )}
                         </TableBody>
                     </Table>
                 </CardContent>

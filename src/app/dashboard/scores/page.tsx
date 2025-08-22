@@ -1,9 +1,9 @@
+
 'use client';
 
 import {
   Card,
   CardContent,
-  CardDescription,
   CardHeader,
   CardTitle,
 } from '@/components/ui/card';
@@ -24,15 +24,16 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Input } from '@/components/ui/input';
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useCallback } from 'react';
 import type { MockUser } from '@/lib/schema';
 import { useToast } from '@/hooks/use-toast';
 import { Skeleton } from '@/components/ui/skeleton';
-import { collection, getDocs, query, where, doc, updateDoc, writeBatch } from 'firebase/firestore';
+import { collection, getDocs, query, where } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import { useRole } from '@/context/role-context';
 import { Badge } from '@/components/ui/badge';
 import { ThumbsDown, ThumbsUp } from 'lucide-react';
+import { useAcademicData } from '@/hooks/use-academic-data';
 
 type Score = {
   ca1: number;
@@ -50,6 +51,7 @@ export default function ScoresPage() {
   const [scores, setScores] = useState<Record<string, Score>>({});
   const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
+  const { classes, subjects, isLoading: isAcademicDataLoading } = useAcademicData();
 
   const handleLoadStudents = async () => {
     if (!selectedClass || !selectedSubject) {
@@ -297,31 +299,27 @@ export default function ScoresPage() {
         <CardHeader>
           <CardTitle>Select Class & Subject</CardTitle>
           <div className="mt-4 flex flex-wrap gap-4">
-            <Select onValueChange={setSelectedClass} value={selectedClass}>
+            <Select onValueChange={setSelectedClass} value={selectedClass} disabled={isAcademicDataLoading}>
               <SelectTrigger className="w-full sm:w-[200px]">
-                <SelectValue placeholder="Select Class" />
+                <SelectValue placeholder={isAcademicDataLoading ? "Loading..." : "Select Class"} />
               </SelectTrigger>
               <SelectContent>
-                {/* Populate with teacher's classes */}
-                <SelectItem value="jss1">JSS 1</SelectItem>
-                <SelectItem value="jss2">JSS 2</SelectItem>
-                <SelectItem value="ss1">SS 1</SelectItem>
-                <SelectItem value="ss2">SS 2</SelectItem>
+                {classes.map(c => (
+                    <SelectItem key={c.id} value={c.name}>{c.name}</SelectItem>
+                ))}
               </SelectContent>
             </Select>
-            <Select onValueChange={setSelectedSubject} value={selectedSubject}>
+            <Select onValueChange={setSelectedSubject} value={selectedSubject} disabled={isAcademicDataLoading}>
               <SelectTrigger className="w-full sm:w-[200px]">
-                <SelectValue placeholder="Select Subject" />
+                <SelectValue placeholder={isAcademicDataLoading ? "Loading..." : "Select Subject"} />
               </SelectTrigger>
               <SelectContent>
-                {/* Populate with teacher's subjects */}
-                <SelectItem value="mathematics">Mathematics</SelectItem>
-                <SelectItem value="english">English Language</SelectItem>
-                <SelectItem value="physics">Physics</SelectItem>
-                <SelectItem value="chemistry">Chemistry</SelectItem>
+                 {subjects.map(s => (
+                    <SelectItem key={s.id} value={s.name}>{s.name}</SelectItem>
+                ))}
               </SelectContent>
             </Select>
-            <Button onClick={handleLoadStudents} disabled={isLoading}>
+            <Button onClick={handleLoadStudents} disabled={isLoading || isAcademicDataLoading}>
               {isLoading ? 'Loading...' : 'Load Data'}
             </Button>
           </div>

@@ -20,18 +20,17 @@ import {
 import {
   Select,
   SelectContent,
-  SelectGroup,
   SelectItem,
-  SelectLabel,
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
 import { Input } from '@/components/ui/input';
 import { useToast } from '@/hooks/use-toast';
 import { db, storage } from '@/lib/firebase';
-import { UploadCloud } from 'lucide-react';
+import { UploadCloud, Loader2 } from 'lucide-react';
 import { useRole } from '@/context/role-context';
 import { useState } from 'react';
+import { useAcademicData } from '@/hooks/use-academic-data';
 
 const formSchema = z.object({
   title: z.string().min(1, { message: 'Title is required.' }),
@@ -43,25 +42,6 @@ const formSchema = z.object({
     .refine((files) => files?.length === 1, 'File is required.'),
 });
 
-const classLevels = [
-  {
-    category: 'Nursery',
-    values: ['Nursery 1', 'Nursery 2', 'Nursery 3'],
-  },
-  {
-    category: 'Primary',
-    values: ['Primary 1', 'Primary 2', 'Primary 3', 'Primary 4', 'Primary 5'],
-  },
-  {
-    category: 'Junior Secondary',
-    values: ['JSS1', 'JSS2', 'JSS3'],
-  },
-  {
-    category: 'Senior Secondary',
-    values: ['SS1', 'SS2', 'SS3'],
-  },
-];
-
 export function AddLessonNoteForm({
   onNoteAdded,
 }: {
@@ -72,6 +52,8 @@ export function AddLessonNoteForm({
   const [isSubmitting, setIsSubmitting] = useState(false);
   const fileRef =
     React.useRef<HTMLInputElement>() as React.MutableRefObject<HTMLInputElement>;
+  const { classes, subjects, isLoading: isAcademicDataLoading } = useAcademicData();
+
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -205,20 +187,17 @@ export function AddLessonNoteForm({
                 <Select
                   onValueChange={field.onChange}
                   defaultValue={field.value}
+                  disabled={isAcademicDataLoading}
                 >
                   <FormControl>
                     <SelectTrigger>
-                      <SelectValue placeholder="Select Subject" />
+                      <SelectValue placeholder={isAcademicDataLoading ? "Loading..." : "Select Subject"} />
                     </SelectTrigger>
                   </FormControl>
                   <SelectContent>
-                    <SelectItem value="Mathematics">Mathematics</SelectItem>
-                    <SelectItem value="English Language">
-                      English Language
-                    </SelectItem>
-                    <SelectItem value="Physics">Physics</SelectItem>
-                    <SelectItem value="Chemistry">Chemistry</SelectItem>
-                    <SelectItem value="Biology">Biology</SelectItem>
+                    {subjects.map(subject => (
+                        <SelectItem key={subject.id} value={subject.name}>{subject.name}</SelectItem>
+                    ))}
                   </SelectContent>
                 </Select>
                 <FormMessage />
@@ -235,20 +214,16 @@ export function AddLessonNoteForm({
                 <Select
                   onValueChange={field.onChange}
                   defaultValue={field.value}
+                   disabled={isAcademicDataLoading}
                 >
                   <FormControl>
                     <SelectTrigger>
-                      <SelectValue placeholder="Select Class" />
+                       <SelectValue placeholder={isAcademicDataLoading ? "Loading..." : "Select Class"} />
                     </SelectTrigger>
                   </FormControl>
                   <SelectContent>
-                    {classLevels.map(group => (
-                        <SelectGroup key={group.category}>
-                            <SelectLabel>{group.category}</SelectLabel>
-                            {group.values.map(value => (
-                                <SelectItem key={value} value={value}>{value}</SelectItem>
-                            ))}
-                        </SelectGroup>
+                     {classes.map(c => (
+                        <SelectItem key={c.id} value={c.name}>{c.name}</SelectItem>
                     ))}
                   </SelectContent>
                 </Select>
@@ -280,7 +255,9 @@ export function AddLessonNoteForm({
 
         <Button type="submit" className="w-full" disabled={isSubmitting}>
           {isSubmitting ? (
-            'Submitting...'
+             <>
+              <Loader2 className="mr-2 h-4 w-4 animate-spin" /> Submitting...
+            </>
           ) : (
             <>
               <UploadCloud className="mr-2 h-4 w-4" /> Submit for Review

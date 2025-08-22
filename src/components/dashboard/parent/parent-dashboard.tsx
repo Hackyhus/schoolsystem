@@ -2,7 +2,6 @@
 'use client';
 import {
   BarChart,
-  BookOpenCheck,
   CalendarCheck,
   Megaphone,
 } from 'lucide-react';
@@ -22,8 +21,23 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
-import { announcements, studentPerformance } from '@/lib/mock-data';
 import { Progress } from '@/components/ui/progress';
+
+// Mock data, to be replaced with live data
+const studentPerformance = {
+  studentName: 'Adewale Adebayo',
+  attendance: [
+    { month: 'January', percentage: 95 },
+    { month: 'February', percentage: 98 },
+  ],
+  grades: [
+      { subject: 'Mathematics', score: 85, grade: 'A' },
+      { subject: 'English', score: 76, grade: 'B' },
+  ],
+};
+const announcements = [
+    { id: 1, title: 'Mid-term Break', content: 'School closes for mid-term break on Friday.'}
+];
 
 export function ParentDashboard() {
   const { studentName, attendance, grades } = studentPerformance;

@@ -2,20 +2,11 @@
 'use client';
 import {
   Archive,
-  ArchiveX,
-  File,
   Inbox,
   Search,
-  Send,
   Trash2,
 } from 'lucide-react';
 import { Input } from '@/components/ui/input';
-import {
-  Tabs,
-  TabsContent,
-  TabsList,
-  TabsTrigger,
-} from '@/components/ui/tabs';
 import { Separator } from '@/components/ui/separator';
 import {
   Tooltip,
@@ -30,10 +21,14 @@ import {
 } from '@/components/ui/resizable';
 import { cn } from '@/lib/utils';
 import { useState } from 'react';
-import { messages } from '@/lib/mock-data';
 import { useRole } from '@/context/role-context';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
+
+// This data is now empty as per the requirement to remove mock data.
+// This component should be connected to a live messaging backend.
+const messages: { id: number; from: string; to: string; subject: string; date: string; content: string; unread: boolean; }[] = [];
+
 
 export default function MessagingPage() {
   const [isCollapsed, setIsCollapsed] = useState(false);

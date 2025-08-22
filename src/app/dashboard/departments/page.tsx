@@ -1,3 +1,4 @@
+
 'use client';
 
 import {
@@ -17,10 +18,15 @@ import {
 } from '@/components/ui/table';
 import { Button } from '@/components/ui/button';
 import { PlusCircle, MoreHorizontal } from 'lucide-react';
-import { departments } from '@/lib/mock-data';
+import { Skeleton } from '@/components/ui/skeleton';
 
+// This component will be refactored to fetch real department data.
+// For now, it displays a placeholder state.
 
 export default function DepartmentsPage() {
+
+  const departments: any[] = []; // Placeholder for real data
+  const isLoading = true; // Placeholder for real loading state
 
   return (
     <div className="space-y-8">
@@ -54,7 +60,17 @@ export default function DepartmentsPage() {
               </TableRow>
             </TableHeader>
             <TableBody>
-                {departments.length > 0 ? departments.map((dept: any) => (
+                {isLoading ? (
+                    Array.from({length: 3}).map((_, i) => (
+                        <TableRow key={i}>
+                            <TableCell><Skeleton className="h-5 w-24" /></TableCell>
+                            <TableCell><Skeleton className="h-5 w-32" /></TableCell>
+                            <TableCell><Skeleton className="h-5 w-20" /></TableCell>
+                            <TableCell><Skeleton className="h-5 w-20" /></TableCell>
+                            <TableCell className="text-right"><Skeleton className="h-8 w-8" /></TableCell>
+                        </TableRow>
+                    ))
+                ) : departments.length > 0 ? departments.map((dept: any) => (
                   <TableRow key={dept.id}>
                     <TableCell className="font-medium">{dept.name}</TableCell>
                     <TableCell>{dept.hod}</TableCell>
