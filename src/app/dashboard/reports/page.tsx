@@ -168,6 +168,20 @@ export default function ReportsPage() {
           ))}
         </CardContent>
       </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle>Exam Analytics</CardTitle>
+          <CardDescription>
+            Performance metrics for recent exams. This feature is coming soon.
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+            <div className="flex h-[200px] items-center justify-center rounded-md border border-dashed text-muted-foreground">
+              Exam performance charts will be displayed here.
+            </div>
+        </CardContent>
+      </Card>
     </div>
   );
 }

@@ -1,5 +1,4 @@
 
-
 'use client';
 
 import React from 'react';
@@ -31,9 +30,11 @@ import {
   Server,
   Settings,
   Shield,
+  Ticket,
   User,
   Users,
   UsersRound,
+  Grid,
 } from 'lucide-react';
 import Image from 'next/image';
 
@@ -73,12 +74,14 @@ const iconMap: { [key: string]: React.ElementType } = {
   bell: Bell,
   MessageSquare: MessageSquare,
   'file-question': FileQuestion,
-  'book-copy': BookCopy
+  'book-copy': BookCopy,
+  'ticket': Ticket,
+  'grid': Grid
 };
 
 
 const navConfig = {
-  Admin: { // mapped from developer_admin
+  Admin: { 
     sidebar_extra: [
       { "icon": "shield", "label": "System Config", "path": "/dashboard/system" },
       { "icon": "users", "label": "Manage Staff", "path": "/dashboard/users" },
@@ -114,6 +117,9 @@ const navConfig = {
       { "icon": "file-question", "label": "Review Questions", "path": "/dashboard/exam-questions" },
       { "icon": "edit-3", "label": "Review Scores", "path": "/dashboard/scores" },
       { "icon": "check-square", "label": "Generate Results", "path": "/dashboard/reports" },
+      { "icon": "calendar", "label": "Timetable", "path": "/dashboard/timetable" },
+      { "icon": "ticket", "label": "Exam Registration", "path": "/dashboard/exam-registration" },
+      { "icon": "grid", "label": "Seating Plans", "path": "/dashboard/seating-plan" },
     ],
   },
   Teacher: {
@@ -177,7 +183,7 @@ export function DashboardSidebar() {
        <React.Fragment key={`${section.group}-${index}`}>
           <p className="px-4 pt-4 text-xs font-semibold text-sidebar-foreground/50">{section.group}</p>
           <SidebarMenu>
-            {section.links.map((item) => {
+            {section.links.map((item: any) => {
               const Icon = iconMap[item.icon] || Home;
               return (
                  <SidebarMenuItem key={item.path}>
@@ -208,9 +214,6 @@ export function DashboardSidebar() {
             />
           </Link>
         </div>
-      <SidebarHeader className="border-b border-sidebar-border hidden">
-       
-      </SidebarHeader>
       <SidebarContent className="flex-1 p-2">
         {renderNav()}
       </SidebarContent>
