@@ -1,10 +1,13 @@
-
 'use client';
 import {
   Users,
   CalendarDays,
   Utensils,
   BookUser,
+  Clock,
+  Heartbeat,
+  UserGraduate,
+  ChalkboardTeacher,
 } from 'lucide-react';
 import {
   Card,
@@ -35,6 +38,7 @@ import {
   ChartTooltipContent,
 } from "@/components/ui/chart"
 import { Area, AreaChart, Bar, BarChart, CartesianGrid, Line, LineChart, ResponsiveContainer, XAxis, YAxis } from "recharts"
+import Image from 'next/image';
 
 const chartData = [
   { month: "January", desktop: 186, mobile: 80 },
@@ -61,6 +65,7 @@ export function NewAdminDashboard() {
   const [stats, setStats] = useState({
     students: 0,
     teachers: 0,
+    pending: 0,
   });
   const [teachers, setTeachers] = useState<MockUser[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -70,13 +75,16 @@ export function NewAdminDashboard() {
     try {
       const studentsQuery = query(collection(db, "users"), where("role", "==", "Student"));
       const teachersQuery = query(collection(db, "users"), where("role", "==", "Teacher"));
+      const lessonNotesQuery = query(collection(db, "lessonNotes"), where("status", "in", ["Pending HOD Approval", "Pending Admin Approval"]));
       
       const studentsSnapshot = await getDocs(studentsQuery);
       const teachersSnapshot = await getDocs(teachersQuery);
+      const pendingSnapshot = await getDocs(lessonNotesQuery);
       
       setStats({
         students: studentsSnapshot.size,
         teachers: teachersSnapshot.size,
+        pending: pendingSnapshot.size,
       });
 
       const teacherList = teachersSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as MockUser));
@@ -100,22 +108,30 @@ export function NewAdminDashboard() {
 
 
   return (
-    <div className="flex flex-col gap-6">
+    <div className="flex flex-col gap-8">
+       <div className="mb-2">
+        <h1 className="text-3xl font-bold text-gray-800 mb-2">Welcome back, Admin</h1>
+        <p className="text-gray-600">Here is what is happening at Great Insight International Academy today.</p>
+      </div>
       {/* Top Stat Cards */}
       <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">
         <Card>
-          <CardHeader className="flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium">Students</CardTitle>
-            <Users className="h-6 w-6 text-primary" />
+          <CardHeader className="flex flex-row items-center justify-between pb-2">
+            <CardTitle className="text-sm font-medium text-gray-600">Total Students</CardTitle>
+             <div className="w-12 h-12 bg-blue-500 rounded-lg flex items-center justify-center">
+                <UserGraduate className=" text-white" />
+            </div>
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{isLoading ? '...' : stats.students}</div>
           </CardContent>
         </Card>
         <Card>
-          <CardHeader className="flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium">Teachers</CardTitle>
-            <BookUser className="h-6 w-6 text-primary" />
+          <CardHeader className="flex flex-row items-center justify-between pb-2">
+            <CardTitle className="text-sm font-medium text-gray-600">Active Staff</CardTitle>
+            <div className="w-12 h-12 bg-green-500 rounded-lg flex items-center justify-center">
+                <ChalkboardTeacher className="text-white" />
+            </div>
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{isLoading ? '...' : stats.teachers}</div>
@@ -123,20 +139,24 @@ export function NewAdminDashboard() {
         </Card>
         <Card>
           <CardHeader className="flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium">Events</CardTitle>
-            <CalendarDays className="h-6 w-6 text-primary" />
+            <CardTitle className="text-sm font-medium text-gray-600">Pending Approvals</CardTitle>
+            <div className="w-12 h-12 bg-orange-500 rounded-lg flex items-center justify-center">
+                <Clock className="text-white" />
+            </div>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">40</div>
+            <div className="text-2xl font-bold">{isLoading ? '...' : stats.pending}</div>
           </CardContent>
         </Card>
         <Card>
-          <CardHeader className="flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium">Foods</CardTitle>
-            <Utensils className="h-6 w-6 text-primary" />
+          <CardHeader className="flex flex-row items-center justify-between pb-2">
+            <CardTitle className="text-sm font-medium text-gray-600">System Health</CardTitle>
+             <div className="w-12 h-12 bg-purple-500 rounded-lg flex items-center justify-center">
+                <Heartbeat className="text-white" />
+            </div>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">32k</div>
+            <div className="text-2xl font-bold">99.2%</div>
           </CardContent>
         </Card>
       </div>
@@ -213,7 +233,7 @@ export function NewAdminDashboard() {
                                     <TableCell>{teacher.email}</TableCell>
                                     <TableCell>
                                         <Badge variant={teacher.status === 'Active' ? 'default' : 'destructive'}>
-                                            {teacher.status || 'Good'}
+                                            {teacher.status || 'Active'}
                                         </Badge>
                                     </TableCell>
                                 </TableRow>
@@ -255,7 +275,7 @@ export function NewAdminDashboard() {
                              <TableRow>
                                 <TableCell>
                                     <div className="flex items-center gap-2">
-                                        <img src="https://placehold.co/40x40.png" alt="Jordan Nico" data-ai-hint="person portrait" className="w-8 h-8 rounded-full" />
+                                        <Image src="https://placehold.co/40x40.png" alt="Jordan Nico" data-ai-hint="person portrait" width={32} height={32} className="w-8 h-8 rounded-full" />
                                         <span>Jordan Nico</span>
                                     </div>
                                 </TableCell>
@@ -265,7 +285,7 @@ export function NewAdminDashboard() {
                              <TableRow>
                                 <TableCell>
                                     <div className="flex items-center gap-2">
-                                        <img src="https://placehold.co/40x40.png" alt="Karen Hope" data-ai-hint="person portrait" className="w-8 h-8 rounded-full" />
+                                        <Image src="https://placehold.co/40x40.png" alt="Karen Hope" data-ai-hint="person portrait" width={32} height={32} className="w-8 h-8 rounded-full" />
                                         <span>Karen Hope</span>
                                     </div>
                                 </TableCell>
@@ -275,7 +295,7 @@ export function NewAdminDashboard() {
                              <TableRow>
                                 <TableCell>
                                     <div className="flex items-center gap-2">
-                                        <img src="https://placehold.co/40x40.png" alt="Nadila Adja" data-ai-hint="person portrait" className="w-8 h-8 rounded-full" />
+                                        <Image src="https://placehold.co/40x40.png" alt="Nadila Adja" data-ai-hint="person portrait" width={32} height={32} className="w-8 h-8 rounded-full" />
                                         <span>Nadila Adja</span>
                                     </div>
                                 </TableCell>
