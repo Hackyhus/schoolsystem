@@ -6,8 +6,7 @@ import {
   BookUser,
   Clock,
   Heartbeat,
-  UserGraduate,
-  ChalkboardTeacher,
+  GraduationCap,
 } from 'lucide-react';
 import {
   Card,
@@ -119,7 +118,7 @@ export function NewAdminDashboard() {
           <CardHeader className="flex flex-row items-center justify-between pb-2">
             <CardTitle className="text-sm font-medium text-gray-600">Total Students</CardTitle>
              <div className="w-12 h-12 bg-blue-500 rounded-lg flex items-center justify-center">
-                <UserGraduate className=" text-white" />
+                <GraduationCap className=" text-white" />
             </div>
           </CardHeader>
           <CardContent>
@@ -130,7 +129,7 @@ export function NewAdminDashboard() {
           <CardHeader className="flex flex-row items-center justify-between pb-2">
             <CardTitle className="text-sm font-medium text-gray-600">Active Staff</CardTitle>
             <div className="w-12 h-12 bg-green-500 rounded-lg flex items-center justify-center">
-                <ChalkboardTeacher className="text-white" />
+                <BookUser className="text-white" />
             </div>
           </CardHeader>
           <CardContent>
