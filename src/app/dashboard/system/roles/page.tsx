@@ -57,12 +57,12 @@ export default function RolesPermissionsPage() {
   const fetchUsers = useCallback(async () => {
     setIsLoading(true);
     try {
+      // Firestore does not support `!=` queries. We fetch all users and filter client-side.
       const usersRef = collection(db, 'users');
-      const q = query(usersRef, where('role', '!=', 'Student'));
-      const querySnapshot = await getDocs(q);
-      const usersList = querySnapshot.docs.map(
-        (doc) => ({ id: doc.id, ...doc.data() } as MockUser)
-      );
+      const querySnapshot = await getDocs(usersRef);
+      const usersList = querySnapshot.docs
+        .map((doc) => ({ id: doc.id, ...doc.data() } as MockUser))
+        .filter((user) => user.role !== 'Student'); // Filter out students here
       setUsers(usersList);
     } catch (error) {
       console.error('Error fetching users:', error);
