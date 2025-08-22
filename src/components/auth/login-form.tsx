@@ -24,7 +24,7 @@ import { useToast } from '@/hooks/use-toast';
 import { auth, db } from '@/lib/firebase';
 
 const formSchema = z.object({
-  staffId: z.string().min(1, { message: 'Staff ID is required.' }),
+  identifier: z.string().min(1, { message: 'ID or Email is required.' }),
   password: z.string().min(1, { message: 'Password is required.' }),
 });
 
@@ -36,36 +36,51 @@ export function LoginForm() {
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      staffId: '',
+      identifier: '',
       password: '',
     },
   });
 
   async function onSubmit(values: z.infer<typeof formSchema>) {
     try {
-      // 1. Find the user by staffId in Firestore
+      // 1. Determine if the identifier is an email or a Staff/Student ID
+      const isEmail = values.identifier.includes('@');
+      let userEmail = '';
+      let userData: any = null;
+
       const usersRef = collection(db, 'users');
-      const q = query(usersRef, where('staffId', '==', values.staffId));
-      const querySnapshot = await getDocs(q);
+      
+      if (isEmail) {
+        // If it's an email, we already have it. Find the user doc to get the role.
+        userEmail = values.identifier;
+        const q = query(usersRef, where('email', '==', userEmail));
+        const querySnapshot = await getDocs(q);
+        if (querySnapshot.empty) {
+            throw new Error("Invalid credentials");
+        }
+        userData = querySnapshot.docs[0].data();
 
-      if (querySnapshot.empty) {
-        toast({
-          variant: 'destructive',
-          title: 'Login Failed',
-          description: 'Invalid Staff ID or Password.',
-        });
-        return;
+      } else {
+        // If it's a Staff/Student ID, find the user doc to get the email.
+        const q = query(usersRef, where('staffId', '==', values.identifier));
+        const querySnapshot = await getDocs(q);
+        if (querySnapshot.empty) {
+           throw new Error("Invalid credentials");
+        }
+        userData = querySnapshot.docs[0].data();
+        userEmail = userData.email;
       }
+      
 
-      const userDoc = querySnapshot.docs[0];
-      const userData = userDoc.data();
-      const passwordToTry = values.password;
+      if (!userEmail || !userData) {
+        throw new Error("Invalid credentials");
+      }
 
       // 2. Sign in with the user's email and provided password
       const userCredential = await signInWithEmailAndPassword(
         auth,
-        userData.email, // Use email from Firestore to sign in
-        passwordToTry
+        userEmail,
+        values.password
       );
       
       const user = userCredential.user;
@@ -74,8 +89,10 @@ export function LoginForm() {
         setRole(userData.role);
 
         // 3. Show password change reminder if needed
-        // Compare the entered password (lowercase) with the stored state of origin (lowercase)
-        if (userData.stateOfOrigin && passwordToTry.toLowerCase() === userData.stateOfOrigin.toLowerCase()) {
+        const isDefaultPassword = (userData.stateOfOrigin && values.password.toLowerCase() === userData.stateOfOrigin.toLowerCase()) || 
+                                (userData.generatedPassword && values.password === userData.generatedPassword);
+        
+        if (isDefaultPassword) {
            toast({
               title: 'Welcome!',
               description: 'For your security, please update your password in your profile settings.',
@@ -93,7 +110,7 @@ export function LoginForm() {
        toast({
         variant: 'destructive',
         title: 'Login Failed',
-        description: 'Invalid Staff ID or Password.',
+        description: 'Invalid ID/Email or Password.',
       });
     }
   }
@@ -103,12 +120,12 @@ export function LoginForm() {
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
         <FormField
           control={form.control}
-          name="staffId"
+          name="identifier"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Staff ID</FormLabel>
+              <FormLabel>Staff/Student ID or Email</FormLabel>
               <FormControl>
-                <Input placeholder="e.g. GIIA24SCI0001" {...field} />
+                <Input placeholder="e.g. GIIA24TEA0001 or name@giia.com.ng" {...field} />
               </FormControl>
               <FormMessage />
             </FormItem>

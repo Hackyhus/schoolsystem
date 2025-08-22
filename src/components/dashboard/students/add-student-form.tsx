@@ -1,9 +1,10 @@
+
 'use client';
 
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
 import * as z from 'zod';
-import { collection, doc, setDoc, getDocs, query, where } from 'firebase/firestore';
+import { collection, doc, setDoc, getDocs, query, where, getCountFromServer } from 'firebase/firestore';
 import { createUserWithEmailAndPassword } from 'firebase/auth';
 import { Button } from '@/components/ui/button';
 import {
@@ -24,7 +25,7 @@ import { format } from 'date-fns';
 const formSchema = z.object({
   firstName: z.string().min(1, { message: 'First name is required.' }),
   lastName: z.string().min(1, { message: 'Last name is required.' }),
-  email: z.string().email({ message: 'Please enter a valid email.' }),
+  parentEmail: z.string().email({ message: "Please enter a valid parent's email." }),
 });
 
 // Function to generate a random password
@@ -46,7 +47,7 @@ export function AddStudentForm({ onStudentAdded }: { onStudentAdded: () => void 
     defaultValues: {
       firstName: '',
       lastName: '',
-      email: '',
+      parentEmail: '',
     },
   });
 
@@ -56,8 +57,8 @@ export function AddStudentForm({ onStudentAdded }: { onStudentAdded: () => void 
 
     const usersRef = collection(db, 'users');
     const q = query(usersRef, where('role', '==', 'Student'));
-    const querySnapshot = await getDocs(q);
-    const serialNumber = (querySnapshot.size + 1).toString().padStart(4, '0');
+    const snapshot = await getCountFromServer(q);
+    const serialNumber = (snapshot.data().count + 1).toString().padStart(4, '0');
 
     return `${prefix}${year}/${serialNumber}`;
   }
@@ -65,35 +66,45 @@ export function AddStudentForm({ onStudentAdded }: { onStudentAdded: () => void 
 
   async function onSubmit(values: z.infer<typeof formSchema>) {
     try {
-      const { email } = values;
-
-      const emailQuery = query(collection(db, 'users'), where('email', '==', email));
-      const emailSnapshot = await getDocs(emailQuery);
-
-      if (!emailSnapshot.empty) {
-        toast({ variant: 'destructive', title: 'Error', description: 'Email already exists.' });
-        return;
-      }
+      const { parentEmail } = values;
       
       const studentId = await generateStudentId();
       const password = generatePassword();
+      
+      // A parent account might exist. If not, this will create it.
+      // This is a simplified flow. A real app might have a more robust parent onboarding.
+      try {
+        await createUserWithEmailAndPassword(auth, parentEmail, password);
+      } catch (error: any) {
+        if (error.code !== 'auth/email-already-exists') {
+          throw error; // Re-throw if it's not the error we expect
+        }
+        // If email exists, we proceed, assuming it's the correct parent.
+      }
+      
+      // Since we can't reliably get the UID of the parent if they already exist without signing them in,
+      // we'll proceed to create the student record. 
+      // The parent can be linked later or via other means.
 
-      const userCredential = await createUserWithEmailAndPassword(auth, email, password);
-      const user = userCredential.user;
-
-      await setDoc(doc(db, "users", user.uid), {
-        uid: user.uid,
+      // For simplicity, we are creating a "Student" record that is identified by its ID.
+      // The login will be handled by the parent using their email.
+      const studentDocRef = doc(collection(db, 'users'));
+      await setDoc(studentDocRef, {
+        uid: studentDocRef.id,
         staffId: studentId, // Using staffId field for student ID for consistency
         name: `${values.firstName} ${values.lastName}`,
-        email: values.email,
+        email: parentEmail, // The parent's email is the contact point
         role: "Student",
         status: "Active",
-        createdAt: new Date()
+        createdAt: new Date(),
+        // Storing the generated password so the parent can use it for the first login
+        // In a real scenario, you'd send this via a secure channel.
+        generatedPassword: password, 
       });
 
       toast({
         title: 'Student Added Successfully',
-        description: `Student ID: ${studentId} | Password: ${password}`,
+        description: `Student ID: ${studentId}. Parent Login: ${parentEmail} | Default Password: ${password}`,
         duration: 20000,
       });
       form.reset();
@@ -140,22 +151,22 @@ export function AddStudentForm({ onStudentAdded }: { onStudentAdded: () => void 
         />
         <FormField
           control={form.control}
-          name="email"
+          name="parentEmail"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Parent's or Student's Email</FormLabel>
+              <FormLabel>Parent's Email</FormLabel>
               <FormControl>
                 <Input placeholder="parent@example.com" {...field} />
               </FormControl>
                <FormDescription>
-                This will be used for login and communication.
+                This will be used for login and communication. A new parent account will be created if one doesn't exist.
               </FormDescription>
               <FormMessage />
             </FormItem>
           )}
         />
          <FormDescription>
-            A random, secure password will be generated and displayed upon creation.
+            A random, secure password will be generated for the parent's first login and displayed upon creation.
          </FormDescription>
        
         <Button type="submit" className="w-full" disabled={form.formState.isSubmitting}>

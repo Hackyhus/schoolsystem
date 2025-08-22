@@ -11,6 +11,7 @@ import {
   query,
   setDoc,
   where,
+  getCountFromServer,
 } from 'firebase/firestore';
 import { createUserWithEmailAndPassword } from 'firebase/auth';
 import { Button } from '@/components/ui/button';
@@ -60,6 +61,25 @@ const NIGERIAN_BANKS = [
   "United Bank for Africa", "Unity Bank Plc", "Wema Bank", "Zenith Bank"
 ].map(bank => ({ value: bank.toLowerCase(), label: bank }));
 
+const departmentCodes: { [key: string]: string } = {
+  Science: 'SCI',
+  Arts: 'ART',
+  Commercial: 'COM',
+  Administration: 'ADM',
+  Accounts: 'ACC',
+  Management: 'MGT'
+};
+
+const roleCodes: { [key: string]: string } = {
+  Teacher: 'TEA',
+  HeadOfDepartment: 'HOD',
+  Principal: 'PRN',
+  Director: 'DIR',
+  ExamOfficer: 'EXO',
+  Accountant: 'ACC',
+  Admin: 'ADM',
+  Parent: 'PAR'
+};
 
 const formSchema = z.object({
   firstName: z.string().min(1, 'First name is required.'),
@@ -73,19 +93,25 @@ const formSchema = z.object({
   address: z.string().min(1, 'Address is required.'),
   dob: z.date({ required_error: 'Date of birth is required.' }),
   gender: z.string().min(1, 'Gender is required.'),
-  salaryAmount: z.number().min(0, 'Salary must be a positive number.'),
-  bankName: z.string().min(1, 'Bank name is required.'),
-  accountNumber: z.string().min(1, 'Account number is required.'),
-  accountName: z.string().min(1, 'Account name is required.'),
+  salaryAmount: z.number().min(0, 'Salary must be a positive number.').optional(),
+  bankName: z.string().optional(),
+  accountNumber: z.string().optional(),
+  accountName: z.string().optional(),
 });
 
 
-// Function to generate a simple random Staff ID
-const generateStaffId = () => {
-  const prefix = 'GIIA';
-  const randomNumber = Math.floor(10000 + Math.random() * 90000);
-  return `${prefix}-${randomNumber}`;
-};
+async function generateStaffId(role: string, department: string) {
+    const year = format(new Date(), 'yy');
+    const roleCode = roleCodes[role] || 'STAFF';
+    
+    const usersRef = collection(db, 'users');
+    const q = query(usersRef, where('role', '==', role));
+    const snapshot = await getCountFromServer(q);
+    const serialNumber = (snapshot.data().count + 1).toString().padStart(4, '0');
+
+    return `GIIA${year}${roleCode}${serialNumber}`;
+}
+
 
 export function AddUserForm({ onUserAdded }: { onUserAdded: () => void }) {
   const { toast } = useToast();
@@ -126,7 +152,7 @@ export function AddUserForm({ onUserAdded }: { onUserAdded: () => void }) {
         return;
       }
 
-      const staffId = generateStaffId();
+      const staffId = await generateStaffId(values.role, values.department);
       const password = stateOfOrigin; // Use State of Origin as the password
 
       const userCredential = await createUserWithEmailAndPassword(
@@ -159,10 +185,10 @@ export function AddUserForm({ onUserAdded }: { onUserAdded: () => void }) {
           profilePicture: null,
         },
         salary: {
-          amount: values.salaryAmount,
-          bankName: values.bankName,
-          accountNumber: values.accountNumber,
-          accountName: values.accountName,
+          amount: values.salaryAmount || 0,
+          bankName: NIGERIAN_BANKS.find(b => b.value === values.bankName)?.label || '',
+          accountNumber: values.accountNumber || '',
+          accountName: values.accountName || '',
           paymentStatus: 'Active',
         },
         permissions: {
@@ -207,7 +233,7 @@ export function AddUserForm({ onUserAdded }: { onUserAdded: () => void }) {
             <FormField control={form.control} name="gender" render={({ field }) => ( <FormItem> <FormLabel>Gender</FormLabel> <Select onValueChange={field.onChange} defaultValue={field.value}> <FormControl> <SelectTrigger> <SelectValue placeholder="Select gender" /> </SelectTrigger> </FormControl> <SelectContent> <SelectItem value="Male">Male</SelectItem> <SelectItem value="Female">Female</SelectItem> </SelectContent> </Select> <FormMessage /> </FormItem> )}/>
             <FormField control={form.control} name="dob" render={({ field }) => ( <FormItem className="flex flex-col"> <FormLabel>Date of Birth</FormLabel> <Popover> <PopoverTrigger asChild> <FormControl> <Button variant={'outline'} className={cn('pl-3 text-left font-normal', !field.value && 'text-muted-foreground' )}> {field.value ? ( format(field.value, 'PPP') ) : ( <span>Pick a date</span> )} <CalendarIcon className="ml-auto h-4 w-4 opacity-50" /> </Button> </FormControl> </PopoverTrigger> <PopoverContent className="w-auto p-0" align="start"> <Calendar mode="single" selected={field.value} onSelect={field.onChange} disabled={(date) => date > new Date() || date < new Date('1900-01-01')} initialFocus /> </PopoverContent> </Popover> <FormMessage /> </FormItem> )}/>
             <FormField control={form.control} name="role" render={({ field }) => ( <FormItem> <FormLabel>Role</FormLabel> <Select onValueChange={field.onChange} defaultValue={field.value}> <FormControl> <SelectTrigger> <SelectValue placeholder="Select a role" /> </SelectTrigger> </FormControl> <SelectContent> {availableRoles.map(role => ( <SelectItem key={role} value={role}>{role}</SelectItem> ))} </SelectContent> </Select> <FormMessage /> </FormItem> )}/>
-            <FormField control={form.control} name="department" render={({ field }) => ( <FormItem> <FormLabel>Department</FormLabel> <Select onValueChange={field.onChange} defaultValue={field.value}> <FormControl> <SelectTrigger> <SelectValue placeholder="Select a department" /> </SelectTrigger> </FormControl> <SelectContent> <SelectItem value="Science">Science</SelectItem> <SelectItem value="Arts">Arts</SelectItem> <SelectItem value="Commercial">Commercial</SelectItem> <SelectItem value="Administration">Administration</SelectItem> </SelectContent> </Select> <FormMessage /> </FormItem> )}/>
+            <FormField control={form.control} name="department" render={({ field }) => ( <FormItem> <FormLabel>Department</FormLabel> <Select onValueChange={field.onChange} defaultValue={field.value}> <FormControl> <SelectTrigger> <SelectValue placeholder="Select a department" /> </SelectTrigger> </FormControl> <SelectContent> {Object.keys(departmentCodes).map((dept) => ( <SelectItem key={dept} value={dept}>{dept}</SelectItem> ))} </SelectContent> </Select> <FormMessage /> </FormItem> )}/>
             <FormField control={form.control} name="employmentDate" render={({ field }) => ( <FormItem className="flex flex-col"> <FormLabel>Employment Date</FormLabel> <Popover> <PopoverTrigger asChild> <FormControl> <Button variant={'outline'} className={cn('pl-3 text-left font-normal', !field.value && 'text-muted-foreground' )}> {field.value ? ( format(field.value, 'PPP') ) : ( <span>Pick a date</span> )} <CalendarIcon className="ml-auto h-4 w-4 opacity-50" /> </Button> </FormControl> </PopoverTrigger> <PopoverContent className="w-auto p-0" align="start"> <Calendar mode="single" selected={field.value} onSelect={field.onChange} disabled={(date) => date > new Date()} initialFocus /> </PopoverContent> </Popover> <FormMessage /> </FormItem> )}/>
             <FormField control={form.control} name="bankName" render={({ field }) => (
               <FormItem>
@@ -243,5 +269,3 @@ export function AddUserForm({ onUserAdded }: { onUserAdded: () => void }) {
     </Form>
   );
 }
-
-    
