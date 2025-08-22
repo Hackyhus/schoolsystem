@@ -201,8 +201,7 @@ export function DashboardSidebar() {
 
   return (
     <Sidebar collapsible="icon">
-      <SidebarHeader className="border-b border-sidebar-border">
-        <div className="flex items-center gap-2 p-4">
+       <div className="flex items-center gap-2 p-4 border-b border-sidebar-border">
           <Link href="/dashboard" className="flex items-center gap-2">
              <Image
               src="/school-logo.png"
@@ -212,6 +211,8 @@ export function DashboardSidebar() {
             />
           </Link>
         </div>
+      <SidebarHeader className="border-b border-sidebar-border hidden">
+       
       </SidebarHeader>
       <SidebarContent className="flex-1 p-2">
         {renderNav()}
