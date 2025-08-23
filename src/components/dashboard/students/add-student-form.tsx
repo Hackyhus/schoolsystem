@@ -233,7 +233,47 @@ export function AddStudentForm({ onStudentAdded }: { onStudentAdded: () => void 
             </div>
              <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
               <FormField control={form.control} name="gender" render={({ field }) => ( <FormItem> <FormLabel>Gender</FormLabel> <Select onValueChange={field.onChange} defaultValue={field.value}> <FormControl> <SelectTrigger> <SelectValue placeholder="Select gender" /> </SelectTrigger> </FormControl> <SelectContent> <SelectItem value="Male">Male</SelectItem> <SelectItem value="Female">Female</SelectItem> <SelectItem value="Other">Other</SelectItem> </SelectContent> </Select> <FormMessage /> </FormItem> )} />
-              <FormField control={form.control} name="dateOfBirth" render={({ field }) => ( <FormItem className="flex flex-col pt-2"> <FormLabel>Date of Birth</FormLabel> <Popover> <PopoverTrigger asChild> <FormControl> <Button variant={'outline'} className={cn('pl-3 text-left font-normal', !field.value && 'text-muted-foreground')}> {field.value ? format(field.value, 'PPP') : <span>Pick a date</span>} <CalendarIcon className="ml-auto h-4 w-4 opacity-50" /> </Button> </FormControl> </PopoverTrigger> <PopoverContent className="w-auto p-0" align="start"> <Calendar mode="single" selected={field.value} onSelect={field.onChange} disabled={(date) => date > new Date() || date < new Date('2000-01-01')} initialFocus /> </PopoverContent> </Popover> <FormMessage /> </FormItem> )} />
+              <FormField
+                control={form.control}
+                name="dateOfBirth"
+                render={({ field }) => (
+                  <FormItem className="flex flex-col pt-2">
+                    <FormLabel>Date of Birth</FormLabel>
+                    <Popover>
+                      <PopoverTrigger asChild>
+                        <FormControl>
+                          <Button
+                            variant={'outline'}
+                            className={cn(
+                              'pl-3 text-left font-normal',
+                              !field.value && 'text-muted-foreground'
+                            )}
+                          >
+                            {field.value ? (
+                              format(field.value, 'PPP')
+                            ) : (
+                              <span>Pick a date</span>
+                            )}
+                            <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
+                          </Button>
+                        </FormControl>
+                      </PopoverTrigger>
+                      <PopoverContent className="w-auto p-0" align="start">
+                        <Calendar
+                          mode="single"
+                          selected={field.value}
+                          onSelect={field.onChange}
+                          disabled={(date) =>
+                            date > new Date() || date < new Date('2000-01-01')
+                          }
+                          initialFocus
+                        />
+                      </PopoverContent>
+                    </Popover>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
             </div>
              <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
               <FormField control={form.control} name="classLevel" render={({ field }) => ( <FormItem> <FormLabel>Assign to Class</FormLabel> <Select onValueChange={field.onChange} defaultValue={field.value} disabled={isAcademicDataLoading}> <FormControl> <SelectTrigger> <SelectValue placeholder={isAcademicDataLoading ? "Loading..." : "Select Class"} /> </SelectTrigger> </FormControl> <SelectContent> {classes.map(c => (<SelectItem key={c.id} value={c.name}>{c.name}</SelectItem>))} </SelectContent> </Select> <FormMessage /> </FormItem> )} />
