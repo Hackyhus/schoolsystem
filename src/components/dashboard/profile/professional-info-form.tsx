@@ -1,4 +1,3 @@
-
 'use client';
 
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -39,10 +38,8 @@ const departmentCodes: { [key: string]: string } = {
   Arts: 'ART',
   Commercial: 'COM',
   Administration: 'ADM',
-  English: 'ENG',
   Accounts: 'ACC',
-  Principal: 'PRN',
-  Bursar: 'BUR',
+  Management: 'MGT'
 };
 
 const availableRoles = [
