@@ -8,7 +8,7 @@ import { DashboardHeader } from '@/components/dashboard/header';
 import { DashboardSidebar } from '@/components/dashboard/sidebar';
 import { SidebarProvider, SidebarInset } from '@/components/ui/sidebar';
 import { useRole } from '@/context/role-context';
-import { SandTimer } from '@/components/icons/sand-timer';
+import { Loader2 } from 'lucide-react';
 
 export default function DashboardLayout({
   children,
@@ -27,7 +27,7 @@ export default function DashboardLayout({
   if (isLoading || !role) {
     return (
       <div className="flex h-screen w-full flex-col items-center justify-center bg-background gap-4">
-        <SandTimer />
+        <Loader2 className="h-12 w-12 animate-spin text-primary" />
         <div className="text-center space-y-1">
             <h2 className="text-xl font-semibold text-foreground">Loading Portal...</h2>
             <p className="text-muted-foreground">Please wait a moment.</p>
