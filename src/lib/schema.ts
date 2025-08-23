@@ -96,30 +96,30 @@ export type MockUser = {
   phone: string;
   stateOfOrigin: string;
   department: string;
+  className?: string; // Optional for students
   role: string;
-  employmentDate: Date;
-  salary: {
+  employmentDate: any; // Can be a Firestore Timestamp
+  salary?: {
     amount: number;
-    bankAccount: string | null; // Legacy, will be replaced
     bankName: string | null;
     accountNumber: string | null;
     accountName: string | null;
     paymentStatus: string;
   };
-  personalInfo: {
+  personalInfo?: {
     address: string;
     gender: string;
-    dob: Date;
+    dob: any; // Can be a Firestore Timestamp
     nextOfKin: string | null;
     profilePicture: string | null;
   };
-  permissions: {
+  permissions?: {
     canUploadLessonNotes: boolean;
     canViewSalary: boolean;
     canAccessPortal: boolean;
   };
   status: string;
-  createdAt: Date;
+  createdAt: any; // Can be a Firestore Timestamp
 };
 
 

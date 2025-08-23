@@ -21,7 +21,7 @@ import { Button } from '@/components/ui/button';
 import Link from 'next/link';
 import { useRole } from '@/context/role-context';
 import { useEffect, useState, useCallback } from 'react';
-import { collection, query, where, getDocs, orderBy } from 'firebase/firestore';
+import { collection, query, where, getDocs, orderBy, limit } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import type { MockLessonNote } from '@/lib/schema';
 import { useToast } from '@/hooks/use-toast';
@@ -54,23 +54,30 @@ export function TeacherDashboard() {
     setIsLoading(true);
     try {
       // Fetch lesson notes
-      const notesQuery = query(collection(db, 'lessonNotes'), where('teacherId', '==', user.uid));
+      const notesQuery = query(
+        collection(db, 'lessonNotes'), 
+        where('teacherId', '==', user.uid),
+        orderBy('submittedOn', 'desc'),
+        limit(3)
+      );
       const notesSnapshot = await getDocs(notesQuery);
       const notesList = notesSnapshot.docs.map(doc => ({id: doc.id, ...doc.data() as MockLessonNote}));
+      setRecentNotes(notesList);
       
-      // Sort client-side to avoid index errors
-      notesList.sort((a, b) => new Date(b.submissionDate).getTime() - new Date(a.submissionDate).getTime());
-      
-      setRecentNotes(notesList.slice(0, 3));
-      
-      // Fetch exam questions
+      // Fetch all notes for stats
+      const allNotesQuery = query(collection(db, 'lessonNotes'), where('teacherId', '==', user.uid));
+      const allNotesSnapshot = await getDocs(allNotesQuery);
+      const allNotesList = allNotesSnapshot.docs.map(doc => doc.data() as MockLessonNote);
+
+
+      // Fetch exam questions stats
       const examsQuery = query(collection(db, 'examQuestions'), where('teacherId', '==', user.uid), where('status', '==', 'Pending Review'));
       const examsSnapshot = await getDocs(examsQuery);
 
       setStats({
-        pendingPlans: notesList.filter(n => n.status.includes('Pending')).length,
-        approvedPlans: notesList.filter(n => n.status.includes('Approved')).length,
-        rejectedPlans: notesList.filter(n => n.status.includes('Rejected') || n.status.includes('Revision')).length,
+        pendingPlans: allNotesList.filter(n => n.status.includes('Pending')).length,
+        approvedPlans: allNotesList.filter(n => n.status.includes('Approved')).length,
+        rejectedPlans: allNotesList.filter(n => n.status.includes('Rejected') || n.status.includes('Revision')).length,
         pendingExams: examsSnapshot.size,
       });
 

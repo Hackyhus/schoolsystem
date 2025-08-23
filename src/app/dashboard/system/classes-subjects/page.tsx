@@ -104,7 +104,7 @@ export default function ClassesSubjectsPage() {
                                     Array.from({ length: 3 }).map((_, i) => (
                                         <TableRow key={i}>
                                             <TableCell><Skeleton className="h-5 w-24" /></TableCell>
-                                            <TableCell className="text-right"><Skeleton className="h-8 w-8" /></TableCell>
+                                            <TableCell className="text-right"><Skeleton className="ml-auto h-8 w-8" /></TableCell>
                                         </TableRow>
                                     ))
                                 ) : classes.map((c) => (
@@ -159,7 +159,7 @@ export default function ClassesSubjectsPage() {
                                     Array.from({ length: 3 }).map((_, i) => (
                                         <TableRow key={i}>
                                             <TableCell><Skeleton className="h-5 w-32" /></TableCell>
-                                            <TableCell className="text-right"><Skeleton className="h-8 w-8" /></TableCell>
+                                            <TableCell className="text-right"><Skeleton className="ml-auto h-8 w-8" /></TableCell>
                                         </TableRow>
                                     ))
                                 ) : subjects.map((s) => (

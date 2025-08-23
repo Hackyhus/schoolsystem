@@ -19,13 +19,22 @@ import {
 import { Input } from '@/components/ui/input';
 import { useToast } from '@/hooks/use-toast';
 import { auth, db } from '@/lib/firebase';
-import { PlusCircle } from 'lucide-react';
+import { CalendarIcon, PlusCircle } from 'lucide-react';
 import { format } from 'date-fns';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { Calendar } from '@/components/ui/calendar';
+import { cn } from '@/lib/utils';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { useAcademicData } from '@/hooks/use-academic-data';
+
 
 const formSchema = z.object({
   firstName: z.string().min(1, { message: 'First name is required.' }),
   lastName: z.string().min(1, { message: 'Last name is required.' }),
   parentEmail: z.string().email({ message: "Please enter a valid parent's email." }),
+  dob: z.date({ required_error: "Date of birth is required."}),
+  gender: z.enum(['Male', 'Female']),
+  className: z.string().min(1, "Please select a class for the student.")
 });
 
 // Function to generate a random password
@@ -41,6 +50,8 @@ const generatePassword = () => {
 
 export function AddStudentForm({ onStudentAdded }: { onStudentAdded: () => void }) {
   const { toast } = useToast();
+  const { classes, isLoading: isAcademicDataLoading } = useAcademicData();
+
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -76,7 +87,13 @@ export function AddStudentForm({ onStudentAdded }: { onStudentAdded: () => void 
       try {
         await createUserWithEmailAndPassword(auth, parentEmail, password);
       } catch (error: any) {
-        if (error.code !== 'auth/email-already-exists') {
+        if (error.code !== 'auth/email-already-in-use') {
+          if (error.code === 'auth/weak-password') {
+            // This can happen if the generated password is weak, although unlikely.
+            // We can retry or just inform the user. For now, we'll let it fail.
+            toast({ variant: 'destructive', title: 'Error', description: 'Generated a weak password, please try again.' });
+            return;
+          }
           throw error; // Re-throw if it's not the error we expect
         }
         // If email exists, we proceed, assuming it's the correct parent.
@@ -86,8 +103,6 @@ export function AddStudentForm({ onStudentAdded }: { onStudentAdded: () => void 
       // we'll proceed to create the student record. 
       // The parent can be linked later or via other means.
 
-      // For simplicity, we are creating a "Student" record that is identified by its ID.
-      // The login will be handled by the parent using their email.
       const studentDocRef = doc(collection(db, 'users'));
       await setDoc(studentDocRef, {
         uid: studentDocRef.id,
@@ -100,6 +115,11 @@ export function AddStudentForm({ onStudentAdded }: { onStudentAdded: () => void 
         // Storing the generated password so the parent can use it for the first login
         // In a real scenario, you'd send this via a secure channel.
         generatedPassword: password, 
+        className: values.className,
+        personalInfo: {
+            dob: values.dob,
+            gender: values.gender,
+        }
       });
 
       toast({
@@ -149,6 +169,96 @@ export function AddStudentForm({ onStudentAdded }: { onStudentAdded: () => void 
             </FormItem>
           )}
         />
+         <FormField
+          control={form.control}
+          name="gender"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Gender</FormLabel>
+              <Select onValueChange={field.onChange} defaultValue={field.value}>
+                <FormControl>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select gender" />
+                  </SelectTrigger>
+                </FormControl>
+                <SelectContent>
+                  <SelectItem value="Male">Male</SelectItem>
+                  <SelectItem value="Female">Female</SelectItem>
+                </SelectContent>
+              </Select>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+        <FormField
+            control={form.control}
+            name="dob"
+            render={({ field }) => (
+              <FormItem className="flex flex-col">
+                <FormLabel>Date of Birth</FormLabel>
+                <Popover>
+                  <PopoverTrigger asChild>
+                    <FormControl>
+                      <Button
+                        variant={'outline'}
+                        className={cn(
+                          'pl-3 text-left font-normal',
+                          !field.value && 'text-muted-foreground'
+                        )}
+                      >
+                        {field.value ? (
+                          format(field.value, 'PPP')
+                        ) : (
+                          <span>Pick a date</span>
+                        )}
+                        <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
+                      </Button>
+                    </FormControl>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-auto p-0" align="start">
+                    <Calendar
+                      mode="single"
+                      selected={field.value}
+                      onSelect={field.onChange}
+                      disabled={(date) =>
+                        date > new Date() || date < new Date('1980-01-01')
+                      }
+                      initialFocus
+                    />
+                  </PopoverContent>
+                </Popover>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+
+         <FormField
+            control={form.control}
+            name="className"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Assign to Class</FormLabel>
+                <Select
+                  onValueChange={field.onChange}
+                  defaultValue={field.value}
+                   disabled={isAcademicDataLoading}
+                >
+                  <FormControl>
+                    <SelectTrigger>
+                       <SelectValue placeholder={isAcademicDataLoading ? "Loading..." : "Select Class"} />
+                    </SelectTrigger>
+                  </FormControl>
+                  <SelectContent>
+                     {classes.map(c => (
+                        <SelectItem key={c.id} value={c.name}>{c.name}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+
         <FormField
           control={form.control}
           name="parentEmail"

@@ -88,7 +88,7 @@ export function AddLessonNoteForm({
         title: existingNoteData.title,
         class: existingNoteData.class,
         subject: existingNoteData.subject,
-        type: 'Lesson Plan', // Assuming resubmission is for lesson plans
+        type: documentType || 'Lesson Plan',
       });
     }
   }, [documentType, form, isResubmission, existingNoteData]);
@@ -121,7 +121,7 @@ export function AddLessonNoteForm({
       
       let collectionName = 'lessonNotes';
       let status = 'Pending HOD Approval';
-      let reviewer = 'HOD';
+      let reviewer = 'HeadOfDepartment';
 
       if (type === 'Exam Question') {
         collectionName = 'examQuestions';

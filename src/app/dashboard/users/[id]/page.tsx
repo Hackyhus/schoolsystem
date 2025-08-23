@@ -101,9 +101,9 @@ export default function UserProfilePage() {
 
   return (
     <div className="space-y-6">
-        <Button variant="outline" onClick={() => router.push('/dashboard/users')}>
+        <Button variant="outline" onClick={() => router.back()}>
             <ArrowLeft className="mr-2 h-4 w-4" />
-            Back to Users
+            Back
         </Button>
       <Card>
         <CardHeader>
