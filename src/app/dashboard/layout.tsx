@@ -6,7 +6,7 @@ import { useEffect } from 'react';
 
 import { DashboardHeader } from '@/components/dashboard/header';
 import { DashboardSidebar } from '@/components/dashboard/sidebar';
-import { SidebarProvider, SidebarInset, SidebarTrigger } from '@/components/ui/sidebar';
+import { SidebarProvider, SidebarInset } from '@/components/ui/sidebar';
 import { useRole } from '@/context/role-context';
 import { SandTimer } from '@/components/icons/sand-timer';
 
@@ -49,3 +49,4 @@ export default function DashboardLayout({
       </SidebarProvider>
     </div>
   );
+}
