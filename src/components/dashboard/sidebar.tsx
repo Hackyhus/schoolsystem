@@ -187,7 +187,7 @@ export function DashboardSidebar() {
 
     return navSections.map((section, index) => (
        <React.Fragment key={`${section.group}-${index}`}>
-          <p className="px-4 pt-4 text-xs font-semibold text-sidebar-foreground/50">{section.group}</p>
+          <p className="px-4 pt-4 text-xs font-semibold text-sidebar-foreground/50 group-data-[collapsible=icon]:hidden">{section.group}</p>
           <SidebarMenu>
             {section.links.map((item: any) => {
               const Icon = iconMap[item.icon] || Home;
@@ -196,7 +196,7 @@ export function DashboardSidebar() {
                     <Link href={item.path}>
                       <SidebarMenuButton isActive={pathname === item.path} tooltip={item.label}>
                         <Icon />
-                        <span>{item.label}</span>
+                        <span className="group-data-[collapsible=icon]:hidden">{item.label}</span>
                       </SidebarMenuButton>
                     </Link>
                   </SidebarMenuItem>
@@ -210,16 +210,19 @@ export function DashboardSidebar() {
 
   return (
     <Sidebar collapsible="icon">
-       <div className="flex items-center gap-2 p-4 border-b border-sidebar-border">
-          <Link href="/dashboard" className="flex items-center gap-2">
-             <Image
-              src="/school-logo.png"
-              alt="Great Insight International Academy Logo"
-              width={200}
-              height={48}
-            />
-          </Link>
-        </div>
+       <SidebarHeader className="border-b border-sidebar-border">
+          <div className="bg-background/10 p-2 rounded-md">
+            <Link href="/dashboard" className="flex items-center justify-center">
+              <Image
+                src="/school-logo.png"
+                alt="Great Insight International Academy Logo"
+                width={200}
+                height={48}
+                className="w-auto h-10"
+              />
+            </Link>
+          </div>
+        </SidebarHeader>
       <SidebarContent className="flex-1 p-2">
         {renderNav()}
       </SidebarContent>
@@ -229,14 +232,14 @@ export function DashboardSidebar() {
             <Link href="/dashboard/settings">
               <SidebarMenuButton isActive={pathname === '/dashboard/settings'} tooltip="Settings">
                 <Settings />
-                <span>Settings</span>
+                <span className="group-data-[collapsible=icon]:hidden">Settings</span>
               </SidebarMenuButton>
             </Link>
           </SidebarMenuItem>
           <SidebarMenuItem>
             <SidebarMenuButton onClick={logout} tooltip="Log Out">
               <LogOut />
-              <span>Log Out</span>
+              <span className="group-data-[collapsible=icon]:hidden">Log Out</span>
             </SidebarMenuButton>
           </SidebarMenuItem>
         </SidebarMenu>
