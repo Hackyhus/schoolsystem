@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useEffect } from 'react';
@@ -47,7 +48,7 @@ export default function AdminLoginPage() {
           <CardHeader className="text-center">
             <div className="mx-auto mb-4">
               <Image
-                src="/school-logo.png"
+                src="https://storage.googleapis.com/proudcity/mebanenc/uploads/2021/03/placeholder-image.png"
                 alt="Great Insight International Academy Logo"
                 width={250}
                 height={60}

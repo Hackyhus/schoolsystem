@@ -214,7 +214,7 @@ export function DashboardSidebar() {
           <div className="bg-background/10 p-2 rounded-md">
             <Link href="/dashboard" className="flex items-center justify-center">
               <Image
-                src="/school-logo.png"
+                src="https://storage.googleapis.com/proudcity/mebanenc/uploads/2021/03/placeholder-image.png"
                 alt="Great Insight International Academy Logo"
                 width={200}
                 height={48}
