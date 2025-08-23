@@ -2,6 +2,7 @@ import type { Metadata } from 'next';
 import './globals.css';
 import { AppProviders } from '@/components/providers';
 import { Toaster } from '@/components/ui/toaster';
+import { Analytics } from "@vercel/analytics/react"
 
 export const metadata: Metadata = {
   title: 'InsightConnect Portal',
@@ -29,6 +30,7 @@ export default function RootLayout({
           {children}
           <Toaster />
         </AppProviders>
+        <Analytics />
       </body>
     </html>
   );
