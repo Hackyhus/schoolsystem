@@ -46,6 +46,7 @@ import {
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
+  useSidebar,
 } from '@/components/ui/sidebar';
 import { useRole } from '@/context/role-context';
 
@@ -169,6 +170,11 @@ const baseNav = [
 export function DashboardSidebar() {
   const pathname = usePathname();
   const { role, logout } = useRole();
+  const { setOpenMobile } = useSidebar();
+
+  React.useEffect(() => {
+    setOpenMobile(false);
+  }, [pathname, setOpenMobile]);
   
   const renderNav = () => {
     const roleSpecificNav = role ? (navConfig as any)[role]?.sidebar_extra || [] : [];
