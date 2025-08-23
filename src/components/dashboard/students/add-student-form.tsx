@@ -232,7 +232,28 @@ export function AddStudentForm({ onStudentAdded }: { onStudentAdded: () => void 
               <FormField control={form.control} name="lastName" render={({ field }) => ( <FormItem> <FormLabel>Last Name</FormLabel> <FormControl> <Input placeholder="e.g. Yusuf" {...field} /> </FormControl> <FormMessage /> </FormItem> )} />
             </div>
              <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-              <FormField control={form.control} name="gender" render={({ field }) => ( <FormItem> <FormLabel>Gender</FormLabel> <Select onValueChange={field.onChange} defaultValue={field.value}> <FormControl> <SelectTrigger> <SelectValue placeholder="Select gender" /> </SelectTrigger> </FormControl> <SelectContent> <SelectItem value="Male">Male</SelectItem> <SelectItem value="Female">Female</SelectItem> <SelectItem value="Other">Other</SelectItem> </SelectContent> </Select> <FormMessage /> </FormItem> )} />
+              <FormField
+                control={form.control}
+                name="gender"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Gender</FormLabel>
+                    <Select onValueChange={field.onChange} defaultValue={field.value}>
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select gender" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        <SelectItem value="Male">Male</SelectItem>
+                        <SelectItem value="Female">Female</SelectItem>
+                        <SelectItem value="Other">Other</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
               <FormField
                 control={form.control}
                 name="dateOfBirth"
@@ -276,7 +297,26 @@ export function AddStudentForm({ onStudentAdded }: { onStudentAdded: () => void 
               />
             </div>
              <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-              <FormField control={form.control} name="classLevel" render={({ field }) => ( <FormItem> <FormLabel>Assign to Class</FormLabel> <Select onValueChange={field.onChange} defaultValue={field.value} disabled={isAcademicDataLoading}> <FormControl> <SelectTrigger> <SelectValue placeholder={isAcademicDataLoading ? "Loading..." : "Select Class"} /> </SelectTrigger> </FormControl> <SelectContent> {classes.map(c => (<SelectItem key={c.id} value={c.name}>{c.name}</SelectItem>))} </SelectContent> </Select> <FormMessage /> </FormItem> )} />
+              <FormField
+                control={form.control}
+                name="classLevel"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Assign to Class</FormLabel>
+                    <Select onValueChange={field.onChange} defaultValue={field.value} disabled={isAcademicDataLoading}>
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder={isAcademicDataLoading ? "Loading..." : "Select Class"} />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        {classes.map(c => (<SelectItem key={c.id} value={c.name}>{c.name}</SelectItem>))}
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
               <FormField control={form.control} name="sessionYear" render={({ field }) => ( <FormItem> <FormLabel>Academic Session</FormLabel> <FormControl> <Input placeholder="e.g. 2024/2025" {...field} /> </FormControl> <FormMessage /> </FormItem> )} />
             </div>
           </CardContent>
