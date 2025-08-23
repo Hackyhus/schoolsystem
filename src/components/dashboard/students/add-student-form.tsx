@@ -20,7 +20,7 @@ import {
 import { Input } from '@/components/ui/input';
 import { useToast } from '@/hooks/use-toast';
 import { auth, db, storage } from '@/lib/firebase';
-import { CalendarIcon, PlusCircle, Trash2, UserPlus, FileUp } from 'lucide-react';
+import { CalendarIcon, PlusCircle, Trash2, UserPlus, FileUp, Loader2 } from 'lucide-react';
 import { format } from 'date-fns';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Calendar } from '@/components/ui/calendar';
@@ -390,7 +390,7 @@ export function AddStudentForm({ onStudentAdded }: { onStudentAdded: () => void 
         </Card>
 
         <Button type="submit" className="w-full" disabled={form.formState.isSubmitting}>
-          {form.formState.isSubmitting ? 'Registering Student...' : <> <PlusCircle className="mr-2 h-4 w-4" /> Register New Student </>}
+          {form.formState.isSubmitting ? <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Registering Student...</> : <> <PlusCircle className="mr-2 h-4 w-4" /> Register New Student </>}
         </Button>
       </form>
     </Form>
