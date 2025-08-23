@@ -102,18 +102,18 @@ export function ExamOfficerDashboard() {
 
   return (
     <div className="flex flex-col gap-6">
-       <div>
-        <h1 className="font-headline text-3xl font-bold">Exam Officer Dashboard</h1>
+       <div className="space-y-1">
+        <h1 className="font-headline text-2xl md:text-3xl font-bold">Exam Officer Dashboard</h1>
         <p className="text-muted-foreground">
           Manage academic assessments, from question review to final results.
         </p>
       </div>
 
-      <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
         <Card>
-          <CardHeader className="flex-row items-center justify-between pb-2">
+          <CardHeader className="flex-row items-center justify-between pb-2 space-y-0">
             <CardTitle className="text-sm font-medium">Total Subjects</CardTitle>
-            <Book className="h-6 w-6 text-primary" />
+            <Book className="h-5 w-5 text-muted-foreground" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{isLoading ? <Skeleton className='w-10 h-8'/> : stats.subjects}</div>
@@ -121,9 +121,9 @@ export function ExamOfficerDashboard() {
           </CardContent>
         </Card>
         <Card>
-          <CardHeader className="flex-row items-center justify-between pb-2">
+          <CardHeader className="flex-row items-center justify-between pb-2 space-y-0">
             <CardTitle className="text-sm font-medium">Total Teachers</CardTitle>
-            <Users className="h-6 w-6 text-primary" />
+            <Users className="h-5 w-5 text-muted-foreground" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{isLoading ? <Skeleton className='w-10 h-8'/> : stats.teachers}</div>
@@ -131,9 +131,9 @@ export function ExamOfficerDashboard() {
           </CardContent>
         </Card>
         <Card>
-          <CardHeader className="flex-row items-center justify-between pb-2">
+          <CardHeader className="flex-row items-center justify-between pb-2 space-y-0">
             <CardTitle className="text-sm font-medium">Pending Approvals</CardTitle>
-            <Clock className="h-6 w-6 text-primary" />
+            <Clock className="h-5 w-5 text-muted-foreground" />
           </CardHeader>
           <CardContent>
              <div className="text-2xl font-bold">{isLoading ? <Skeleton className='w-10 h-8'/> : stats.pending}</div>
@@ -142,61 +142,58 @@ export function ExamOfficerDashboard() {
         </Card>
       </div>
 
-      <div className="grid grid-cols-1">
-        <Card>
-            <CardHeader>
-                <CardTitle>Exam Question Review Queue</CardTitle>
-                <CardDescription>Review and approve exam questions from teachers.</CardDescription>
-            </CardHeader>
-            <CardContent>
-                <Table>
-                <TableHeader>
-                    <TableRow>
-                    <TableHead>Teacher</TableHead>
-                    <TableHead>Subject & Class</TableHead>
-                    <TableHead>Status</TableHead>
-                    <TableHead className="text-right">Action</TableHead>
-                    </TableRow>
-                </TableHeader>
-                <TableBody>
-                    {isLoading ? (
-                        Array.from({length: 3}).map((_, i) => (
-                           <TableRow key={i}>
-                                <TableCell><Skeleton className="h-5 w-24" /></TableCell>
-                                <TableCell><Skeleton className="h-5 w-32" /></TableCell>
-                                <TableCell><Skeleton className="h-6 w-28" /></TableCell>
-                                <TableCell className="text-right"><Skeleton className="h-8 w-20" /></TableCell>
-                           </TableRow>
-                        ))
-                    ): questions.map((q) => (
-                    <TableRow key={q.id}>
-                        <TableCell>
-                           <div className="font-medium">{q.teacherName}</div>
-                        </TableCell>
-                        <TableCell>
-                          <div>{q.subject}</div>
-                          <div className="text-sm text-muted-foreground">{q.class}</div>
-                        </TableCell>
-                        <TableCell>
-                        <Badge variant={statusVariant(q.status)}>{q.status}</Badge>
-                        </TableCell>
-                        <TableCell className="text-right">
-                        <Button asChild variant="outline" size="sm">
-                           <Link href="/dashboard/exam-questions">Review All</Link>
-                        </Button>
-                        </TableCell>
-                    </TableRow>
-                    ))}
-                    {!isLoading && questions.length === 0 && (
-                        <TableRow>
-                        <TableCell colSpan={4} className="h-24 text-center">No questions in the queue.</TableCell>
-                        </TableRow>
-                    )}
-                </TableBody>
-                </Table>
-            </CardContent>
-        </Card>
-      </div>
+      <Card>
+          <CardHeader>
+              <CardTitle>Exam Question Review Queue</CardTitle>
+              <CardDescription>Review and approve exam questions from teachers.</CardDescription>
+          </CardHeader>
+          <CardContent>
+              <Table>
+              <TableHeader>
+                  <TableRow>
+                  <TableHead>Teacher</TableHead>
+                  <TableHead className="hidden sm:table-cell">Subject & Class</TableHead>
+                  <TableHead>Status</TableHead>
+                  <TableHead className="text-right">Action</TableHead>
+                  </TableRow>
+              </TableHeader>
+              <TableBody>
+                  {isLoading ? (
+                      Array.from({length: 3}).map((_, i) => (
+                         <TableRow key={i}>
+                              <TableCell><Skeleton className="h-5 w-24" /></TableCell>
+                              <TableCell className="hidden sm:table-cell"><Skeleton className="h-5 w-32" /></TableCell>
+                              <TableCell><Skeleton className="h-6 w-28" /></TableCell>
+                              <TableCell className="text-right"><Skeleton className="h-8 w-20" /></TableCell>
+                         </TableRow>
+                      ))
+                  ): questions.length > 0 ? questions.map((q) => (
+                  <TableRow key={q.id}>
+                      <TableCell>
+                         <div className="font-medium">{q.teacherName}</div>
+                      </TableCell>
+                      <TableCell className="hidden sm:table-cell">
+                        <div>{q.subject}</div>
+                        <div className="text-sm text-muted-foreground">{q.class}</div>
+                      </TableCell>
+                      <TableCell>
+                      <Badge variant={statusVariant(q.status)}>{q.status}</Badge>
+                      </TableCell>
+                      <TableCell className="text-right">
+                      <Button asChild variant="outline" size="sm">
+                         <Link href="/dashboard/exam-questions">Review All</Link>
+                      </Button>
+                      </TableCell>
+                  </TableRow>
+                  )) : (
+                      <TableRow>
+                      <TableCell colSpan={4} className="h-24 text-center">No questions in the queue.</TableCell>
+                      </TableRow>
+                  )}
+              </TableBody>
+              </Table>
+          </CardContent>
+      </Card>
     </div>
   );
 }

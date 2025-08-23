@@ -75,7 +75,7 @@ export function NewAdminDashboard() {
     approved: 0,
     rejected: 0,
   });
-  const [staff, setStaff] = useState<MockUser[]>([]);
+  const [recentStaff, setRecentStaff] = useState<MockUser[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [submissionStatusData, setSubmissionStatusData] = useState<
     SubmissionStatusData[]
@@ -118,7 +118,7 @@ export function NewAdminDashboard() {
         rejected,
       });
 
-      setStaff(staffList);
+      setRecentStaff(staffList);
 
       // Prepare data for status donut chart
       setSubmissionStatusData([
@@ -208,73 +208,56 @@ export function NewAdminDashboard() {
 
   return (
     <div className="flex flex-col gap-8">
-      <div className="mb-2">
-        <h1 className="text-3xl font-bold text-gray-800 mb-2">
+      <div className="space-y-1">
+        <h1 className="text-2xl md:text-3xl font-bold text-foreground">
           Welcome back, Admin
         </h1>
-        <p className="text-gray-600">
+        <p className="text-muted-foreground">
           Here is what is happening at Great Insight International Academy
           today.
         </p>
       </div>
+
       {/* Top Stat Cards */}
-      <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
         <Card>
-          <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium text-gray-600">
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">
               Total Students
             </CardTitle>
-            <div className="w-12 h-12 bg-blue-500 rounded-lg flex items-center justify-center">
-              <GraduationCap className=" text-white" />
-            </div>
+            <GraduationCap className="h-5 w-5 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">
-              {isLoading ? <Skeleton className="h-8 w-16" /> : stats.students}
-            </div>
+            {isLoading ? <Skeleton className="h-8 w-16" /> : <div className="text-2xl font-bold">{stats.students}</div>}
           </CardContent>
         </Card>
         <Card>
-          <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium text-gray-600">
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">
               Active Staff
             </CardTitle>
-            <div className="w-12 h-12 bg-green-500 rounded-lg flex items-center justify-center">
-              <BookUser className="text-white" />
-            </div>
+            <BookUser className="h-5 w-5 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">
-              {isLoading ? <Skeleton className="h-8 w-16" /> : stats.staff}
-            </div>
+            {isLoading ? <Skeleton className="h-8 w-16" /> : <div className="text-2xl font-bold">{stats.staff}</div>}
           </CardContent>
         </Card>
         <Card>
-          <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium text-gray-600">
-              Pending Approvals
-            </CardTitle>
-            <div className="w-12 h-12 bg-orange-500 rounded-lg flex items-center justify-center">
-              <Clock className="text-white" />
-            </div>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Pending Approvals</CardTitle>
+            <Clock className="h-5 w-5 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">
-              {isLoading ? <Skeleton className="h-8 w-16" /> : stats.pending}
-            </div>
+            {isLoading ? <Skeleton className="h-8 w-16" /> : <div className="text-2xl font-bold">{stats.pending}</div>}
           </CardContent>
         </Card>
         <Card>
-          <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium text-gray-600">
-              System Health
-            </CardTitle>
-            <div className="w-12 h-12 bg-purple-500 rounded-lg flex items-center justify-center">
-              <Activity className="text-white" />
-            </div>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">System Health</CardTitle>
+            <Activity className="h-5 w-5 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">99.2%</div>
+             <div className="text-2xl font-bold">99.2%</div>
           </CardContent>
         </Card>
       </div>
@@ -353,14 +336,15 @@ export function NewAdminDashboard() {
           <Card>
             <CardHeader>
               <CardTitle>Recent Staff</CardTitle>
+              <CardDescription>A list of recently added staff members.</CardDescription>
             </CardHeader>
             <CardContent>
               <Table>
                 <TableHeader>
                   <TableRow>
                     <TableHead>Name</TableHead>
-                    <TableHead>Department</TableHead>
-                    <TableHead>Email</TableHead>
+                    <TableHead className="hidden sm:table-cell">Department</TableHead>
+                    <TableHead className="hidden md:table-cell">Email</TableHead>
                     <TableHead>Role</TableHead>
                   </TableRow>
                 </TableHeader>
@@ -371,10 +355,10 @@ export function NewAdminDashboard() {
                           <TableCell>
                             <Skeleton className="h-5 w-24" />
                           </TableCell>
-                          <TableCell>
+                          <TableCell className="hidden sm:table-cell">
                             <Skeleton className="h-5 w-20" />
                           </TableCell>
-                          <TableCell>
+                          <TableCell className="hidden md:table-cell">
                             <Skeleton className="h-5 w-32" />
                           </TableCell>
                           <TableCell>
@@ -382,11 +366,11 @@ export function NewAdminDashboard() {
                           </TableCell>
                         </TableRow>
                       ))
-                    : staff.slice(0, 4).map((user) => (
+                    : recentStaff.slice(0, 4).map((user) => (
                         <TableRow key={user.id}>
                           <TableCell>{user.name}</TableCell>
-                          <TableCell>{user.department}</TableCell>
-                          <TableCell>{user.email}</TableCell>
+                          <TableCell className="hidden sm:table-cell">{user.department}</TableCell>
+                          <TableCell className="hidden md:table-cell">{user.email}</TableCell>
                           <TableCell>
                             <Badge
                               variant="outline"
@@ -446,6 +430,7 @@ export function NewAdminDashboard() {
           <Card>
             <CardHeader>
               <CardTitle>School Calendar</CardTitle>
+              <CardDescription>Key dates and events for the term.</CardDescription>
             </CardHeader>
             <CardContent>
               <Calendar

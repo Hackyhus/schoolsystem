@@ -34,6 +34,7 @@ import {
   DialogTrigger,
 } from '@/components/ui/dialog';
 import { AddLessonNoteForm } from '../lesson-notes/add-lesson-note-form';
+import { Skeleton } from '@/components/ui/skeleton';
 
 export function TeacherDashboard() {
   const { user } = useRole();
@@ -103,51 +104,51 @@ export function TeacherDashboard() {
 
   return (
     <div className="flex flex-col gap-6">
-      <div>
-        <h1 className="font-headline text-3xl font-bold">Teacher Dashboard</h1>
+      <div className="space-y-1">
+        <h1 className="font-headline text-2xl md:text-3xl font-bold">Teacher Dashboard</h1>
         <p className="text-muted-foreground">
           Welcome, {user?.displayName || 'Teacher'}. Manage your submissions and data.
         </p>
       </div>
-      <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
         <Card>
-          <CardHeader className="flex-row items-center justify-between pb-2">
+          <CardHeader className="flex-row items-center justify-between pb-2 space-y-0">
             <CardTitle className="text-sm font-medium">Pending Plans</CardTitle>
-            <Clock className="h-6 w-6 text-primary" />
+            <Clock className="h-5 w-5 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{isLoading ? '...' : stats.pendingPlans}</div>
+            <div className="text-2xl font-bold">{isLoading ? <Skeleton className="h-8 w-10"/> : stats.pendingPlans}</div>
             <p className="text-xs text-muted-foreground">Lesson plans awaiting review</p>
           </CardContent>
         </Card>
         <Card>
-          <CardHeader className="flex-row items-center justify-between pb-2">
+          <CardHeader className="flex-row items-center justify-between pb-2 space-y-0">
             <CardTitle className="text-sm font-medium">Approved Plans</CardTitle>
-            <CheckCircle className="h-6 w-6 text-primary" />
+            <CheckCircle className="h-5 w-5 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{isLoading ? '...' : stats.approvedPlans}</div>
+            <div className="text-2xl font-bold">{isLoading ? <Skeleton className="h-8 w-10"/> : stats.approvedPlans}</div>
              <p className="text-xs text-muted-foreground">Total plans approved</p>
           </CardContent>
         </Card>
         <Card>
-          <CardHeader className="flex-row items-center justify-between pb-2">
+          <CardHeader className="flex-row items-center justify-between pb-2 space-y-0">
             <CardTitle className="text-sm font-medium">Pending Questions</CardTitle>
-            <FileQuestion className="h-6 w-6 text-primary" />
+            <FileQuestion className="h-5 w-5 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{isLoading ? '...' : stats.pendingExams}</div>
+            <div className="text-2xl font-bold">{isLoading ? <Skeleton className="h-8 w-10"/> : stats.pendingExams}</div>
             <p className="text-xs text-muted-foreground">Exam questions awaiting review</p>
           </CardContent>
         </Card>
          <Card>
-          <CardHeader className="flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium">Rejected/Revision</CardTitle>
-            <XCircle className="h-6 w-6 text-destructive" />
+          <CardHeader className="flex-row items-center justify-between pb-2 space-y-0">
+            <CardTitle className="text-sm font-medium">Returned for Correction</CardTitle>
+            <XCircle className="h-5 w-5 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{isLoading ? '...' : stats.rejectedPlans}</div>
-            <p className="text-xs text-muted-foreground">Plans returned for correction</p>
+            <div className="text-2xl font-bold">{isLoading ? <Skeleton className="h-8 w-10"/> : stats.rejectedPlans}</div>
+            <p className="text-xs text-muted-foreground">Plans needing your review</p>
           </CardContent>
         </Card>
       </div>
@@ -166,16 +167,25 @@ export function TeacherDashboard() {
                     <TableHeader>
                         <TableRow>
                         <TableHead>Title</TableHead>
-                        <TableHead>Subject</TableHead>
+                        <TableHead className="hidden sm:table-cell">Subject</TableHead>
                         <TableHead>Status</TableHead>
                         <TableHead className="text-right">Action</TableHead>
                         </TableRow>
                     </TableHeader>
                     <TableBody>
-                        {!isLoading && recentNotes.length > 0 ? recentNotes.map((note) => (
+                        {isLoading ? (
+                          Array.from({length: 3}).map((_, i) => (
+                            <TableRow key={i}>
+                              <TableCell><Skeleton className="h-5 w-32" /></TableCell>
+                              <TableCell className="hidden sm:table-cell"><Skeleton className="h-5 w-24" /></TableCell>
+                              <TableCell><Skeleton className="h-6 w-28" /></TableCell>
+                              <TableCell className="text-right"><Skeleton className="h-8 w-20" /></TableCell>
+                            </TableRow>
+                          ))
+                        ) : recentNotes.length > 0 ? recentNotes.map((note) => (
                         <TableRow key={note.id}>
                             <TableCell className="font-medium">{note.title}</TableCell>
-                            <TableCell>{note.subject}</TableCell>
+                            <TableCell className="hidden sm:table-cell">{note.subject}</TableCell>
                             <TableCell>
                                <Badge variant={statusVariant(note.status)}>{note.status}</Badge>
                             </TableCell>
@@ -188,7 +198,7 @@ export function TeacherDashboard() {
                         )) : (
                             <TableRow>
                                 <TableCell colSpan={4} className="h-24 text-center text-muted-foreground">
-                                    {isLoading ? "Loading submissions..." : "No recent submissions."}
+                                    No recent submissions.
                                 </TableCell>
                             </TableRow>
                         )}
