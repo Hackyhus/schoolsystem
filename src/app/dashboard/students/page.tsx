@@ -1,3 +1,4 @@
+
 'use client';
 
 import {
@@ -19,9 +20,9 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { PlusCircle, Trash2 } from 'lucide-react';
 import { useEffect, useState, useCallback } from 'react';
-import { collection, getDocs, deleteDoc, doc, query, where } from 'firebase/firestore';
+import { collection, getDocs, deleteDoc, doc, query, orderBy } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
-import type { MockUser } from '@/lib/schema';
+import type { Student } from '@/lib/schema';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useToast } from '@/hooks/use-toast';
 import {
@@ -36,7 +37,7 @@ import { AddStudentForm } from '@/components/dashboard/students/add-student-form
 
 
 export default function StudentsPage() {
-  const [students, setStudents] = useState<MockUser[]>([]);
+  const [students, setStudents] = useState<Student[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const { toast } = useToast();
@@ -44,12 +45,11 @@ export default function StudentsPage() {
   const fetchStudents = useCallback(async () => {
     setIsLoading(true);
     try {
-      const usersRef = collection(db, 'users');
-      // Query for users that have the role 'Student'.
-      const q = query(usersRef, where('role', '==', 'Student'));
+      const studentsRef = collection(db, 'students');
+      const q = query(studentsRef, orderBy('createdAt', 'desc'));
       const querySnapshot = await getDocs(q);
       const studentsList = querySnapshot.docs
-        .map((doc) => ({ id: doc.id, ...doc.data() } as MockUser));
+        .map((doc) => ({ id: doc.id, ...doc.data() } as Student));
       setStudents(studentsList);
     } catch (error) {
       console.error('Error fetching students:', error);
@@ -76,7 +76,9 @@ export default function StudentsPage() {
     )
       return;
     try {
-      await deleteDoc(doc(db, 'users', studentId));
+      // This only deletes from the 'students' collection.
+      // A more robust solution would use a Cloud Function to also handle associated parent users and documents.
+      await deleteDoc(doc(db, 'students', studentId));
       toast({
         title: 'Student Removed',
         description: 'The student has been successfully deleted.',
@@ -102,7 +104,7 @@ export default function StudentsPage() {
       <div>
         <h1 className="font-headline text-3xl font-bold">Student Management</h1>
         <p className="text-muted-foreground">
-          Add, view, and manage student accounts.
+          Add, view, and manage student accounts and records.
         </p>
       </div>
       <Card>
@@ -119,11 +121,11 @@ export default function StudentsPage() {
                 <PlusCircle className="mr-2 h-4 w-4" /> Add New Student
               </Button>
             </DialogTrigger>
-            <DialogContent className="max-h-[90vh] overflow-y-auto">
+            <DialogContent className="max-w-3xl">
               <DialogHeader>
-                <DialogTitle>Add New Student</DialogTitle>
+                <DialogTitle>New Student Registration</DialogTitle>
                 <DialogDescription>
-                  Create a new account for a student.
+                  Fill out the form to register a new student. A parent portal account will be created for the primary guardian.
                 </DialogDescription>
               </DialogHeader>
               <AddStudentForm onStudentAdded={handleStudentAdded} />
@@ -136,8 +138,9 @@ export default function StudentsPage() {
               <TableRow>
                 <TableHead>Student ID</TableHead>
                 <TableHead>Name</TableHead>
-                <TableHead className="hidden md:table-cell">Parent's Email</TableHead>
+                <TableHead className="hidden md:table-cell">Primary Guardian</TableHead>
                 <TableHead>Class</TableHead>
+                 <TableHead>Status</TableHead>
                 <TableHead className="text-right">Action</TableHead>
               </TableRow>
             </TableHeader>
@@ -157,6 +160,9 @@ export default function StudentsPage() {
                      <TableCell>
                       <Skeleton className="h-5 w-24" />
                     </TableCell>
+                     <TableCell>
+                      <Skeleton className="h-6 w-20" />
+                    </TableCell>
                     <TableCell className="text-right">
                       <Skeleton className="ml-auto h-8 w-8" />
                     </TableCell>
@@ -165,18 +171,20 @@ export default function StudentsPage() {
               ) : (
                 students.map((student) => (
                   <TableRow key={student.id}>
-                    <TableCell className="font-mono text-xs">{student.staffId || 'N/A'}</TableCell>
-                    <TableCell className="font-medium">{student.name}</TableCell>
-                    <TableCell className="hidden md:table-cell">{student.email}</TableCell>
+                    <TableCell className="font-mono text-xs">{student.studentId || 'N/A'}</TableCell>
+                    <TableCell className="font-medium">{`${student.firstName} ${student.lastName}`}</TableCell>
+                    <TableCell className="hidden md:table-cell">{student.guardians[0]?.fullName || 'N/A'}</TableCell>
                     <TableCell>
-                      {/* This will be dynamic later */}
-                      <Badge variant="outline">JSS 1</Badge>
+                      <Badge variant="outline">{student.classLevel}</Badge>
+                    </TableCell>
+                    <TableCell>
+                        <Badge variant={student.status === 'Active' ? 'secondary' : 'destructive'}>{student.status}</Badge>
                     </TableCell>
                     <TableCell className="text-right">
                       <Button
                         variant="ghost"
                         size="icon"
-                        onClick={() => removeStudent(student.id.toString())}
+                        onClick={() => removeStudent(student.id)}
                       >
                         <Trash2 className="h-4 w-4" />
                       </Button>
@@ -187,7 +195,7 @@ export default function StudentsPage() {
               {!isLoading && students.length === 0 && (
                 <TableRow>
                   <TableCell
-                    colSpan={5}
+                    colSpan={6}
                     className="h-24 text-center text-muted-foreground"
                   >
                     No students found. Add a student to get started.

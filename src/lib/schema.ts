@@ -76,14 +76,53 @@ export type Announcement = {
   createdAt: Date;
 };
 
+// New, detailed Student Schema
 export type Student = {
-  _id: string;
-  firstName: string;
-  lastName:string;
-  classId: string; // ObjectId -> classes._id
-  parentId: string; // ObjectId -> users._id (role=parent)
-  createdAt: Date;
-};
+    id: string;
+    studentId: string; // GIIA/STU/24/0001
+    firstName: string;
+    lastName: string;
+    gender: 'Male' | 'Female' | 'Other';
+    dateOfBirth: any; // Firestore Timestamp
+    classLevel: string;
+    sessionYear: string;
+    guardians: Guardian[];
+    contacts: EmergencyContact[];
+    documents?: StudentDocument[];
+    health: HealthInfo;
+    status: 'Active' | 'Inactive' | 'Graduated';
+    createdAt: any; // Firestore Timestamp
+}
+
+export type Guardian = {
+    fullName: string;
+    relationship: string;
+    phone: string;
+    email: string;
+    address: string;
+    occupation?: string;
+    isPrimary: boolean; // To identify the main contact
+    userId?: string; // Firestore UID for parent login
+}
+
+export type EmergencyContact = {
+    emergencyContactName: string;
+    emergencyContactPhone: string;
+    relationToStudent: string;
+}
+
+export type StudentDocument = {
+    documentType: string;
+    fileUrl: string;
+    storagePath: string;
+}
+
+export type HealthInfo = {
+    bloodGroup?: string;
+    genotype?: string;
+    allergies?: string;
+    medicalConditions?: string;
+}
 
 
 export type MockUser = {
@@ -137,5 +176,3 @@ export type MockLessonNote = {
     hod_review: string | null;
     admin_review: string | null;
 };
-
-    
