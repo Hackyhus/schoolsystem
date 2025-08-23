@@ -1,4 +1,3 @@
-
 'use client';
 
 import { useEffect, useState, useCallback } from 'react';
@@ -15,7 +14,7 @@ import {
 } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
-import { Check, Send, ThumbsDown, ThumbsUp, User, File as FileIcon, AlertTriangle, Upload } from 'lucide-react';
+import { Check, Send, ThumbsDown, ThumbsUp, User, File as FileIcon, AlertTriangle, Upload, Eye } from 'lucide-react';
 import { ReviewForm } from '@/components/dashboard/lesson-notes/review-form';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useToast } from '@/hooks/use-toast';
@@ -50,6 +49,17 @@ async function createNotification(teacherId: string, noteId: string, noteTitle: 
       read: false,
       createdAt: serverTimestamp(),
     });
+
+     await addDoc(collection(db, "auditLog"), {
+        actorId: 'System', // In a real app, get current user ID
+        action: `notification_sent_to_${teacherId}`,
+        entity: 'lessonNote',
+        entityId: noteId,
+        timestamp: serverTimestamp(),
+        details: `Note ${action}: ${noteTitle}`
+    });
+
+
   } catch (error) {
     console.error("Error creating notification:", error);
   }
@@ -63,6 +73,7 @@ export default function LessonNoteDetailPage() {
   const { toast } = useToast();
   const { role, user } = useRole();
   const [isResubmitModalOpen, setIsResubmitModalOpen] = useState(false);
+  const [isViewerOpen, setIsViewerOpen] = useState(false);
 
   const fetchNote = useCallback(async () => {
     if (typeof id !== 'string') return;
@@ -189,6 +200,11 @@ export default function LessonNoteDetailPage() {
     }
     return null;
   }
+  
+  const getDocumentViewUrl = (fileUrl: string) => {
+    const encodedUrl = encodeURIComponent(fileUrl);
+    return `https://docs.google.com/gview?url=${encodedUrl}&embedded=true`;
+  }
 
   if (isLoading) {
     return (
@@ -254,9 +270,23 @@ export default function LessonNoteDetailPage() {
                           {note.title}.{note.fileUrl.split('.').pop()?.split('?')[0]}
                         </p>
                         <p className="text-sm text-muted-foreground">
-                          Click to download the lesson note file.
+                          Click to view or download the file.
                         </p>
                       </div>
+                       <Dialog open={isViewerOpen} onOpenChange={setIsViewerOpen}>
+                        <DialogTrigger asChild>
+                           <Button variant="outline"><Eye className="mr-2 h-4 w-4" /> View</Button>
+                        </DialogTrigger>
+                        <DialogContent className="max-w-4xl h-[90vh]">
+                            <DialogHeader>
+                                <DialogTitle>{note.title}</DialogTitle>
+                                <DialogDescription>
+                                  Viewing document. <a href={note.fileUrl} target="_blank" rel="noopener noreferrer" className="underline">Click here to download</a>.
+                                </DialogDescription>
+                            </DialogHeader>
+                            <iframe src={getDocumentViewUrl(note.fileUrl)} className="w-full h-full border-0"></iframe>
+                        </DialogContent>
+                      </Dialog>
                       <Button asChild>
                         <a href={note.fileUrl} target="_blank" rel="noopener noreferrer">Download</a>
                       </Button>

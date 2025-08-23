@@ -1,4 +1,3 @@
-
 'use client';
 
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -12,6 +11,7 @@ import {
   setDoc,
   where,
   getCountFromServer,
+  addDoc
 } from 'firebase/firestore';
 import { createUserWithEmailAndPassword } from 'firebase/auth';
 import { Button } from '@/components/ui/button';
@@ -196,6 +196,15 @@ export function AddUserForm({ onUserAdded }: { onUserAdded: () => void }) {
             canUploadLessonNotes: role === 'Teacher',
             canViewSalary: true,
         }
+      });
+      
+      await addDoc(collection(db, 'auditLog'), {
+        actorId: 'Admin', // Assume admin is creating user
+        action: 'create_user',
+        entity: 'user',
+        entityId: user.uid,
+        timestamp: new Date(),
+        details: `Created user ${values.firstName} ${values.lastName} with role ${role}`
       });
 
       toast({

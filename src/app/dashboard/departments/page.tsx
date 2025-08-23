@@ -1,4 +1,3 @@
-
 'use client';
 
 import {
@@ -19,14 +18,85 @@ import {
 import { Button } from '@/components/ui/button';
 import { PlusCircle, MoreHorizontal } from 'lucide-react';
 import { Skeleton } from '@/components/ui/skeleton';
+import { useEffect, useState, useCallback } from 'react';
+import { collection, getDocs, query, doc, getDoc } from 'firebase/firestore';
+import { db } from '@/lib/firebase';
+import { useToast } from '@/hooks/use-toast';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from '@/components/ui/dialog';
+import { AddDepartmentForm } from '@/components/dashboard/departments/add-department-form';
 
-// This component will be refactored to fetch real department data.
-// For now, it displays a placeholder state.
+type Department = {
+  id: string;
+  name: string;
+  hodId?: string;
+  hodName?: string;
+  teacherCount?: number;
+  studentCount?: number;
+};
 
 export default function DepartmentsPage() {
+  const [departments, setDepartments] = useState<Department[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const { toast } = useToast();
 
-  const departments: any[] = []; // Placeholder for real data
-  const isLoading = true; // Placeholder for real loading state
+  const fetchDepartments = useCallback(async () => {
+    setIsLoading(true);
+    try {
+      const departmentsQuery = query(collection(db, 'departments'));
+      const querySnapshot = await getDocs(departmentsQuery);
+      
+      const departmentsList = await Promise.all(
+        querySnapshot.docs.map(async (d) => {
+          const deptData = d.data();
+          let hodName = 'N/A';
+          if (deptData.hodId) {
+            const hodDoc = await getDoc(doc(db, 'users', deptData.hodId));
+            if (hodDoc.exists()) {
+              hodName = hodDoc.data().name;
+            }
+          }
+          // In a real app, teacher/student counts would be calculated, possibly via a Cloud Function.
+          // For now, we'll keep them as placeholders.
+          return {
+            id: d.id,
+            name: deptData.name,
+            hodId: deptData.hodId,
+            hodName: hodName,
+            teacherCount: 0,
+            studentCount: 0,
+          };
+        })
+      );
+      
+      setDepartments(departmentsList);
+    } catch (error) {
+      console.error("Error fetching departments:", error);
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "Could not fetch department data.",
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  }, [toast]);
+
+  useEffect(() => {
+    fetchDepartments();
+  }, [fetchDepartments]);
+
+  const handleDepartmentAdded = () => {
+    fetchDepartments();
+    setIsModalOpen(false);
+  };
 
   return (
     <div className="space-y-8">
@@ -37,16 +107,29 @@ export default function DepartmentsPage() {
         </p>
       </div>
       <Card>
-        <CardHeader className="flex-row items-center justify-between">
+        <CardHeader className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
           <div>
             <CardTitle>All Departments</CardTitle>
             <CardDescription>
               A list of all departments in the school.
             </CardDescription>
           </div>
-          <Button>
-            <PlusCircle className="mr-2 h-4 w-4" /> Add New Department
-          </Button>
+          <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
+            <DialogTrigger asChild>
+              <Button>
+                <PlusCircle className="mr-2 h-4 w-4" /> Add New Department
+              </Button>
+            </DialogTrigger>
+            <DialogContent>
+              <DialogHeader>
+                <DialogTitle>Add New Department</DialogTitle>
+                <DialogDescription>
+                  Create a new department and optionally assign a Head of Department (HOD).
+                </DialogDescription>
+              </DialogHeader>
+              <AddDepartmentForm onDepartmentAdded={handleDepartmentAdded} />
+            </DialogContent>
+          </Dialog>
         </CardHeader>
         <CardContent>
           <Table>
@@ -54,41 +137,43 @@ export default function DepartmentsPage() {
               <TableRow>
                 <TableHead>Department Name</TableHead>
                 <TableHead>Head of Department (HOD)</TableHead>
-                <TableHead>No. of Teachers</TableHead>
-                <TableHead>No. of Students</TableHead>
+                <TableHead className="hidden md:table-cell">No. of Teachers</TableHead>
+                <TableHead className="hidden md:table-cell">No. of Students</TableHead>
                 <TableHead className="text-right">Action</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
-                {isLoading ? (
-                    Array.from({length: 3}).map((_, i) => (
-                        <TableRow key={i}>
-                            <TableCell><Skeleton className="h-5 w-24" /></TableCell>
-                            <TableCell><Skeleton className="h-5 w-32" /></TableCell>
-                            <TableCell><Skeleton className="h-5 w-20" /></TableCell>
-                            <TableCell><Skeleton className="h-5 w-20" /></TableCell>
-                            <TableCell className="text-right"><Skeleton className="h-8 w-8" /></TableCell>
-                        </TableRow>
-                    ))
-                ) : departments.length > 0 ? departments.map((dept: any) => (
+              {isLoading ? (
+                Array.from({ length: 3 }).map((_, i) => (
+                  <TableRow key={i}>
+                    <TableCell><Skeleton className="h-5 w-24" /></TableCell>
+                    <TableCell><Skeleton className="h-5 w-32" /></TableCell>
+                    <TableCell className="hidden md:table-cell"><Skeleton className="h-5 w-20" /></TableCell>
+                    <TableCell className="hidden md:table-cell"><Skeleton className="h-5 w-20" /></TableCell>
+                    <TableCell className="text-right"><Skeleton className="ml-auto h-8 w-8" /></TableCell>
+                  </TableRow>
+                ))
+              ) : departments.length > 0 ? (
+                departments.map((dept) => (
                   <TableRow key={dept.id}>
                     <TableCell className="font-medium">{dept.name}</TableCell>
-                    <TableCell>{dept.hod}</TableCell>
-                    <TableCell>{dept.teachers}</TableCell>
-                    <TableCell>{dept.students}</TableCell>
+                    <TableCell>{dept.hodName}</TableCell>
+                    <TableCell className="hidden md:table-cell">{dept.teacherCount}</TableCell>
+                    <TableCell className="hidden md:table-cell">{dept.studentCount}</TableCell>
                     <TableCell className="text-right">
-                       <Button variant="ghost" size="icon">
+                      <Button variant="ghost" size="icon">
                         <MoreHorizontal className="h-4 w-4" />
-                       </Button>
+                      </Button>
                     </TableCell>
                   </TableRow>
-                )) : (
-                  <TableRow>
-                    <TableCell colSpan={5} className="h-24 text-center">
-                      No departments found.
-                    </TableCell>
-                  </TableRow>
-                )}
+                ))
+              ) : (
+                <TableRow>
+                  <TableCell colSpan={5} className="h-24 text-center">
+                    No departments found.
+                  </TableCell>
+                </TableRow>
+              )}
             </TableBody>
           </Table>
         </CardContent>

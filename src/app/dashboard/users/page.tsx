@@ -1,4 +1,3 @@
-
 'use client';
 
 import {
@@ -108,7 +107,7 @@ export default function UsersPage() {
         </p>
       </div>
       <Card>
-        <CardHeader className="flex-row items-center justify-between">
+        <CardHeader className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
           <div>
             <CardTitle>All Staff</CardTitle>
             <CardDescription>
@@ -138,7 +137,7 @@ export default function UsersPage() {
               <TableRow>
                 <TableHead>Staff ID</TableHead>
                 <TableHead>Name</TableHead>
-                <TableHead>Email</TableHead>
+                <TableHead className="hidden md:table-cell">Email</TableHead>
                 <TableHead>Role</TableHead>
                 <TableHead className="text-right">Actions</TableHead>
               </TableRow>
@@ -153,23 +152,23 @@ export default function UsersPage() {
                     <TableCell>
                       <Skeleton className="h-5 w-24" />
                     </TableCell>
-                    <TableCell>
+                    <TableCell className="hidden md:table-cell">
                       <Skeleton className="h-5 w-36" />
                     </TableCell>
                     <TableCell>
                       <Skeleton className="h-6 w-24" />
                     </TableCell>
                     <TableCell className="text-right">
-                      <Skeleton className="h-8 w-8 inline-block" />
+                      <Skeleton className="ml-auto h-8 w-8" />
                     </TableCell>
                   </TableRow>
                 ))
               ) : (
                 users.map((user) => (
                   <TableRow key={user.id}>
-                    <TableCell className="font-mono">{user.staffId || 'N/A'}</TableCell>
+                    <TableCell className="font-mono text-xs">{user.staffId || 'N/A'}</TableCell>
                     <TableCell className="font-medium">{user.name}</TableCell>
-                    <TableCell>{user.email}</TableCell>
+                    <TableCell className="hidden md:table-cell">{user.email}</TableCell>
                     <TableCell>
                        <Badge variant="outline">{user.role}</Badge>
                     </TableCell>

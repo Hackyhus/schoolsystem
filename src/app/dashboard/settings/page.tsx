@@ -5,10 +5,15 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button';
 import { Download } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import { useTheme } from '@/context/theme-context';
+import { Label } from '@/components/ui/label';
+import { Switch } from '@/components/ui/switch';
 
 export default function SettingsPage() {
   const [installPrompt, setInstallPrompt] = useState<Event | null>(null);
   const { toast } = useToast();
+  const { theme, setTheme } = useTheme();
+
 
   useEffect(() => {
     const handleBeforeInstallPrompt = (event: Event) => {
@@ -27,7 +32,7 @@ export default function SettingsPage() {
     if (!installPrompt) {
         toast({
             title: 'App Already Installed',
-            description: 'The InsightConnect Portal is already installed on your device.',
+            description: 'The InsightConnect Portal is already installed on your device or not supported by your browser.',
         });
         return;
     }
@@ -53,6 +58,25 @@ export default function SettingsPage() {
           Manage your account and application settings.
         </p>
       </div>
+
+       <Card>
+        <CardHeader>
+          <CardTitle>Appearance</CardTitle>
+          <CardDescription>
+            Customize the look and feel of the application.
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+           <div className="flex items-center space-x-2">
+            <Switch
+                id="dark-mode"
+                checked={theme === 'dark'}
+                onCheckedChange={(checked) => setTheme(checked ? 'dark' : 'light')}
+            />
+            <Label htmlFor="dark-mode">Dark Mode</Label>
+            </div>
+        </CardContent>
+      </Card>
 
       <Card>
         <CardHeader>

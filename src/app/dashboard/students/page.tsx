@@ -106,7 +106,7 @@ export default function StudentsPage() {
         </p>
       </div>
       <Card>
-        <CardHeader className="flex-row items-center justify-between">
+        <CardHeader className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
           <div>
             <CardTitle>All Students</CardTitle>
             <CardDescription>
@@ -136,7 +136,7 @@ export default function StudentsPage() {
               <TableRow>
                 <TableHead>Student ID</TableHead>
                 <TableHead>Name</TableHead>
-                <TableHead>Email</TableHead>
+                <TableHead className="hidden md:table-cell">Parent's Email</TableHead>
                 <TableHead>Class</TableHead>
                 <TableHead className="text-right">Action</TableHead>
               </TableRow>
@@ -151,23 +151,23 @@ export default function StudentsPage() {
                     <TableCell>
                       <Skeleton className="h-5 w-24" />
                     </TableCell>
-                    <TableCell>
+                    <TableCell className="hidden md:table-cell">
                       <Skeleton className="h-5 w-36" />
                     </TableCell>
                      <TableCell>
                       <Skeleton className="h-5 w-24" />
                     </TableCell>
                     <TableCell className="text-right">
-                      <Skeleton className="h-8 w-8 inline-block" />
+                      <Skeleton className="ml-auto h-8 w-8" />
                     </TableCell>
                   </TableRow>
                 ))
               ) : (
                 students.map((student) => (
                   <TableRow key={student.id}>
-                    <TableCell className="font-mono">{student.staffId || 'N/A'}</TableCell>
+                    <TableCell className="font-mono text-xs">{student.staffId || 'N/A'}</TableCell>
                     <TableCell className="font-medium">{student.name}</TableCell>
-                    <TableCell>{student.email}</TableCell>
+                    <TableCell className="hidden md:table-cell">{student.email}</TableCell>
                     <TableCell>
                       {/* This will be dynamic later */}
                       <Badge variant="outline">JSS 1</Badge>
