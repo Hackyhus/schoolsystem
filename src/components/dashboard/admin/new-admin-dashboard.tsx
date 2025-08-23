@@ -29,7 +29,7 @@ import {
 import { Badge } from '@/components/ui/badge';
 import Link from 'next/link';
 import { useEffect, useState, useCallback } from 'react';
-import { collection, getDocs, query, where } from 'firebase/firestore';
+import { collection, getDocs, query, where, orderBy, limit } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import type { MockUser, MockLessonNote } from '@/lib/schema';
 import { useToast } from '@/hooks/use-toast';
@@ -70,12 +70,12 @@ export function NewAdminDashboard() {
   const { toast } = useToast();
   const [stats, setStats] = useState({
     students: 0,
-    teachers: 0,
+    staff: 0,
     pending: 0,
     approved: 0,
     rejected: 0,
   });
-  const [teachers, setTeachers] = useState<MockUser[]>([]);
+  const [staff, setStaff] = useState<MockUser[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [submissionStatusData, setSubmissionStatusData] = useState<
     SubmissionStatusData[]
@@ -88,19 +88,12 @@ export function NewAdminDashboard() {
     setIsLoading(true);
     try {
       // User counts
-      const studentsQuery = query(
-        collection(db, 'users'),
-        where('role', '==', 'Student')
-      );
-      const teachersQuery = query(
-        collection(db, 'users'),
-        where('role', '==', 'Teacher')
-      );
-      const studentsSnapshot = await getDocs(studentsQuery);
-      const teachersSnapshot = await getDocs(teachersQuery);
-      const teacherList = teachersSnapshot.docs.map(
-        (doc) => ({ id: doc.id, ...doc.data() } as MockUser)
-      );
+      const usersQuery = query(collection(db, 'users'), orderBy('createdAt', 'desc'));
+      const usersSnapshot = await getDocs(usersQuery);
+      const allUsers = usersSnapshot.docs.map(doc => doc.data() as MockUser);
+      
+      const students = allUsers.filter(u => u.role === 'Student');
+      const staffList = allUsers.filter(u => u.role !== 'Student' && u.role !== 'Parent');
 
       // Lesson note stats and charts
       const lessonNotesQuery = query(collection(db, 'lessonNotes'));
@@ -118,14 +111,14 @@ export function NewAdminDashboard() {
       ).length;
 
       setStats({
-        students: studentsSnapshot.size,
-        teachers: teachersSnapshot.size,
+        students: students.length,
+        staff: staffList.length,
         pending,
         approved,
         rejected,
       });
 
-      setTeachers(teacherList);
+      setStaff(staffList);
 
       // Prepare data for status donut chart
       setSubmissionStatusData([
@@ -252,7 +245,7 @@ export function NewAdminDashboard() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">
-              {isLoading ? <Skeleton className="h-8 w-16" /> : stats.teachers}
+              {isLoading ? <Skeleton className="h-8 w-16" /> : stats.staff}
             </div>
           </CardContent>
         </Card>
@@ -314,7 +307,12 @@ export function NewAdminDashboard() {
                       axisLine={false}
                       tickMargin={8}
                     />
-                    <YAxis tickLine={false} axisLine={false} tickMargin={8} />
+                    <YAxis
+                      tickLine={false}
+                      axisLine={false}
+                      tickMargin={8}
+                      allowDecimals={false}
+                    />
                     <ChartTooltip
                       cursor={false}
                       content={<ChartTooltipContent />}
@@ -354,7 +352,7 @@ export function NewAdminDashboard() {
           </Card>
           <Card>
             <CardHeader>
-              <CardTitle>Teacher Details</CardTitle>
+              <CardTitle>Recent Staff</CardTitle>
             </CardHeader>
             <CardContent>
               <Table>
@@ -363,7 +361,7 @@ export function NewAdminDashboard() {
                     <TableHead>Name</TableHead>
                     <TableHead>Department</TableHead>
                     <TableHead>Email</TableHead>
-                    <TableHead>Status</TableHead>
+                    <TableHead>Role</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -380,24 +378,20 @@ export function NewAdminDashboard() {
                             <Skeleton className="h-5 w-32" />
                           </TableCell>
                           <TableCell>
-                            <Skeleton className="h-6 w-16" />
+                            <Skeleton className="h-6 w-24" />
                           </TableCell>
                         </TableRow>
                       ))
-                    : teachers.slice(0, 4).map((teacher) => (
-                        <TableRow key={teacher.id}>
-                          <TableCell>{teacher.name}</TableCell>
-                          <TableCell>{teacher.department}</TableCell>
-                          <TableCell>{teacher.email}</TableCell>
+                    : staff.slice(0, 4).map((user) => (
+                        <TableRow key={user.id}>
+                          <TableCell>{user.name}</TableCell>
+                          <TableCell>{user.department}</TableCell>
+                          <TableCell>{user.email}</TableCell>
                           <TableCell>
                             <Badge
-                              variant={
-                                teacher.status === 'Active'
-                                  ? 'default'
-                                  : 'destructive'
-                              }
+                              variant="outline"
                             >
-                              {teacher.status || 'Active'}
+                              {user.role}
                             </Badge>
                           </TableCell>
                         </TableRow>
