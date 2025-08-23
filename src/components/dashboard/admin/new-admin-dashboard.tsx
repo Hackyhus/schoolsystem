@@ -351,7 +351,7 @@ export function NewAdminDashboard() {
                 <TableBody>
                   {isLoading
                     ? Array.from({ length: 4 }).map((_, i) => (
-                        <TableRow key={i}>
+                        <TableRow key={`skeleton-staff-${i}`}>
                           <TableCell>
                             <Skeleton className="h-5 w-24" />
                           </TableCell>
