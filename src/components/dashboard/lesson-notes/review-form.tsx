@@ -4,50 +4,47 @@
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
-import { ThumbsDown, ThumbsUp, MessageCircle } from 'lucide-react';
+import { MessageCircle } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import { Label } from '@/components/ui/label';
 
-export function ReviewForm({ onSubmit }: { onSubmit: (action: 'Approve' | 'Reject' | 'Revision', comment: string) => void; }) {
-  const [review, setReview] = useState('');
+export function ReviewForm({ onSubmit }: { onSubmit: (action: 'Revision', comment: string) => void; }) {
+  const [comment, setComment] = useState('');
   const { toast } = useToast();
 
-  const handleSubmit = (action: 'Approve' | 'Reject' | 'Revision') => {
-    if (!review) {
+  const handleSubmit = () => {
+    if (!comment) {
       toast({
         variant: 'destructive',
-        title: 'Error',
-        description: 'Please provide a review comment before submitting.',
+        title: 'Comment Required',
+        description: 'Please provide a comment before requesting a revision.',
       });
       return;
     }
     
-    onSubmit(action, review);
-    setReview('');
+    onSubmit('Revision', comment);
+    setComment('');
   };
 
   return (
     <div className="space-y-4">
+      <div>
+        <Label htmlFor="revision-comment" className="text-base font-semibold">Request Revision</Label>
+        <p className="text-sm text-muted-foreground">If corrections are needed, provide your feedback below and send it back to the teacher.</p>
+      </div>
       <Textarea
-        placeholder="Type your review here..."
-        value={review}
-        onChange={(e) => setReview(e.target.value)}
+        id="revision-comment"
+        placeholder="Type your feedback here..."
+        value={comment}
+        onChange={(e) => setComment(e.target.value)}
+        rows={4}
       />
       <div className="flex justify-end gap-2">
-        <Button variant="outline" onClick={() => handleSubmit('Revision')}>
+        <Button variant="outline" onClick={handleSubmit}>
           <MessageCircle className="mr-2 h-4 w-4" />
-          Request Revision
-        </Button>
-        <Button variant="destructive" onClick={() => handleSubmit('Reject')}>
-          <ThumbsDown className="mr-2 h-4 w-4" />
-          Reject
-        </Button>
-        <Button onClick={() => handleSubmit('Approve')}>
-          <ThumbsUp className="mr-2 h-4 w-4" />
-          Approve
+          Send Feedback & Request Revision
         </Button>
       </div>
     </div>
   );
 }
-
-    

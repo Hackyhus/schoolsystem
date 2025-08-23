@@ -26,17 +26,23 @@ import { Dialog, DialogTrigger, DialogContent, DialogHeader, DialogTitle, Dialog
 import { AddLessonNoteForm } from '@/components/dashboard/lesson-notes/add-lesson-note-form';
 
 
-async function createNotification(teacherId: string, noteId: string, noteTitle: string, action: 'Approved' | 'Rejected' | 'Needs Revision') {
+async function createNotification(teacherId: string, noteId: string, noteTitle: string, action: 'Approved' | 'Rejected' | 'Needs Revision', comment?: string) {
   try {
     let type: 'APPROVAL' | 'REJECTION' | 'INFO' = 'INFO';
+    let body = `Your lesson note "${noteTitle}" has been marked as ${action.toLowerCase()}.`;
     if (action === 'Approved') type = 'APPROVAL';
-    if (action === 'Rejected' || action === 'Needs Revision') type = 'REJECTION';
+    if (action === 'Rejected' || action === 'Needs Revision') {
+      type = 'REJECTION';
+      if (comment) {
+        body += ` Feedback: ${comment}`;
+      }
+    }
     
     await addDoc(collection(db, "notifications"), {
       toUserId: teacherId,
       type: type,
       title: `Lesson Note Update: ${action}`,
-      body: `Your lesson note "${noteTitle}" has been marked as ${action.toLowerCase()}.`,
+      body: body,
       ref: {
         collection: 'lessonNotes',
         id: noteId,
@@ -85,12 +91,10 @@ export default function LessonNoteDetailPage() {
     fetchNote();
   }, [fetchNote]);
 
-  const handleReview = async (action: 'Approve' | 'Reject' | 'Revision', comment: string) => {
+  const handleReview = async (action: 'Revision', comment: string) => {
     if (typeof id !== 'string' || !note || !user) return;
 
-    let newStatus: 'Approved' | 'Rejected' | 'Needs Revision' = 'Approved';
-    if (action === 'Reject') newStatus = 'Rejected';
-    if (action === 'Revision') newStatus = 'Needs Revision';
+    let newStatus: 'Needs Revision' = 'Needs Revision';
 
     const reviewerName = user.displayName || 'Reviewer';
     const reviewComment = `${newStatus} by ${reviewerName}: ${comment}`;
@@ -98,9 +102,8 @@ export default function LessonNoteDetailPage() {
     let reviewData = {};
 
     if (role === 'HeadOfDepartment') {
-      reviewData = { status: newStatus, hod_review: reviewComment, admin_review: null }; // HOD is final approver now
+      reviewData = { status: newStatus, hod_review: reviewComment, admin_review: null }; 
     } else if (role === 'Admin' || role === 'Principal' || role === 'Director') {
-      // Admins can also review, their review is final.
        reviewData = { status: newStatus, admin_review: reviewComment, hod_review: note.hod_review };
     } else {
       toast({ variant: "destructive", title: "Unauthorized", description: "You do not have permission to review this."});
@@ -112,7 +115,7 @@ export default function LessonNoteDetailPage() {
         const docRef = doc(db, 'lessonNotes', id);
         await updateDoc(docRef, reviewData);
         
-        await createNotification(note.teacherId, note.id, note.title, newStatus);
+        await createNotification(note.teacherId, note.id, note.title, newStatus, comment);
 
         toast({
             title: `Lesson Note ${newStatus}`,
@@ -128,6 +131,43 @@ export default function LessonNoteDetailPage() {
         });
     }
   }
+
+  const handleApprove = async () => {
+    if (typeof id !== 'string' || !note || !user) return;
+    
+    const reviewerName = user.displayName || 'Reviewer';
+    const reviewComment = `Approved by ${reviewerName}`;
+    let reviewData = {};
+
+     if (role === 'HeadOfDepartment') {
+      reviewData = { status: 'Approved', hod_review: reviewComment, admin_review: null };
+    } else if (role === 'Admin' || role === 'Principal' || role === 'Director') {
+       reviewData = { status: 'Approved', admin_review: reviewComment, hod_review: note.hod_review };
+    } else {
+      toast({ variant: "destructive", title: "Unauthorized", description: "You do not have permission to approve this."});
+      return;
+    }
+
+    try {
+        const docRef = doc(db, 'lessonNotes', id);
+        await updateDoc(docRef, reviewData);
+        
+        await createNotification(note.teacherId, note.id, note.title, 'Approved');
+
+        toast({
+            title: `Lesson Note Approved`,
+            description: "The status has been updated and the teacher has been notified.",
+        });
+        fetchNote(); // Re-fetch the note to show updated status
+    } catch (error) {
+        console.error("Error approving document:", error);
+        toast({
+            variant: "destructive",
+            title: "Error",
+            description: "Could not approve the lesson note.",
+        });
+    }
+  };
 
   const handleResubmission = () => {
     fetchNote();
@@ -253,9 +293,16 @@ export default function LessonNoteDetailPage() {
               <Card>
                   <CardHeader>
                       <CardTitle>Review & Approval</CardTitle>
-                      <CardDescription>Provide feedback for the teacher.</CardDescription>
+                      <CardDescription>Approve this submission or request corrections from the teacher.</CardDescription>
                   </CardHeader>
                   <CardContent className="space-y-4">
+                    <div className="flex justify-end">
+                       <Button onClick={handleApprove}>
+                          <ThumbsUp className="mr-2 h-4 w-4" />
+                          Approve
+                        </Button>
+                    </div>
+                    <Separator />
                     <ReviewForm onSubmit={handleReview} />
                   </CardContent>
               </Card>
@@ -284,7 +331,7 @@ export default function LessonNoteDetailPage() {
                         </li>
                          {note.hod_review && (
                              <li className="flex gap-4">
-                                <div className={`flex h-8 w-8 items-center justify-center rounded-full ${note.status.includes('Rejected') || note.status.includes('Revision') ? 'bg-red-100 text-red-600' : 'bg-green-100 text-green-600'}`}>
+                                <div className={`flex h-8 w-8 items-center justify-center rounded-full ${note.status.includes('Approved') ? 'bg-green-100 text-green-600' : 'bg-red-100 text-red-600'}`}>
                                     <User className="h-4 w-4"/>
                                 </div>
                                 <div>
@@ -295,7 +342,7 @@ export default function LessonNoteDetailPage() {
                          )}
                          {note.admin_review && (
                              <li className="flex gap-4">
-                                <div className={`flex h-8 w-8 items-center justify-center rounded-full ${note.status.includes('Rejected') || note.status.includes('Revision') ? 'bg-red-100 text-red-600' : 'bg-green-100 text-green-600'}`}>
+                                <div className={`flex h-8 w-8 items-center justify-center rounded-full ${note.status.includes('Approved') ? 'bg-green-100 text-green-600' : 'bg-red-100 text-red-600'}`}>
                                     <Check className="h-4 w-4"/>
                                 </div>
                                 <div>
