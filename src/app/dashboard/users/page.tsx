@@ -114,7 +114,22 @@ export default function UsersPage() {
               A list of all non-student users in the system.
             </CardDescription>
           </div>
-          {/* Add user button and dialog removed as requested */}
+           <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
+            <DialogTrigger asChild>
+                <Button>
+                    <PlusCircle className="mr-2 h-4 w-4" /> Add New Staff
+                </Button>
+            </DialogTrigger>
+            <DialogContent className="max-w-4xl">
+                <DialogHeader>
+                    <DialogTitle>Create New Staff Profile</DialogTitle>
+                    <DialogDescription>
+                       Fill out the details to create a new staff account. The default password will be their State of Origin.
+                    </DialogDescription>
+                </DialogHeader>
+                <AddUserForm onUserAdded={handleUserAdded} />
+            </DialogContent>
+          </Dialog>
         </CardHeader>
         <CardContent>
           <Table>

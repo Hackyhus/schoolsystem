@@ -116,7 +116,24 @@ export default function StudentsPage() {
               A list of all students in the system.
             </CardDescription>
           </div>
-          {/* Add student button and dialog removed as requested */}
+          {role === 'Admin' && (
+            <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
+              <DialogTrigger asChild>
+                <Button>
+                  <PlusCircle className="mr-2 h-4 w-4" /> Add New Student
+                </Button>
+              </DialogTrigger>
+              <DialogContent className="max-w-4xl">
+                <DialogHeader>
+                  <DialogTitle>Enroll New Student</DialogTitle>
+                  <DialogDescription>
+                    Fill in the form below to add a new student to the school database.
+                  </DialogDescription>
+                </DialogHeader>
+                <AddStudentForm onStudentAdded={handleStudentAdded} />
+              </DialogContent>
+            </Dialog>
+          )}
         </CardHeader>
         <CardContent>
           <Table>
