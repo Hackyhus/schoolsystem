@@ -4,6 +4,9 @@ import { getAuth } from "firebase/auth";
 import { getFirestore } from "firebase/firestore";
 import { getStorage } from "firebase/storage";
 import { getAnalytics, isSupported } from "firebase/analytics";
+import { FirebaseDatabaseService, IDatabaseService } from "@/services/databaseService";
+import { FirebaseStorageService, IStorageService } from "@/services/storageService";
+import { FirebaseAuthService, IAuthService } from "@/services/authService";
 
 // Your web app's Firebase configuration
 const firebaseConfig = {
@@ -18,11 +21,19 @@ const firebaseConfig = {
 
 // Initialize Firebase
 const app = !getApps().length ? initializeApp(firebaseConfig) : getApp();
-const db = getFirestore(app);
+
+// Firebase SDK instances
+const firestore = getFirestore(app);
 const auth = getAuth(app);
 const storage = getStorage(app);
 
 // Conditionally initialize Analytics only on the client side
 const analytics = isSupported().then(yes => yes ? getAnalytics(app) : null);
 
-export { app, db, auth, storage, analytics };
+// Abstracted Service Instances
+const dbService: IDatabaseService = new FirebaseDatabaseService(firestore);
+const storageService: IStorageService = new FirebaseStorageService(storage);
+const authService: IAuthService = new FirebaseAuthService(auth);
+
+
+export { app, firestore as db, auth, storage, analytics, dbService, storageService, authService };

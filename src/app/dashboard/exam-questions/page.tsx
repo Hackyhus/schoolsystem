@@ -23,13 +23,12 @@ import {
   DialogTitle,
   DialogTrigger,
 } from '@/components/ui/dialog';
-import { collection, query, where, getDocs, orderBy, doc, updateDoc } from 'firebase/firestore';
-import { db } from '@/lib/firebase';
 import { useToast } from '@/hooks/use-toast';
 import { Skeleton } from '@/components/ui/skeleton';
 import { AddLessonNoteForm } from '@/components/dashboard/lesson-notes/add-lesson-note-form'; // Re-using the unified form
 import { format } from 'date-fns';
-import type { AppNotification } from '@/lib/schema';
+import { dbService } from '@/lib/firebase';
+import type { QueryConstraint } from '@/services/types';
 
 type ExamQuestion = {
     id: string;
@@ -53,15 +52,13 @@ export default function ExamQuestionsPage() {
     if (!user) return;
     setIsLoading(true);
     try {
-        let q;
+        let constraints: QueryConstraint[] = [{ type: 'orderBy', fieldPath: 'submittedOn', direction: 'desc' }];
+        
         if (role === 'Teacher') {
-            q = query(collection(db, 'examQuestions'), where("teacherId", "==", user.uid), orderBy("submittedOn", "desc"));
-        } else {
-            // Exam Officer or Admin sees all
-            q = query(collection(db, 'examQuestions'), orderBy("submittedOn", "desc"));
+            constraints.push({ type: 'where', fieldPath: 'teacherId', opStr: '==', value: user.uid });
         }
-        const querySnapshot = await getDocs(q);
-        const questionList = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as ExamQuestion));
+        
+        const questionList = await dbService.getDocs<ExamQuestion>('examQuestions', constraints);
         setQuestions(questionList);
     } catch (error) {
         console.error("Error fetching exam questions:", error);
@@ -86,8 +83,7 @@ export default function ExamQuestionsPage() {
 
   const handleReview = async (question: ExamQuestion, newStatus: 'Approved' | 'Rejected') => {
     try {
-        const questionRef = doc(db, 'examQuestions', question.id);
-        await updateDoc(questionRef, { status: newStatus });
+        await dbService.updateDoc('examQuestions', question.id, { status: newStatus });
         
         // You would typically create a notification here for the teacher
         // await createNotification(question.teacherId, question.id, question.title, newStatus);

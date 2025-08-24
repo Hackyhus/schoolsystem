@@ -1,11 +1,11 @@
+
 'use client';
 
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Download, Upload, ServerCrash, RefreshCw } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
-import { collection, getDocs } from "firebase/firestore";
-import { db } from "@/lib/firebase";
+import { dbService } from "@/lib/firebase";
 
 export default function DatabasePage() {
     const { toast } = useToast();
@@ -16,14 +16,12 @@ export default function DatabasePage() {
             description: "This may take a few moments.",
         });
 
-        const collectionsToBackup = ['users', 'lessonNotes', 'examQuestions', 'notifications', 'departments', 'classes', 'subjects', 'auditLog'];
+        const collectionsToBackup = ['users', 'lessonNotes', 'examQuestions', 'notifications', 'departments', 'classes', 'subjects', 'auditLog', 'scores', 'students'];
         const backupData: { [key: string]: any[] } = {};
-        let success = true;
-
+        
         try {
             for (const collectionName of collectionsToBackup) {
-                const querySnapshot = await getDocs(collection(db, collectionName));
-                backupData[collectionName] = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+                backupData[collectionName] = await dbService.getDocs(collectionName);
             }
 
             const jsonString = JSON.stringify(backupData, null, 2);
@@ -49,7 +47,6 @@ export default function DatabasePage() {
                 title: "Backup Failed",
                 description: "Could not export database contents.",
             });
-            success = false;
         }
     };
 

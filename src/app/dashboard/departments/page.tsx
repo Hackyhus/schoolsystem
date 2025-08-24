@@ -1,3 +1,4 @@
+
 'use client';
 
 import {
@@ -19,8 +20,6 @@ import { Button } from '@/components/ui/button';
 import { PlusCircle, MoreHorizontal } from 'lucide-react';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useEffect, useState, useCallback } from 'react';
-import { collection, getDocs, query, doc, getDoc } from 'firebase/firestore';
-import { db } from '@/lib/firebase';
 import { useToast } from '@/hooks/use-toast';
 import {
   Dialog,
@@ -31,6 +30,8 @@ import {
   DialogTrigger,
 } from '@/components/ui/dialog';
 import { AddDepartmentForm } from '@/components/dashboard/departments/add-department-form';
+import { dbService } from '@/lib/firebase';
+import type { QueryConstraint } from '@/services/types';
 
 type Department = {
   id: string;
@@ -50,25 +51,21 @@ export default function DepartmentsPage() {
   const fetchDepartments = useCallback(async () => {
     setIsLoading(true);
     try {
-      const departmentsQuery = query(collection(db, 'departments'));
-      const querySnapshot = await getDocs(departmentsQuery);
+      const departmentsList = await dbService.getDocs<Department>('departments');
       
-      const departmentsList = await Promise.all(
-        querySnapshot.docs.map(async (d) => {
-          const deptData = d.data();
+      const populatedDepartments = await Promise.all(
+        departmentsList.map(async (dept) => {
           let hodName = 'N/A';
-          if (deptData.hodId) {
-            const hodDoc = await getDoc(doc(db, 'users', deptData.hodId));
-            if (hodDoc.exists()) {
-              hodName = hodDoc.data().name;
+          if (dept.hodId) {
+            const hodDoc = await dbService.getDoc<{name: string}>('users', dept.hodId);
+            if (hodDoc) {
+              hodName = hodDoc.name;
             }
           }
           // In a real app, teacher/student counts would be calculated, possibly via a Cloud Function.
           // For now, we'll keep them as placeholders.
           return {
-            id: d.id,
-            name: deptData.name,
-            hodId: deptData.hodId,
+            ...dept,
             hodName: hodName,
             teacherCount: 0,
             studentCount: 0,
@@ -76,7 +73,7 @@ export default function DepartmentsPage() {
         })
       );
       
-      setDepartments(departmentsList);
+      setDepartments(populatedDepartments);
     } catch (error) {
       console.error("Error fetching departments:", error);
       toast({
