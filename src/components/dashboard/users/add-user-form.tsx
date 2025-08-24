@@ -1,3 +1,4 @@
+
 'use client';
 
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -41,6 +42,7 @@ import { format } from 'date-fns';
 import { createStaff } from '@/actions/staff-actions';
 import { NIGERIAN_STATES } from '@/lib/nigerian-states';
 import { Combobox } from '@/components/ui/combobox';
+import { Calendar } from '@/components/ui/calendar';
 
 
 const formSchema = z.object({
@@ -73,7 +75,7 @@ export function AddUserForm({ onUserAdded }: { onUserAdded: () => void }) {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const { departments, isLoading: isAcademicDataLoading } = useAcademicData();
   
-  const departmentOptions = departments.map(d => ({ value: d.name.toLowerCase(), label: d.name }));
+  const departmentOptions = departments.map(d => ({ value: d.name, label: d.name }));
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
