@@ -1,4 +1,3 @@
-
 'use client';
 
 import { useState, useCallback } from 'react';
@@ -10,32 +9,33 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { useToast } from '@/hooks/use-toast';
 import { useAcademicData } from '@/hooks/use-academic-data';
 import { useRole } from '@/context/role-context';
-import { collection, getDocs, query, where } from 'firebase/firestore';
+import { collection, getDocs, query, where, writeBatch, doc } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import type { MockUser } from '@/lib/schema';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Badge } from '@/components/ui/badge';
-import { ThumbsDown, ThumbsUp, Save } from 'lucide-react';
+import { ThumbsDown, ThumbsUp, Save, Loader2, Send } from 'lucide-react';
 
 type Score = {
-  ca1: number;
-  ca2: number;
-  exam: number;
-  total: number;
-  status: 'Pending' | 'Approved' | 'Rejected' | 'Draft';
+  id?: string; // Firestore document ID
+  caScore: number;
+  examScore: number;
+  totalScore: number;
+  status: 'Draft' | 'Pending' | 'Approved' | 'Rejected';
 };
 
 export default function ScoresPage() {
-  const { role } = useRole();
+  const { role, user } = useRole();
   const [selectedClass, setSelectedClass] = useState('');
   const [selectedSubject, setSelectedSubject] = useState('');
   const [students, setStudents] = useState<MockUser[]>([]);
   const [scores, setScores] = useState<Record<string, Score>>({});
   const [isLoading, setIsLoading] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const { toast } = useToast();
   const { classes, subjects, isLoading: isAcademicDataLoading } = useAcademicData();
 
-  const handleLoadStudents = async () => {
+  const handleLoadData = async () => {
     if (!selectedClass || !selectedSubject) {
       toast({
         variant: 'destructive',
@@ -46,85 +46,178 @@ export default function ScoresPage() {
     }
     setIsLoading(true);
     try {
-      // In a real app, you'd fetch students based on the selected class.
-      // For now, we'll fetch all students as a placeholder.
-      const usersRef = collection(db, 'users');
-      const q = query(usersRef, where('role', '==', 'Student'));
-      const querySnapshot = await getDocs(q);
-      const studentsList = querySnapshot.docs.map(
-        (doc) => ({ id: doc.id, ...doc.data() } as MockUser)
-      );
+      // 1. Fetch students for the selected class
+      const studentsQuery = query(collection(db, 'students'), where('classLevel', '==', selectedClass));
+      const studentsSnapshot = await getDocs(studentsQuery);
+      const studentsList = studentsSnapshot.docs.map(doc => ({ id: doc.data().studentId, ...doc.data() } as MockUser));
       setStudents(studentsList);
+      
+      // 2. Fetch existing scores for these students, for this subject/term
+      const studentIds = studentsList.map(s => s.id);
+      if (studentIds.length === 0) {
+        setScores({});
+        setIsLoading(false);
+        return;
+      }
+      
+      const scoresQuery = query(
+        collection(db, 'scores'),
+        where('studentId', 'in', studentIds),
+        where('subject', '==', selectedSubject),
+        // where('term', '==', currentTerm) // Add term logic later
+      );
+      const scoresSnapshot = await getDocs(scoresQuery);
+      const existingScores: Record<string, Score> = {};
+      scoresSnapshot.forEach(doc => {
+        const data = doc.data();
+        existingScores[data.studentId] = { id: doc.id, ...data } as Score;
+      });
 
-      // Initialize scores for the loaded students
+      // 3. Initialize scores for all students, using existing data or defaults
       const initialScores: Record<string, Score> = {};
       studentsList.forEach((student) => {
-        initialScores[student.id] = { ca1: 0, ca2: 0, exam: 0, total: 0, status: 'Draft' };
+        initialScores[student.id] = existingScores[student.id] || { caScore: 0, examScore: 0, totalScore: 0, status: 'Draft' };
       });
       setScores(initialScores);
+
     } catch (error) {
-      console.error('Error fetching students:', error);
+      console.error('Error fetching data:', error);
       toast({
         variant: 'destructive',
         title: 'Error',
-        description: 'Could not load students.',
+        description: 'Could not load student or score data.',
       });
     } finally {
       setIsLoading(false);
     }
   };
 
-  const handleScoreChange = (studentId: string, field: keyof Omit<Score, 'total' | 'status'>, value: string) => {
+  const handleScoreChange = (studentId: string, field: 'caScore' | 'examScore', value: string) => {
     const numericValue = Number(value) || 0;
     setScores(prevScores => {
-      const newScores = { ...prevScores };
-      const studentScore = { ...newScores[studentId], [field]: numericValue };
-      studentScore.total = studentScore.ca1 + studentScore.ca2 + studentScore.exam;
-      newScores[studentId] = studentScore;
-      return newScores;
+      const studentScore = { ...prevScores[studentId] };
+      
+      // Basic validation
+      if (field === 'caScore' && numericValue > 40) return prevScores;
+      if (field === 'examScore' && numericValue > 60) return prevScores;
+
+      studentScore[field] = numericValue;
+      studentScore.totalScore = (studentScore.caScore || 0) + (studentScore.examScore || 0);
+      
+      return { ...prevScores, [studentId]: studentScore };
     });
   };
 
-  const handleSaveScores = (asDraft: boolean) => {
-    // Logic to save scores to the database will be implemented here.
-    // This will involve creating or updating a 'scores' collection.
-    console.log('Saving scores:', scores);
-    toast({
-      title: asDraft ? 'Scores Saved as Draft!' : 'Scores Submitted!',
-      description: asDraft ? 'Your progress has been saved.' : 'The scores have been submitted to the Exam Officer for review.',
-    });
-    // In a real app, you'd likely update the status of each score here
-  }
+  const handleSaveScores = async (asDraft: boolean) => {
+    if (!user) return;
+    setIsSubmitting(true);
+    const batch = writeBatch(db);
+    const newStatus = asDraft ? 'Draft' : 'Pending';
 
-  const handleReview = async (studentId: string, newStatus: 'Approved' | 'Rejected') => {
-    setScores(prev => ({ ...prev, [studentId]: { ...prev[studentId], status: newStatus } }));
-    // In a real app, this would also update the database
-    toast({ title: `Score ${newStatus}` });
+    Object.entries(scores).forEach(([studentId, score]) => {
+        const scoreRef = score.id ? doc(db, 'scores', score.id) : doc(collection(db, 'scores'));
+        const scoreData = {
+          studentId,
+          subject: selectedSubject,
+          class: selectedClass,
+          teacherId: user.uid,
+          // term: currentTerm, // Add later
+          caScore: score.caScore,
+          examScore: score.examScore,
+          totalScore: score.totalScore,
+          status: newStatus
+        };
+        if (score.id) {
+          batch.update(scoreRef, scoreData);
+        } else {
+          batch.set(scoreRef, scoreData);
+        }
+    });
+
+    try {
+      await batch.commit();
+      toast({
+        title: asDraft ? 'Scores Saved as Draft' : 'Scores Submitted!',
+        description: asDraft ? 'Your progress has been saved.' : 'The scores have been submitted to the Exam Officer for review.',
+      });
+      await handleLoadData(); // Refresh data from DB
+    } catch (error) {
+      console.error('Error saving scores:', error);
+      toast({ variant: 'destructive', title: 'Error', description: 'Could not save scores.' });
+    } finally {
+      setIsSubmitting(false);
+    }
   }
+  
+  const handleReview = async (studentId: string, newStatus: 'Approved' | 'Rejected') => {
+    const score = scores[studentId];
+    if (!score || !score.id) return;
+    setIsLoading(true);
+    try {
+        const scoreRef = doc(db, 'scores', score.id);
+        await writeBatch(db).update(scoreRef, { status: newStatus }).commit();
+        setScores(prev => ({ ...prev, [studentId]: { ...prev[studentId], status: newStatus } }));
+        toast({ title: `Score ${newStatus}` });
+    } catch (error) {
+        console.error('Error reviewing score:', error);
+        toast({ variant: 'destructive', title: 'Error', description: `Could not update score to ${newStatus}.` });
+    } finally {
+        setIsLoading(false);
+    }
+  };
 
   const handleApproveAll = async () => {
-    // This is a placeholder for a batch update
+    setIsSubmitting(true);
+    const batch = writeBatch(db);
+    let updatedCount = 0;
     const updatedScores = { ...scores };
-    Object.keys(updatedScores).forEach(studentId => {
-      if (updatedScores[studentId].status === 'Pending') {
+
+    Object.entries(scores).forEach(([studentId, score]) => {
+      if (score.status === 'Pending' && score.id) {
+        const scoreRef = doc(db, 'scores', score.id);
+        batch.update(scoreRef, { status: 'Approved' });
         updatedScores[studentId].status = 'Approved';
+        updatedCount++;
       }
     });
-    setScores(updatedScores);
-    toast({ title: 'All Pending Scores Approved' });
+
+    if (updatedCount === 0) {
+        toast({ title: 'No scores to approve.' });
+        setIsSubmitting(false);
+        return;
+    }
+
+    try {
+        await batch.commit();
+        setScores(updatedScores);
+        toast({ title: 'All Pending Scores Approved', description: `${updatedCount} scores were updated.` });
+    } catch (error) {
+        console.error('Error approving all scores:', error);
+        toast({ variant: 'destructive', title: 'Error', description: 'Could not approve all scores.' });
+    } finally {
+        setIsSubmitting(false);
+    }
   };
 
+
   const statusVariant = (status: string) => {
-    if (status.includes('Approved')) return 'default';
-    if (status.includes('Pending')) return 'secondary';
-    if (status.includes('Rejected')) return 'destructive';
+    if (status === 'Approved') return 'default';
+    if (status === 'Pending') return 'secondary';
+    if (status === 'Rejected') return 'destructive';
     return 'outline';
+  };
+  
+  const isSheetEditable = (status: Score['status']) => {
+    if (role === 'Teacher') {
+        return status === 'Draft' || status === 'Rejected';
+    }
+    return false;
   };
 
   const renderContent = () => {
     if (isLoading) {
       return (
-        <div className="space-y-4">
+        <div className="space-y-4 pt-4">
           {Array.from({ length: 5 }).map((_, i) => (
             <div key={i} className="flex items-center gap-4">
               <Skeleton className="h-9 w-32" />
@@ -153,10 +246,10 @@ export default function ScoresPage() {
           <TableHeader>
             <TableRow>
               <TableHead>Student Name</TableHead>
-              <TableHead className="w-[120px]">CA 1 (20%)</TableHead>
-              <TableHead className="w-[120px]">CA 2 (20%)</TableHead>
+              <TableHead className="w-[120px]">CA (40%)</TableHead>
               <TableHead className="w-[120px]">Exam (60%)</TableHead>
               <TableHead className="w-[100px] text-right">Total</TableHead>
+              <TableHead className="w-[150px] text-right">Status</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -164,16 +257,16 @@ export default function ScoresPage() {
               <TableRow key={student.id}>
                 <TableCell className="font-medium">{student.name}</TableCell>
                 <TableCell>
-                  <Input type="number" max={20} onChange={(e) => handleScoreChange(student.id, 'ca1', e.target.value)} />
+                  <Input type="number" max={40} value={scores[student.id]?.caScore || 0} onChange={(e) => handleScoreChange(student.id, 'caScore', e.target.value)} disabled={!isSheetEditable(scores[student.id]?.status)} />
                 </TableCell>
                 <TableCell>
-                  <Input type="number" max={20} onChange={(e) => handleScoreChange(student.id, 'ca2', e.target.value)} />
-                </TableCell>
-                <TableCell>
-                  <Input type="number" max={60} onChange={(e) => handleScoreChange(student.id, 'exam', e.target.value)} />
+                  <Input type="number" max={60} value={scores[student.id]?.examScore || 0} onChange={(e) => handleScoreChange(student.id, 'examScore', e.target.value)} disabled={!isSheetEditable(scores[student.id]?.status)} />
                 </TableCell>
                 <TableCell className="text-right font-medium">
-                  {scores[student.id]?.total || 0}
+                  {scores[student.id]?.totalScore || 0}
+                </TableCell>
+                <TableCell className="text-right">
+                    <Badge variant={statusVariant(scores[student.id]?.status)}>{scores[student.id]?.status}</Badge>
                 </TableCell>
               </TableRow>
             ))}
@@ -197,15 +290,15 @@ export default function ScoresPage() {
             {students.map((student) => (
               <TableRow key={student.id}>
                 <TableCell className="font-medium">{student.name}</TableCell>
-                <TableCell>{scores[student.id]?.total || 0}</TableCell>
+                <TableCell>{scores[student.id]?.totalScore || 0}</TableCell>
                 <TableCell>
                   <Badge variant={statusVariant(scores[student.id]?.status)}>{scores[student.id]?.status}</Badge>
                 </TableCell>
                 <TableCell className="text-right space-x-2">
-                  <Button size="sm" variant="outline" onClick={() => handleReview(student.id, 'Approved')} disabled={scores[student.id]?.status === 'Approved'}>
+                  <Button size="sm" variant="outline" onClick={() => handleReview(student.id, 'Approved')} disabled={scores[student.id]?.status !== 'Pending'}>
                     <ThumbsUp className="mr-2 h-4 w-4" /> Approve
                   </Button>
-                  <Button size="sm" variant="destructive" onClick={() => handleReview(student.id, 'Rejected')} disabled={scores[student.id]?.status === 'Rejected'}>
+                  <Button size="sm" variant="destructive" onClick={() => handleReview(student.id, 'Rejected')} disabled={scores[student.id]?.status !== 'Pending'}>
                     <ThumbsDown className="mr-2 h-4 w-4" /> Reject
                   </Button>
                 </TableCell>
@@ -222,10 +315,10 @@ export default function ScoresPage() {
     <div className="space-y-8">
       <div>
         <h1 className="font-headline text-3xl font-bold">
-          {role === 'Teacher' ? 'Enter Student Scores' : 'Validate Student Scores'}
+          {role === 'Teacher' ? 'Enter Student Scores' : 'Review Student Scores'}
         </h1>
         <p className="text-muted-foreground">
-          {role === 'Teacher' ? 'Input Continuous Assessment (CA) and exam scores for your students.' : 'Validate scores submitted by teachers before result generation.'}
+          {role === 'Teacher' ? 'Input Continuous Assessment (CA) and exam scores for your students.' : 'Review scores submitted by teachers before result generation.'}
         </p>
       </div>
 
@@ -252,23 +345,27 @@ export default function ScoresPage() {
                 </SelectContent>
               </Select>
             </div>
-            <Button onClick={handleLoadStudents} disabled={isLoading || isAcademicDataLoading}>
-              {isLoading ? 'Loading...' : 'Load Students'}
+            <Button onClick={handleLoadData} disabled={isLoading || isAcademicDataLoading || isSubmitting}>
+              {isLoading ? 'Loading...' : 'Load Data'}
             </Button>
             <div className="ml-auto flex gap-2">
               {role === 'Teacher' && students.length > 0 && (
                 <>
-                  <Button variant="outline" onClick={() => handleSaveScores(true)}>
-                    <Save className="mr-2 h-4 w-4" />
+                  <Button variant="outline" onClick={() => handleSaveScores(true)} disabled={isSubmitting}>
+                    {isSubmitting ? <Loader2 className="mr-2 h-4 w-4 animate-spin"/> : <Save className="mr-2 h-4 w-4" />}
                     Save Draft
                   </Button>
-                  <Button onClick={() => handleSaveScores(false)}>
+                  <Button onClick={() => handleSaveScores(false)} disabled={isSubmitting}>
+                     {isSubmitting ? <Loader2 className="mr-2 h-4 w-4 animate-spin"/> : <Send className="mr-2 h-4 w-4" />}
                     Submit to Exam Officer
                   </Button>
                 </>
               )}
               {role === 'ExamOfficer' && students.length > 0 && (
-                <Button onClick={handleApproveAll}>Approve All Pending</Button>
+                <Button onClick={handleApproveAll} disabled={isSubmitting}>
+                  {isSubmitting ? <Loader2 className="mr-2 h-4 w-4 animate-spin"/> : <ThumbsUp className="mr-2 h-4 w-4" />}
+                  Approve All Pending
+                </Button>
               )}
             </div>
           </div>

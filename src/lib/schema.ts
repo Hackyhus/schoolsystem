@@ -124,6 +124,19 @@ export type HealthInfo = {
     medicalConditions?: string;
 }
 
+export type Score = {
+  id: string;
+  studentId: string;
+  subject: string;
+  class: string;
+  teacherId: string;
+  term: string;
+  caScore: number;
+  examScore: number;
+  totalScore: number;
+  status: 'Draft' | 'Pending' | 'Approved' | 'Rejected';
+};
+
 
 export type MockUser = {
   id: string;
@@ -136,6 +149,7 @@ export type MockUser = {
   stateOfOrigin: string;
   department: string;
   className?: string; // Optional for students
+  classLevel?: string;
   role: string;
   employmentDate: any; // Can be a Firestore Timestamp
   salary?: {

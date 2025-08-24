@@ -4,6 +4,7 @@ import { AppProviders } from '@/components/providers';
 import { Toaster } from '@/components/ui/toaster';
 import { Analytics } from "@vercel/analytics/react"
 
+
 export const metadata: Metadata = {
   title: 'InsightConnect Portal',
   description: 'A role-based portal for staff and parents of Great Insight International Academy (GIIA).',
@@ -18,7 +19,7 @@ export default function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning>
       <head>
-        <link rel="icon" href="https://storage.googleapis.com/proudcity/mebanenc/uploads/2021/03/placeholder-image.png" sizes="any" />
+        <link rel="icon" href="/favicon.ico" sizes="any" />
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
         <link
