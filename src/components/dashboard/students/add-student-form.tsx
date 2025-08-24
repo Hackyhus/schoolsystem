@@ -333,7 +333,7 @@ export function AddStudentForm({ onStudentAdded }: { onStudentAdded: () => void 
           <CardContent className="space-y-4">
             {fields.map((field, index) => (
               <div key={field.id} className="space-y-4 rounded-md border p-4 relative">
-                <FormDescription className="font-semibold">Guardian {index + 1} {index === 0 && '(Primary Contact & Portal User)'}</FormDescription>
+                <p className="font-semibold text-sm text-muted-foreground">Guardian {index + 1} {index === 0 && '(Primary Contact & Portal User)'}</p>
                 <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
                     <FormField control={form.control} name={`guardians.${index}.fullName`} render={({ field }) => ( <FormItem> <FormLabel>Full Name</FormLabel> <FormControl> <Input {...field} /> </FormControl> <FormMessage /> </FormItem> )} />
                     <FormField control={form.control} name={`guardians.${index}.relationship`} render={({ field }) => ( <FormItem> <FormLabel>Relationship</FormLabel> <FormControl> <Input placeholder="e.g. Father, Mother" {...field} /> </FormControl> <FormMessage /> </FormItem> )} />
@@ -360,7 +360,7 @@ export function AddStudentForm({ onStudentAdded }: { onStudentAdded: () => void 
                  <FormField control={form.control} name="allergies" render={({ field }) => ( <FormItem> <FormLabel>Allergies</FormLabel> <FormControl> <Textarea placeholder="e.g. Peanuts, Dust" {...field} /> </FormControl> <FormMessage /> </FormItem> )} />
                  <FormField control={form.control} name="medicalConditions" render={({ field }) => ( <FormItem> <FormLabel>Existing Medical Conditions</FormLabel> <FormControl> <Textarea placeholder="e.g. Asthma" {...field} /> </FormControl> <FormMessage /> </FormItem> )} />
                 <Separator />
-                <FormDescription>Emergency Contact (if different from guardian)</FormDescription>
+                <p className="font-semibold text-sm text-muted-foreground">Emergency Contact (if different from guardian)</p>
                  <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
                     <FormField control={form.control} name="emergencyContactName" render={({ field }) => ( <FormItem> <FormLabel>Contact Name</FormLabel> <FormControl> <Input {...field} /> </FormControl> <FormMessage /> </FormItem> )} />
                     <FormField control={form.control} name="emergencyContactPhone" render={({ field }) => ( <FormItem> <FormLabel>Contact Phone</FormLabel> <FormControl> <Input {...field} /> </FormControl> <FormMessage /> </FormItem> )} />
