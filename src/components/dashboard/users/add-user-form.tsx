@@ -43,6 +43,7 @@ import { createStaff } from '@/actions/staff-actions';
 import { NIGERIAN_STATES } from '@/lib/nigerian-states';
 import { Combobox } from '@/components/ui/combobox';
 import { Calendar } from '@/components/ui/calendar';
+import { DateOfBirthInput } from '@/components/ui/date-of-birth-input';
 
 
 const formSchema = z.object({
@@ -148,7 +149,22 @@ export function AddUserForm({ onUserAdded }: { onUserAdded: () => void }) {
                         </div>
                         <div className="grid grid-cols-2 gap-4">
                              <FormField control={form.control} name="gender" render={({ field }) => ( <FormItem><FormLabel>Gender</FormLabel><Select onValueChange={field.onChange} defaultValue={field.value}><FormControl><SelectTrigger><SelectValue placeholder="Select gender" /></SelectTrigger></FormControl><SelectContent><SelectItem value="Male">Male</SelectItem><SelectItem value="Female">Female</SelectItem><SelectItem value="Other">Other</SelectItem></SelectContent></Select><FormMessage /></FormItem> )}/>
-                             <FormField control={form.control} name="dateOfBirth" render={({ field }) => ( <FormItem className="flex flex-col"><FormLabel>Date of Birth</FormLabel><Popover><PopoverTrigger asChild><Button variant={"outline"} className={cn("pl-3 text-left font-normal",!field.value && "text-muted-foreground")}>{field.value ? format(field.value, "PPP") : (<span>Pick a date</span>)}<CalendarIcon className="ml-auto h-4 w-4 opacity-50" /></Button></PopoverTrigger><PopoverContent className="w-auto p-0" align="start"><Calendar mode="single" selected={field.value} onSelect={field.onChange} disabled={(date) =>date > new Date() || date < new Date("1950-01-01")}/></PopoverContent></Popover><FormMessage /></FormItem> )}/>
+                             <FormField
+                                control={form.control}
+                                name="dateOfBirth"
+                                render={({ field }) => (
+                                    <FormItem className="flex flex-col">
+                                        <FormLabel>Date of Birth</FormLabel>
+                                        <FormControl>
+                                            <DateOfBirthInput
+                                                value={field.value}
+                                                onChange={field.onChange}
+                                            />
+                                        </FormControl>
+                                        <FormMessage />
+                                    </FormItem>
+                                )}
+                            />
                         </div>
                          <FormField control={form.control} name="stateOfOrigin" render={({ field }) => (<FormItem><FormLabel>State of Origin</FormLabel><FormControl><Combobox options={NIGERIAN_STATES} placeholder="Select State" searchPlaceholder="Search states..." notFoundText="No state found." {...field} /></FormControl><FormDescription>This will be the user's default password.</FormDescription><FormMessage /></FormItem>)}/>
                          <FormField control={form.control} name="profilePicture" render={({ field: { onChange, value, ...rest }}) => ( <FormItem><FormLabel>Profile Photo</FormLabel><FormControl><Input type="file" accept="image/png, image/jpeg" onChange={(e) => onChange(e.target.files?.[0])} {...rest} /></FormControl><FormDescription>Max file size 2MB.</FormDescription><FormMessage /></FormItem>)}/>

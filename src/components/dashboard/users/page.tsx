@@ -1,3 +1,4 @@
+
 'use client';
 
 import {
@@ -15,18 +16,25 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
-import { Badge } from '@/components/ui/badge';
 import { AddUserForm } from '@/components/dashboard/users/add-user-form';
 import { Button } from '@/components/ui/button';
-import { PlusCircle, Trash2 } from 'lucide-react';
+import { PlusCircle, Trash2, Edit } from 'lucide-react';
 import { useEffect, useState, useCallback } from 'react';
-import { collection, getDocs, deleteDoc, doc, setDoc } from 'firebase/firestore';
-import { createUserWithEmailAndPassword } from 'firebase/auth';
+import { collection, getDocs, deleteDoc, doc, query, where, updateDoc } from 'firebase/firestore';
 import { auth, db } from '@/lib/firebase';
 import type { MockUser } from '@/lib/schema';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useToast } from '@/hooks/use-toast';
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from '@/components/ui/dialog';
+import Link from 'next/link';
+import { Badge } from '@/components/ui/badge';
 
 export default function UsersPage() {
   const [users, setUsers] = useState<MockUser[]>([]);
@@ -37,10 +45,12 @@ export default function UsersPage() {
   const fetchUsers = useCallback(async () => {
     setIsLoading(true);
     try {
-      const querySnapshot = await getDocs(collection(db, 'users'));
-      const usersList = querySnapshot.docs.map(
-        (doc) => ({ id: doc.id, ...doc.data() } as MockUser)
-      );
+      const usersRef = collection(db, 'users');
+      // Query for users that have a staffId field
+      const q = query(usersRef, where('staffId', '!=', null));
+      const querySnapshot = await getDocs(q);
+      const usersList = querySnapshot.docs
+        .map((doc) => ({ id: doc.id, ...doc.data() } as MockUser))
       setUsers(usersList);
     } catch (error) {
       console.error('Error fetching users:', error);
@@ -59,7 +69,12 @@ export default function UsersPage() {
   }, [fetchUsers]);
 
   const removeUser = async (userId: string) => {
-     if (!confirm('Are you sure you want to delete this user? This action cannot be undone.')) return;
+    if (
+      !confirm(
+        'Are you sure you want to delete this user? This action cannot be undone.'
+      )
+    )
+      return;
     try {
       // Note: This does not delete the user from Firebase Auth, only Firestore.
       // A more robust solution would use a Cloud Function to delete the Auth user.
@@ -70,8 +85,8 @@ export default function UsersPage() {
       });
       fetchUsers(); // Refresh the list
     } catch (error) {
-       console.error('Error removing user:', error);
-       toast({
+      console.error('Error removing user:', error);
+      toast({
         variant: 'destructive',
         title: 'Error',
         description: 'Could not remove the user.',
@@ -84,31 +99,33 @@ export default function UsersPage() {
     setIsModalOpen(false); // Close the modal
   };
 
-
   return (
     <div className="space-y-8">
       <div>
-        <h1 className="font-headline text-3xl font-bold">User Management</h1>
-        <p className="text-muted-foreground">Manage staff and parent accounts.</p>
+        <h1 className="font-headline text-3xl font-bold">Staff Management</h1>
+        <p className="text-muted-foreground">
+          Manage staff accounts and profiles.
+        </p>
       </div>
-
-       <Card>
-        <CardHeader className='flex-row items-center justify-between'>
+      <Card>
+        <CardHeader className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
           <div>
-              <CardTitle>All Users</CardTitle>
-              <CardDescription>A list of all users in the system.</CardDescription>
+            <CardTitle>All Staff</CardTitle>
+            <CardDescription>
+              A list of all non-student users in the system.
+            </CardDescription>
           </div>
-          <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
+           <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
             <DialogTrigger asChild>
                 <Button>
-                    <PlusCircle className="mr-2 h-4 w-4" /> Add New User
+                    <PlusCircle className="mr-2 h-4 w-4" /> Add New Staff
                 </Button>
             </DialogTrigger>
-            <DialogContent className='max-h-[90vh] overflow-y-auto'>
+            <DialogContent className="max-w-4xl">
                 <DialogHeader>
-                    <DialogTitle>Add New Staff</DialogTitle>
+                    <DialogTitle>Create New Staff Profile</DialogTitle>
                     <DialogDescription>
-                       Create a new account for a staff member. Default password is their State of Origin.
+                       Fill out the details to create a new staff account. The default password will be their State of Origin.
                     </DialogDescription>
                 </DialogHeader>
                 <AddUserForm onUserAdded={handleUserAdded} />
@@ -121,48 +138,65 @@ export default function UsersPage() {
               <TableRow>
                 <TableHead>Staff ID</TableHead>
                 <TableHead>Name</TableHead>
-                <TableHead>Email</TableHead>
+                <TableHead className="hidden md:table-cell">Email</TableHead>
                 <TableHead>Role</TableHead>
-                <TableHead className="text-right">Action</TableHead>
+                <TableHead className="text-right">Actions</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {isLoading ? (
                 Array.from({ length: 5 }).map((_, i) => (
-                    <TableRow key={i}>
-                    <TableCell><Skeleton className="h-5 w-28" /></TableCell>
-                    <TableCell><Skeleton className="h-5 w-24" /></TableCell>
-                    <TableCell><Skeleton className="h-5 w-36" /></TableCell>
-                    <TableCell><Skeleton className="h-5 w-16" /></TableCell>
-                    <TableCell className="text-right"><Skeleton className="h-8 w-8 inline-block" /></TableCell>
+                  <TableRow key={i}>
+                    <TableCell>
+                      <Skeleton className="h-5 w-28" />
+                    </TableCell>
+                    <TableCell>
+                      <Skeleton className="h-5 w-24" />
+                    </TableCell>
+                    <TableCell className="hidden md:table-cell">
+                      <Skeleton className="h-5 w-36" />
+                    </TableCell>
+                    <TableCell>
+                      <Skeleton className="h-6 w-24" />
+                    </TableCell>
+                    <TableCell className="text-right">
+                      <Skeleton className="ml-auto h-8 w-8" />
+                    </TableCell>
                   </TableRow>
                 ))
-              ) : users.map((user) => (
-                <TableRow key={user.id}>
-                  <TableCell className="font-mono">{user.staffId}</TableCell>
-                  <TableCell className="font-medium">{user.name}</TableCell>
-                  <TableCell>{user.email}</TableCell>
-                  <TableCell>
-                    <Badge variant="outline">{user.role}</Badge>
-                  </TableCell>
-                    <TableCell className="text-right">
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      onClick={() => removeUser(user.id.toString())}
-                    >
-                      <Trash2 className="h-4 w-4" />
-                    </Button>
-                  </TableCell>
-                </TableRow>
-              ))}
+              ) : (
+                users.map((user) => (
+                  <TableRow key={user.id}>
+                    <TableCell className="font-mono text-xs">{user.staffId || 'N/A'}</TableCell>
+                    <TableCell className="font-medium">{user.name}</TableCell>
+                    <TableCell className="hidden md:table-cell">{user.email}</TableCell>
+                    <TableCell>
+                       <Badge variant="outline">{user.role}</Badge>
+                    </TableCell>
+                    <TableCell className="text-right space-x-2">
+                       <Button asChild variant="outline" size="icon">
+                         <Link href={`/dashboard/users/${user.id}`}>
+                           <Edit className="h-4 w-4" />
+                         </Link>
+                       </Button>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => removeUser(user.id.toString())}
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
+                    </TableCell>
+                  </TableRow>
+                ))
+              )}
               {!isLoading && users.length === 0 && (
                 <TableRow>
                   <TableCell
                     colSpan={5}
                     className="h-24 text-center text-muted-foreground"
                   >
-                    No users found. Add a user to get started.
+                    No users found.
                   </TableCell>
                 </TableRow>
               )}
