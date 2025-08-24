@@ -1,4 +1,3 @@
-
 'use client';
 
 import {
@@ -117,24 +116,7 @@ export default function StudentsPage() {
               A list of all students in the system.
             </CardDescription>
           </div>
-          {role === 'Admin' && (
-            <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
-              <DialogTrigger asChild>
-                <Button>
-                  <PlusCircle className="mr-2 h-4 w-4" /> Add New Student
-                </Button>
-              </DialogTrigger>
-              <DialogContent className="max-w-3xl">
-                <DialogHeader>
-                  <DialogTitle>New Student Registration</DialogTitle>
-                  <DialogDescription>
-                    Fill out the form to register a new student. A parent portal account will be created for the primary guardian.
-                  </DialogDescription>
-                </DialogHeader>
-                <AddStudentForm onStudentAdded={handleStudentAdded} />
-              </DialogContent>
-            </Dialog>
-          )}
+          {/* Add student button and dialog removed as requested */}
         </CardHeader>
         <CardContent>
           <Table>
@@ -204,7 +186,7 @@ export default function StudentsPage() {
                     colSpan={6}
                     className="h-24 text-center text-muted-foreground"
                   >
-                    No students found. Add a student to get started.
+                    No students found.
                   </TableCell>
                 </TableRow>
               )}

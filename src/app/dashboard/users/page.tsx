@@ -114,22 +114,7 @@ export default function UsersPage() {
               A list of all non-student users in the system.
             </CardDescription>
           </div>
-          <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
-            <DialogTrigger asChild>
-              <Button>
-                <PlusCircle className="mr-2 h-4 w-4" /> Add New Staff
-              </Button>
-            </DialogTrigger>
-            <DialogContent className="max-h-[90vh] overflow-y-auto">
-              <DialogHeader>
-                <DialogTitle>Add New Staff</DialogTitle>
-                <DialogDescription>
-                  Create a new account for a staff member. The default password is their State of Origin.
-                </DialogDescription>
-              </DialogHeader>
-              <AddUserForm onUserAdded={handleUserAdded} />
-            </DialogContent>
-          </Dialog>
+          {/* Add user button and dialog removed as requested */}
         </CardHeader>
         <CardContent>
           <Table>
@@ -195,7 +180,7 @@ export default function UsersPage() {
                     colSpan={5}
                     className="h-24 text-center text-muted-foreground"
                   >
-                    No users found. Add a user to get started.
+                    No users found.
                   </TableCell>
                 </TableRow>
               )}
