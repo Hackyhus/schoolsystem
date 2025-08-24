@@ -5,6 +5,9 @@ export const users: MockUser[] = [];
 
 export const lessonNotes: MockLessonNote[] = [];
 
+// All mock data has been removed to transition to live data fetching.
+// Components will now fetch data directly from Firestore.
+
 export const studentPerformance = {
   studentId: '',
   studentName: '',

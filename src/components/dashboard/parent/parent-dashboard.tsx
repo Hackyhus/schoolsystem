@@ -26,6 +26,11 @@ import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
 import { ChartContainer, ChartTooltip, ChartTooltipContent, ChartLegend, ChartLegendContent } from '@/components/ui/chart';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, PieChart, Pie, Cell } from 'recharts';
+import { useRole } from '@/context/role-context';
+import { useEffect, useState } from 'react';
+import { collection, query, where, getDocs } from 'firebase/firestore';
+import { db } from '@/lib/firebase';
+import { Skeleton } from '@/components/ui/skeleton';
 
 // Mock data, to be replaced with live data
 const studentPerformance = {
@@ -63,6 +68,36 @@ const chartConfig = {
 
 
 export function ParentDashboard() {
+  const { user } = useRole();
+  const [isLoading, setIsLoading] = useState(true);
+  const [childData, setChildData] = useState<any | null>(null);
+
+  useEffect(() => {
+    const fetchChildData = async () => {
+      if (!user) return;
+      setIsLoading(true);
+      try {
+        // This query finds a student where the current user is listed as a guardian.
+        const studentsRef = collection(db, 'students');
+        const q = query(studentsRef, where('guardians', 'array-contains-any', [{ userId: user.uid, email: user.email }]));
+        const querySnapshot = await getDocs(q);
+
+        if (!querySnapshot.empty) {
+          // Assuming one child per parent for now. A real app would handle multiple.
+          const studentDoc = querySnapshot.docs[0];
+          setChildData(studentDoc.data());
+        }
+      } catch (error) {
+        console.error("Error fetching child's data:", error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchChildData();
+  }, [user]);
+  
+  // Using placeholder data until backend logic is complete
   const { studentName, attendance, grades } = studentPerformance;
   const overallAttendance = attendance.length > 0 ? attendance.reduce((acc, month) => acc + month.percentage, 0) / attendance.length : 100;
   const averageGrade = grades.length > 0 ? (grades.reduce((acc, g) => acc+g.score, 0) / grades.length) : 0;
@@ -75,12 +110,14 @@ export function ParentDashboard() {
     return 'bg-red-500 hover:bg-red-500';
   }
   
+  const studentDisplayName = childData ? `${childData.firstName} ${childData.lastName}` : "your child";
+
   return (
     <div className="flex flex-col gap-6">
       <div>
         <h1 className="font-headline text-3xl font-bold">Parent Dashboard</h1>
         <p className="text-muted-foreground">
-          Welcome! Here's a summary of {studentName || "your child"}'s performance.
+           Welcome! Here's a summary of {isLoading ? <Skeleton className="h-5 w-32 inline-block" /> : studentDisplayName}'s performance.
         </p>
       </div>
 
@@ -132,7 +169,7 @@ export function ParentDashboard() {
                 <CardHeader>
                     <CardTitle>Recent Grades</CardTitle>
                     <CardDescription>
-                    A snapshot of {studentName || "your child"}'s latest academic results.
+                    A snapshot of {studentDisplayName}'s latest academic results.
                     </CardDescription>
                 </CardHeader>
                 <CardContent>

@@ -111,8 +111,10 @@ export default function MessagingPage() {
                 ))}
               </div>
             ) : (
-              <div className="p-4 text-center text-muted-foreground">
-                <p>No messages</p>
+              <div className="p-4 text-center text-sm text-muted-foreground">
+                <Inbox className="mx-auto h-8 w-8 opacity-50" />
+                <p>No messages found.</p>
+                <p className="text-xs">This feature is coming soon.</p>
               </div>
             )}
           </ResizablePanel>
