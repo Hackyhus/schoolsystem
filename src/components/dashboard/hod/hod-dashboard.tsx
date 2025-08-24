@@ -6,6 +6,8 @@ import {
   Clock,
   Users,
   XCircle,
+  LineChart as LineChartIcon,
+  AreaChart,
 } from 'lucide-react';
 import {
   Card,
@@ -39,7 +41,7 @@ import {
   ChartLegend,
   ChartLegendContent,
 } from '@/components/ui/chart';
-import { Pie, PieChart, Cell } from 'recharts';
+import { Pie, PieChart, Cell, BarChart, Bar, XAxis, YAxis, CartesianGrid } from 'recharts';
 
 
 type SubmissionStatusData = {
@@ -48,6 +50,20 @@ type SubmissionStatusData = {
   fill: string;
 };
 
+const subjectPerformanceData = [
+  { subject: 'Math', average: 78, color: 'hsl(var(--chart-1))' },
+  { subject: 'English', average: 85, color: 'hsl(var(--chart-2))' },
+  { subject: 'Science', average: 72, color: 'hsl(var(--chart-3))' },
+  { subject: 'History', average: 65, color: 'hsl(var(--chart-4))' },
+  { subject: 'Art', average: 91, color: 'hsl(var(--chart-5))' },
+];
+
+const gradingProgressData = [
+  { name: 'Week 1', graded: 10, pending: 5 },
+  { name: 'Week 2', graded: 15, pending: 3 },
+  { name: 'Week 3', graded: 20, pending: 2 },
+  { name: 'Week 4', graded: 25, pending: 1 },
+];
 
 export function HodDashboard() {
   const { user } = useRole();
@@ -126,6 +142,9 @@ export function HodDashboard() {
     approved: { label: 'Approved', color: 'hsl(var(--chart-2))' },
     pending: { label: 'Pending', color: 'hsl(var(--chart-4))' },
     rejected: { label: 'Rejected', color: 'hsl(var(--destructive))' },
+    average: { label: 'Average Score', color: 'hsl(var(--chart-1))' },
+    graded: { label: 'Graded', color: 'hsl(var(--chart-2))' },
+    pendingGrade: { label: 'Pending', color: 'hsl(var(--chart-4))' },
   };
 
   return (
@@ -181,7 +200,7 @@ export function HodDashboard() {
       </div>
 
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
-        <div className="lg:col-span-2">
+        <div className="lg:col-span-2 space-y-6">
             <Card>
                 <CardHeader>
                     <CardTitle>Lesson Plan Approval Queue</CardTitle>
@@ -230,9 +249,28 @@ export function HodDashboard() {
                     </Table>
                 </CardContent>
             </Card>
+            <Card>
+                <CardHeader>
+                    <CardTitle>Class Averages by Subject</CardTitle>
+                    <CardDescription>Average performance in subjects across your department.</CardDescription>
+                </CardHeader>
+                <CardContent>
+                    <ChartContainer config={chartConfig} className="h-[250px] w-full">
+                         <BarChart data={subjectPerformanceData}>
+                            <CartesianGrid vertical={false} />
+                            <XAxis dataKey="subject" tickLine={false} axisLine={false} tickMargin={8} fontSize={12} />
+                            <YAxis domain={[0, 100]} />
+                            <ChartTooltip content={<ChartTooltipContent indicator="dot" />} />
+                            <Bar dataKey="average" radius={4}>
+                                {subjectPerformanceData.map(entry => <Cell key={entry.subject} fill={entry.color} />)}
+                            </Bar>
+                         </BarChart>
+                    </ChartContainer>
+                </CardContent>
+            </Card>
         </div>
         
-        <div className="lg:col-span-1">
+        <div className="lg:col-span-1 space-y-6">
              <Card>
                 <CardHeader>
                     <CardTitle>Department Submission Status</CardTitle>
@@ -248,10 +286,28 @@ export function HodDashboard() {
                                         <Cell key={`cell-${entry.name}`} fill={entry.fill} />
                                     ))}
                                 </Pie>
-                                <ChartLegend content={<ChartLegendContent nameKey="name" />} />
+                                <ChartLegend content={<ChartLegendContent className="flex-wrap" nameKey="name" />} />
                             </PieChart>
                         </ChartContainer>
                     )}
+                </CardContent>
+            </Card>
+            <Card>
+                <CardHeader>
+                    <CardTitle>Grading Progress</CardTitle>
+                    <CardDescription>Status of score entry for the current term.</CardDescription>
+                </CardHeader>
+                <CardContent>
+                    <ChartContainer config={chartConfig} className="h-[250px] w-full">
+                         <BarChart data={gradingProgressData} layout="vertical" stackOffset="expand">
+                            <XAxis type="number" hide />
+                            <YAxis dataKey="name" type="category" tickLine={false} axisLine={false} tickMargin={4} fontSize={12} />
+                             <ChartTooltip content={<ChartTooltipContent hideLabel />} />
+                             <ChartLegend content={<ChartLegendContent />} />
+                            <Bar dataKey="graded" fill="var(--color-approved)" stackId="a" radius={0} />
+                            <Bar dataKey="pending" fill="var(--color-pending)" stackId="a" radius={4} />
+                         </BarChart>
+                    </ChartContainer>
                 </CardContent>
             </Card>
         </div>

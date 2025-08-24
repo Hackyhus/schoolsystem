@@ -4,6 +4,8 @@ import {
   BarChart,
   CalendarCheck,
   Megaphone,
+  LineChart as LineChartIcon,
+  DollarSign
 } from 'lucide-react';
 import {
   Card,
@@ -22,6 +24,8 @@ import {
 } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
+import { ChartContainer, ChartTooltip, ChartTooltipContent, ChartLegend, ChartLegendContent } from '@/components/ui/chart';
+import { LineChart, Line, XAxis, YAxis, CartesianGrid, PieChart, Pie, Cell } from 'recharts';
 
 // Mock data, to be replaced with live data
 const studentPerformance = {
@@ -38,6 +42,25 @@ const studentPerformance = {
 const announcements = [
     { id: 1, title: 'Mid-term Break', content: 'School closes for mid-term break on Friday.'}
 ];
+
+const performanceOverTime = [
+  { term: 'Term 1', average: 75 },
+  { term: 'Term 2', average: 82 },
+  { term: 'Term 3', average: 78 },
+];
+
+const feeHistoryData = [
+  { name: 'Term 1 Fees', value: 100, fill: 'hsl(var(--chart-2))' },
+  { name: 'Term 2 Fees', value: 100, fill: 'hsl(var(--chart-2))' },
+  { name: 'Term 3 Fees', value: 0, fill: 'hsl(var(--destructive))' },
+];
+
+const chartConfig = {
+  average: { label: 'Average %', color: 'hsl(var(--chart-1))' },
+  paid: { label: 'Paid', color: 'hsl(var(--chart-2))' },
+  unpaid: { label: 'Unpaid', color: 'hsl(var(--destructive))' },
+};
+
 
 export function ParentDashboard() {
   const { studentName, attendance, grades } = studentPerformance;
@@ -87,7 +110,24 @@ export function ParentDashboard() {
       </div>
 
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
-        <div className="lg:col-span-2">
+        <div className="lg:col-span-2 space-y-6">
+            <Card>
+                <CardHeader>
+                    <CardTitle>Academic Performance Over Time</CardTitle>
+                    <CardDescription>Tracking your ward's termly average score.</CardDescription>
+                </CardHeader>
+                <CardContent>
+                    <ChartContainer config={chartConfig} className="h-[250px] w-full">
+                        <LineChart data={performanceOverTime} margin={{ top: 5, right: 10, left: -20, bottom: 0 }}>
+                            <CartesianGrid vertical={false} />
+                            <XAxis dataKey="term" tickLine={false} axisLine={false} tickMargin={8} />
+                            <YAxis domain={[60, 100]} tickFormatter={(value) => `${value}%`} />
+                            <ChartTooltip content={<ChartTooltipContent />} />
+                            <Line type="monotone" dataKey="average" stroke="var(--color-average)" strokeWidth={2} dot={true} />
+                        </LineChart>
+                    </ChartContainer>
+                </CardContent>
+            </Card>
             <Card>
                 <CardHeader>
                     <CardTitle>Recent Grades</CardTitle>
@@ -128,7 +168,24 @@ export function ParentDashboard() {
             </Card>
         </div>
 
-        <div className="lg:col-span-1">
+        <div className="lg:col-span-1 space-y-6">
+             <Card>
+                <CardHeader>
+                    <CardTitle>Fee Payment History</CardTitle>
+                    <CardDescription>Status of school fee payments.</CardDescription>
+                </CardHeader>
+                <CardContent>
+                    <ChartContainer config={chartConfig} className="mx-auto aspect-square h-[250px]">
+                        <PieChart>
+                            <ChartTooltip content={<ChartTooltipContent hideLabel />} />
+                            <Pie data={feeHistoryData} dataKey="value" nameKey="name" innerRadius={50}>
+                                {feeHistoryData.map((entry) => <Cell key={entry.name} fill={entry.fill} />)}
+                            </Pie>
+                            <ChartLegend content={<ChartLegendContent className="flex-wrap" nameKey="name" />} />
+                        </PieChart>
+                    </ChartContainer>
+                </CardContent>
+            </Card>
             <Card>
                 <CardHeader>
                     <CardTitle>School Announcements</CardTitle>

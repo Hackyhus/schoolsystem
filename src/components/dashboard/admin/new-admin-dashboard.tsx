@@ -11,6 +11,10 @@ import {
   BookCheck,
   FileWarning,
   PieChart as PieChartIcon,
+  AreaChart as AreaChartIcon,
+  BarChart2,
+  DollarSign,
+  CalendarCheck
 } from 'lucide-react';
 import {
   Card,
@@ -54,6 +58,8 @@ import {
   Pie,
   PieChart,
   Cell,
+  Line,
+  LineChart,
 } from 'recharts';
 import Image from 'next/image';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -79,6 +85,21 @@ type EnrollmentData = {
   name: string;
   total: number;
 }
+
+const financeData = [
+    { name: 'Paid', value: 400, fill: 'hsl(var(--chart-2))' },
+    { name: 'Unpaid', value: 150, fill: 'hsl(var(--destructive))' },
+    { name: 'Overdue', value: 50, fill: 'hsl(var(--chart-4))' },
+]
+
+const attendanceData = [
+  { month: 'Jan', attendance: 95 },
+  { month: 'Feb', attendance: 92 },
+  { month: 'Mar', attendance: 97 },
+  { month: 'Apr', attendance: 94 },
+  { month: 'May', attendance: 98 },
+]
+
 
 export function NewAdminDashboard() {
   const { toast } = useToast();
@@ -390,57 +411,40 @@ export function NewAdminDashboard() {
               )}
             </CardContent>
           </Card>
-          <Card>
-            <CardHeader>
-              <CardTitle>Recent Staff</CardTitle>
-              <CardDescription>A list of recently added staff members.</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Name</TableHead>
-                    <TableHead className="hidden sm:table-cell">Department</TableHead>
-                    <TableHead className="hidden md:table-cell">Email</TableHead>
-                    <TableHead>Role</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {isLoading
-                    ? Array.from({ length: 4 }).map((_, i) => (
-                        <TableRow key={`skeleton-staff-${i}`}>
-                          <TableCell>
-                            <Skeleton className="h-5 w-24" />
-                          </TableCell>
-                          <TableCell className="hidden sm:table-cell">
-                            <Skeleton className="h-5 w-20" />
-                          </TableCell>
-                          <TableCell className="hidden md:table-cell">
-                            <Skeleton className="h-5 w-32" />
-                          </TableCell>
-                          <TableCell>
-                            <Skeleton className="h-6 w-24" />
-                          </TableCell>
-                        </TableRow>
-                      ))
-                    : recentStaff.slice(0, 4).map((user) => (
-                        <TableRow key={user.id}>
-                          <TableCell>{user.name}</TableCell>
-                          <TableCell className="hidden sm:table-cell">{user.department}</TableCell>
-                          <TableCell className="hidden md:table-cell">{user.email}</TableCell>
-                          <TableCell>
-                            <Badge
-                              variant="outline"
-                            >
-                              {user.role}
-                            </Badge>
-                          </TableCell>
-                        </TableRow>
-                      ))}
-                </TableBody>
-              </Table>
-            </CardContent>
-          </Card>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <Card>
+                <CardHeader>
+                    <CardTitle className="flex items-center gap-2"><DollarSign /> Finance & Fees Summary</CardTitle>
+                    <CardDescription>A summary of termly fee payments.</CardDescription>
+                </CardHeader>
+                <CardContent>
+                    <ChartContainer config={chartConfig} className="mx-auto aspect-square h-[200px]">
+                        <PieChart>
+                            <ChartTooltip content={<ChartTooltipContent hideLabel />} />
+                            <Pie data={financeData} dataKey="value" nameKey="name" innerRadius={50} />
+                            <ChartLegend content={<ChartLegendContent className="flex-wrap" nameKey="name" />} />
+                        </PieChart>
+                    </ChartContainer>
+                </CardContent>
+            </Card>
+             <Card>
+                <CardHeader>
+                    <CardTitle className="flex items-center gap-2"><CalendarCheck /> Attendance Statistics</CardTitle>
+                    <CardDescription>School-wide attendance trend this term.</CardDescription>
+                </CardHeader>
+                <CardContent>
+                    <ChartContainer config={{ attendance: { label: 'Attendance', color: 'hsl(var(--chart-3))' } }} className="h-[200px] w-full">
+                        <AreaChart data={attendanceData} margin={{ left: 0, right: 10, top: 10, bottom: 0 }}>
+                            <CartesianGrid vertical={false} />
+                            <XAxis dataKey="month" tickLine={false} axisLine={false} tickMargin={8} fontSize={12} />
+                            <YAxis domain={[80, 100]} tickFormatter={(value) => `${value}%`} />
+                            <ChartTooltip content={<ChartTooltipContent indicator="dot" />} />
+                            <Area dataKey="attendance" type="natural" fill="var(--color-attendance)" fillOpacity={0.4} stroke="var(--color-attendance)" />
+                        </AreaChart>
+                    </ChartContainer>
+                </CardContent>
+            </Card>
+          </div>
         </div>
 
         {/* Right column */}
@@ -477,7 +481,7 @@ export function NewAdminDashboard() {
                       ))}
                     </Pie>
                     <ChartLegend
-                      content={<ChartLegendContent nameKey="name" />}
+                      content={<ChartLegendContent className="flex-wrap" nameKey="name" />}
                     />
                   </PieChart>
                 </ChartContainer>
@@ -516,11 +520,52 @@ export function NewAdminDashboard() {
                       ))}
                     </Pie>
                     <ChartLegend
-                      content={<ChartLegendContent nameKey="name" />}
+                      content={<ChartLegendContent className="flex-wrap" nameKey="name" />}
                     />
                   </PieChart>
                 </ChartContainer>
               )}
+            </CardContent>
+          </Card>
+           <Card>
+            <CardHeader>
+              <CardTitle>Recent Staff</CardTitle>
+              <CardDescription>A list of recently added staff members.</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Name</TableHead>
+                    <TableHead>Role</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {isLoading
+                    ? Array.from({ length: 4 }).map((_, i) => (
+                        <TableRow key={`skeleton-staff-${i}`}>
+                          <TableCell>
+                            <Skeleton className="h-5 w-24" />
+                          </TableCell>
+                          <TableCell>
+                            <Skeleton className="h-6 w-24" />
+                          </TableCell>
+                        </TableRow>
+                      ))
+                    : recentStaff.slice(0, 4).map((user) => (
+                        <TableRow key={user.id}>
+                          <TableCell>{user.name}</TableCell>
+                          <TableCell>
+                            <Badge
+                              variant="outline"
+                            >
+                              {user.role}
+                            </Badge>
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                </TableBody>
+              </Table>
             </CardContent>
           </Card>
         </div>

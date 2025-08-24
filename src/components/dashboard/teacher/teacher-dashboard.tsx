@@ -1,6 +1,6 @@
 
 'use client';
-import { Book, CheckCircle, Clock, FileQuestion, Upload, XCircle } from 'lucide-react';
+import { Book, CheckCircle, Clock, FileQuestion, Upload, XCircle, LineChart as LineChartIcon, PieChart as PieChartIcon } from 'lucide-react';
 import {
   Card,
   CardContent,
@@ -35,6 +35,28 @@ import {
 } from '@/components/ui/dialog';
 import { AddLessonNoteForm } from '../lesson-notes/add-lesson-note-form';
 import { Skeleton } from '@/components/ui/skeleton';
+import { ChartContainer, ChartTooltip, ChartTooltipContent, ChartLegend, ChartLegendContent } from '@/components/ui/chart';
+import { LineChart, Line, XAxis, YAxis, CartesianGrid, AreaChart, Area } from 'recharts';
+
+const classPerformanceData = [
+  { month: 'Jan', average: 65 },
+  { month: 'Feb', average: 70 },
+  { month: 'Mar', average: 75 },
+  { month: 'Apr', average: 80 },
+  { month: 'May', average: 78 },
+];
+
+const submissionHistoryData = [
+  { month: 'Jan', submitted: 4 },
+  { month: 'Feb', submitted: 5 },
+  { month: 'Mar', submitted: 3 },
+  { month: 'Apr', submitted: 6 },
+];
+
+const chartConfig = {
+    average: { label: 'Average Score', color: 'hsl(var(--chart-1))' },
+    submitted: { label: 'Submissions', color: 'hsl(var(--chart-2))' },
+}
 
 export function TeacherDashboard() {
   const { user } = useRole();
@@ -161,7 +183,7 @@ export function TeacherDashboard() {
       </div>
 
        <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
-        <div className="lg:col-span-2">
+        <div className="lg:col-span-2 space-y-6">
             <Card>
                 <CardHeader>
                     <CardTitle>Recent Lesson Plan Submissions</CardTitle>
@@ -213,6 +235,23 @@ export function TeacherDashboard() {
                     </Table>
                 </CardContent>
             </Card>
+            <Card>
+                <CardHeader>
+                    <CardTitle>Class Performance Trend</CardTitle>
+                    <CardDescription>Average performance of your primary class over time.</CardDescription>
+                </CardHeader>
+                <CardContent>
+                    <ChartContainer config={chartConfig} className="h-[250px] w-full">
+                        <LineChart data={classPerformanceData} margin={{ top: 5, right: 10, left: -20, bottom: 0 }}>
+                            <CartesianGrid vertical={false} />
+                            <XAxis dataKey="month" tickLine={false} axisLine={false} tickMargin={8} />
+                            <YAxis domain={[60, 90]} tickFormatter={(value) => `${value}%`} />
+                            <ChartTooltip content={<ChartTooltipContent />} />
+                            <Line type="monotone" dataKey="average" stroke="var(--color-average)" strokeWidth={2} dot={true} />
+                        </LineChart>
+                    </ChartContainer>
+                </CardContent>
+            </Card>
         </div>
         <div className="lg:col-span-1 space-y-6">
             <Card>
@@ -242,6 +281,23 @@ export function TeacherDashboard() {
                             Enter Student Scores
                         </Link>
                     </Button>
+                </CardContent>
+            </Card>
+             <Card>
+                <CardHeader>
+                    <CardTitle>My Submission History</CardTitle>
+                    <CardDescription>Your document submissions over the last few months.</CardDescription>
+                </CardHeader>
+                <CardContent>
+                    <ChartContainer config={chartConfig} className="h-[250px] w-full">
+                        <AreaChart data={submissionHistoryData} margin={{ top: 5, right: 10, left: -10, bottom: 0 }}>
+                            <CartesianGrid vertical={false} />
+                            <XAxis dataKey="month" tickLine={false} axisLine={false} tickMargin={8} fontSize={12}/>
+                            <YAxis allowDecimals={false} />
+                            <ChartTooltip content={<ChartTooltipContent />} />
+                            <Area type="monotone" dataKey="submitted" fill="var(--color-submitted)" fillOpacity={0.4} stroke="var(--color-submitted)" />
+                        </AreaChart>
+                    </ChartContainer>
                 </CardContent>
             </Card>
         </div>
