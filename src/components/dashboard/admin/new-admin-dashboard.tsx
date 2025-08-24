@@ -259,6 +259,8 @@ export function NewAdminDashboard() {
     (acc as any)[name] = { label: name, color: fill };
     return acc;
   }, { users: { label: 'Users' } });
+  
+  const totalNotes = stats.approved + stats.pending + stats.rejected;
 
 
   return (
@@ -331,7 +333,7 @@ export function NewAdminDashboard() {
                 <CardDescription>A breakdown of student population in each class.</CardDescription>
             </CardHeader>
             <CardContent>
-               {isLoading ? <Skeleton className="h-[250px] w-full" /> : (
+               {isLoading ? ( <Skeleton className="h-[250px] w-full" /> ) : enrollmentData.length > 0 ? (
                 <ChartContainer config={chartConfig} className="h-[250px] w-full">
                     <BarChart data={enrollmentData} margin={{ top: 20, right: 20, bottom: 5, left: 0 }}>
                         <CartesianGrid vertical={false} />
@@ -341,6 +343,10 @@ export function NewAdminDashboard() {
                         <Bar dataKey="total" fill="var(--color-students)" radius={4} />
                     </BarChart>
                 </ChartContainer>
+               ) : (
+                <div className="flex h-[250px] items-center justify-center text-center text-muted-foreground">
+                    <p>No student enrollment data available.</p>
+                </div>
                )}
             </CardContent>
            </Card>
@@ -349,9 +355,7 @@ export function NewAdminDashboard() {
               <CardTitle>Lesson Note Submissions by Month</CardTitle>
             </CardHeader>
             <CardContent>
-              {isLoading ? (
-                <Skeleton className="h-[250px] w-full" />
-              ) : (
+              {isLoading ? ( <Skeleton className="h-[250px] w-full" /> ) : totalNotes > 0 ? (
                 <ChartContainer
                   config={chartConfig}
                   className="h-[250px] w-full"
@@ -408,6 +412,10 @@ export function NewAdminDashboard() {
                     />
                   </AreaChart>
                 </ChartContainer>
+              ) : (
+                 <div className="flex h-[250px] items-center justify-center text-center text-muted-foreground">
+                    <p>No lesson note submission data to display.</p>
+                </div>
               )}
             </CardContent>
           </Card>
@@ -457,9 +465,7 @@ export function NewAdminDashboard() {
               </CardDescription>
             </CardHeader>
             <CardContent>
-              {isLoading ? (
-                <Skeleton className="h-[250px] w-full" />
-              ) : (
+              {isLoading ? ( <Skeleton className="h-[250px] w-full" /> ) : userRoleData.length > 0 ? (
                 <ChartContainer
                   config={userRoleChartConfig}
                   className="mx-auto aspect-square h-[250px]"
@@ -485,6 +491,10 @@ export function NewAdminDashboard() {
                     />
                   </PieChart>
                 </ChartContainer>
+              ) : (
+                <div className="flex h-[250px] items-center justify-center text-center text-muted-foreground">
+                    <p>No user data to display.</p>
+                </div>
               )}
             </CardContent>
           </Card>
@@ -496,9 +506,7 @@ export function NewAdminDashboard() {
               </CardDescription>
             </CardHeader>
             <CardContent>
-              {isLoading ? (
-                <Skeleton className="h-[250px] w-full" />
-              ) : (
+              {isLoading ? ( <Skeleton className="h-[250px] w-full" /> ) : totalNotes > 0 ? (
                 <ChartContainer
                   config={chartConfig}
                   className="mx-auto aspect-square h-[250px]"
@@ -524,6 +532,10 @@ export function NewAdminDashboard() {
                     />
                   </PieChart>
                 </ChartContainer>
+              ) : (
+                 <div className="flex h-[250px] items-center justify-center text-center text-muted-foreground">
+                    <p>No submission data to display.</p>
+                </div>
               )}
             </CardContent>
           </Card>

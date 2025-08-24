@@ -140,6 +140,8 @@ export function HodDashboard() {
     pendingGrade: { label: 'Pending', color: 'hsl(var(--chart-4))' },
   };
 
+  const totalNotes = stats.approved + stats.pending + stats.rejected;
+
   return (
     <div className="flex flex-col gap-6">
        <div className="space-y-1">
@@ -270,7 +272,7 @@ export function HodDashboard() {
                     <CardDescription>Overview of lesson note statuses in your department.</CardDescription>
                 </CardHeader>
                 <CardContent>
-                    {isLoading ? <Skeleton className="h-[250px] w-full" /> : (
+                    {isLoading ? ( <Skeleton className="h-[250px] w-full" /> ) : totalNotes > 0 ? (
                         <ChartContainer config={chartConfig} className="mx-auto aspect-square h-[250px]">
                             <PieChart>
                                 <ChartTooltip cursor={false} content={<ChartTooltipContent hideLabel />} />
@@ -282,6 +284,10 @@ export function HodDashboard() {
                                 <ChartLegend content={<ChartLegendContent className="flex-wrap" nameKey="name" />} />
                             </PieChart>
                         </ChartContainer>
+                    ) : (
+                         <div className="flex h-[250px] items-center justify-center text-center text-muted-foreground">
+                            <p>No submission data available.</p>
+                        </div>
                     )}
                 </CardContent>
             </Card>

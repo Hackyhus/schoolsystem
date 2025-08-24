@@ -136,7 +136,7 @@ export default function ReportsPage() {
           </CardDescription>
         </CardHeader>
         <CardContent>
-          {isLoading ? <Skeleton className="h-[200px] w-full" /> : (totalNotes > 0 ? (
+          {isLoading ? ( <Skeleton className="h-[200px] w-full" /> ) : totalNotes > 0 ? (
             <ChartContainer
               config={chartConfig}
               className="h-[200px] w-full"
@@ -165,7 +165,7 @@ export default function ReportsPage() {
             <div className="flex h-[200px] items-center justify-center text-muted-foreground">
               No data to display.
             </div>
-          ))}
+          )}
         </CardContent>
       </Card>
 

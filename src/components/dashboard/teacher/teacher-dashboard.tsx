@@ -130,6 +130,8 @@ export function TeacherDashboard() {
     if (status.includes('Rejected') || status.includes('Revision')) return 'destructive';
     return 'outline';
   };
+  
+  const totalSubmissions = stats.approvedPlans + stats.pendingPlans + stats.rejectedPlans;
 
   return (
     <div className="flex flex-col gap-6">
@@ -241,6 +243,7 @@ export function TeacherDashboard() {
                     <CardDescription>Average performance of your primary class over time.</CardDescription>
                 </CardHeader>
                 <CardContent>
+                    {isLoading ? ( <Skeleton className="h-[250px] w-full" />) : classPerformanceData.length > 0 ? (
                     <ChartContainer config={chartConfig} className="h-[250px] w-full">
                         <LineChart data={classPerformanceData} margin={{ top: 5, right: 10, left: -20, bottom: 0 }}>
                             <CartesianGrid vertical={false} />
@@ -250,6 +253,11 @@ export function TeacherDashboard() {
                             <Line type="monotone" dataKey="average" stroke="var(--color-average)" strokeWidth={2} dot={true} />
                         </LineChart>
                     </ChartContainer>
+                    ) : (
+                        <div className="flex h-[250px] items-center justify-center text-center text-muted-foreground">
+                            <p>No performance data available.</p>
+                        </div>
+                    )}
                 </CardContent>
             </Card>
         </div>
@@ -289,6 +297,7 @@ export function TeacherDashboard() {
                     <CardDescription>Your document submissions over the last few months.</CardDescription>
                 </CardHeader>
                 <CardContent>
+                    {isLoading ? ( <Skeleton className="h-[250px] w-full" /> ) : totalSubmissions > 0 ? (
                     <ChartContainer config={chartConfig} className="h-[250px] w-full">
                         <AreaChart data={submissionHistoryData} margin={{ top: 5, right: 10, left: -10, bottom: 0 }}>
                             <CartesianGrid vertical={false} />
@@ -298,6 +307,11 @@ export function TeacherDashboard() {
                             <Area type="monotone" dataKey="submitted" fill="var(--color-submitted)" fillOpacity={0.4} stroke="var(--color-submitted)" />
                         </AreaChart>
                     </ChartContainer>
+                    ) : (
+                        <div className="flex h-[250px] items-center justify-center text-center text-muted-foreground">
+                            <p>No submission history to display.</p>
+                        </div>
+                    )}
                 </CardContent>
             </Card>
         </div>
