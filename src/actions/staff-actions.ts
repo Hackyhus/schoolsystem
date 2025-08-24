@@ -1,3 +1,4 @@
+
 'use server';
 
 import { z } from 'zod';
@@ -13,13 +14,33 @@ const staffSchema = z.object({
   phone: z.string().min(1),
   email: z.string().email(),
   address: z.string().min(1),
-  staffId: z.string().min(1),
   role: z.enum(['Admin', 'SLT', 'HeadOfDepartment', 'Teacher', 'Accountant', 'ExamOfficer']),
   department: z.string().min(1),
   dateOfEmployment: z.string(),
   profilePicture: z.instanceof(File).optional(),
   documents: z.array(z.instanceof(File)).optional(),
 });
+
+const ROLE_CODES: { [key: string]: string } = {
+    Admin: 'ADM',
+    SLT: 'SLT',
+    HeadOfDepartment: 'HOD',
+    Teacher: 'TEA',
+    Accountant: 'ACC',
+    ExamOfficer: 'EXO',
+};
+
+async function generateStaffId(role: string): Promise<string> {
+    const roleCode = ROLE_CODES[role] || 'GEN';
+    const year = new Date().getFullYear().toString().slice(-2);
+
+    // Get the count of existing staff to determine the next sequential number.
+    // This is a simple way, but for high concurrency, a dedicated counter in Firestore might be better.
+    const staffCount = await dbService.getCountFromServer('users');
+    const nextId = (staffCount + 1).toString().padStart(3, '0');
+
+    return `GIIA/${roleCode}/${year}/${nextId}`;
+}
 
 
 export async function createStaff(formData: FormData) {
@@ -41,13 +62,16 @@ export async function createStaff(formData: FormData) {
     
     const { profilePicture, documents: staffDocs, ...staffData } = parsed.data;
 
-    // 1. Create user in Firebase Auth
+    // 1. Generate Staff ID
+    const staffId = await generateStaffId(staffData.role);
+
+    // 2. Create user in Firebase Auth
     const authUser = await authService.createUser({
         email: staffData.email,
         password: staffData.stateOfOrigin, // Use state of origin as default password
     });
 
-    // 2. Upload profile picture if it exists
+    // 3. Upload profile picture if it exists
     let profilePictureUrl = '';
     if (profilePicture) {
       const { downloadURL } = await storageService.uploadFile(
@@ -57,10 +81,10 @@ export async function createStaff(formData: FormData) {
       profilePictureUrl = downloadURL;
     }
 
-    // 3. Create user document in Firestore
+    // 4. Create user document in Firestore
     const newStaffData = {
         uid: authUser.uid,
-        staffId: staffData.staffId,
+        staffId: staffId,
         name: `${staffData.firstName} ${staffData.lastName}`,
         email: staffData.email,
         phone: staffData.phone,
