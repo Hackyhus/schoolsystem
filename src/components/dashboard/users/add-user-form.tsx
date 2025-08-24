@@ -44,8 +44,9 @@ import { format } from 'date-fns';
 import { Combobox } from '@/components/ui/combobox';
 
 const availableRoles = [
-  'Teacher',
   'SLT',
+  'HeadOfDepartment',
+  'Teacher',
   'ExamOfficer',
   'Accountant',
   'Admin',
@@ -85,7 +86,7 @@ const formSchema = z.object({
   lastName: z.string().min(1, 'Last name is required.'),
   email: z.string().email('Please enter a valid email.'),
   phone: z.string().min(1, 'Phone number is required.'),
-  role: z.enum(['Teacher', 'SLT', 'ExamOfficer', 'Accountant', 'Admin']),
+  role: z.enum(['SLT', 'HeadOfDepartment', 'Teacher', 'ExamOfficer', 'Accountant', 'Admin']),
   stateOfOrigin: z.string().min(1, 'State of Origin is required.'),
   department: z.string().min(1, 'Department is required.'),
   employmentDate: z.date({ required_error: 'Employment date is required.' }),

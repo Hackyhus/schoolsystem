@@ -109,6 +109,14 @@ const navConfig = {
       { "icon": "dollar-sign", "label": "Financials", "path": "/dashboard/accountant/reports" }, // Points to accountant reports
     ],
   },
+  HeadOfDepartment: {
+     sidebar_extra: [
+      { "icon": "book", "label": "Lesson Approvals", "path": "/dashboard/lesson-notes" },
+      { "icon": "file-question", "label": "Question Approvals", "path": "/dashboard/exam-questions" },
+      { "icon": "bar-chart", "label": "Dept. Analytics", "path": "/dashboard/reports" },
+      { "icon": "users", "label": "My Teachers", "path": "/dashboard/users" },
+    ],
+  },
   Accountant: {
     sidebar_extra: [
       { "icon": "dollar-sign", "label": "Fee Structures", "path": "/dashboard/accountant/fees" },

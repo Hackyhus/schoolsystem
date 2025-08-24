@@ -44,8 +44,9 @@ const departmentCodes: { [key: string]: string } = {
 };
 
 const availableRoles = [
-  'Teacher',
   'SLT',
+  'HeadOfDepartment',
+  'Teacher',
   'ExamOfficer',
   'Accountant',
   'Parent',

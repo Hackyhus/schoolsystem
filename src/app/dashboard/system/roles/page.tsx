@@ -39,8 +39,7 @@ import {
 } from '@/components/ui/select';
 
 const availableRoles = [
-  'Principal',
-  'Director',
+  'SLT',
   'HeadOfDepartment',
   'Teacher',
   'Accountant',
