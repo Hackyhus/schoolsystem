@@ -34,6 +34,7 @@ import {
   DialogTrigger,
 } from '@/components/ui/dialog';
 import { AddStudentForm } from '@/components/dashboard/students/add-student-form';
+import { useRole } from '@/context/role-context';
 
 
 export default function StudentsPage() {
@@ -41,6 +42,7 @@ export default function StudentsPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const { toast } = useToast();
+  const { role } = useRole();
 
   const fetchStudents = useCallback(async () => {
     setIsLoading(true);
@@ -104,7 +106,7 @@ export default function StudentsPage() {
       <div>
         <h1 className="font-headline text-3xl font-bold">Student Management</h1>
         <p className="text-muted-foreground">
-          Add, view, and manage student accounts and records.
+          {role === 'Admin' ? 'Add, view, and manage student accounts and records.' : 'View student records.'}
         </p>
       </div>
       <Card>
@@ -115,22 +117,24 @@ export default function StudentsPage() {
               A list of all students in the system.
             </CardDescription>
           </div>
-          <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
-            <DialogTrigger asChild>
-              <Button>
-                <PlusCircle className="mr-2 h-4 w-4" /> Add New Student
-              </Button>
-            </DialogTrigger>
-            <DialogContent className="max-w-3xl">
-              <DialogHeader>
-                <DialogTitle>New Student Registration</DialogTitle>
-                <DialogDescription>
-                  Fill out the form to register a new student. A parent portal account will be created for the primary guardian.
-                </DialogDescription>
-              </DialogHeader>
-              <AddStudentForm onStudentAdded={handleStudentAdded} />
-            </DialogContent>
-          </Dialog>
+          {role === 'Admin' && (
+            <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
+              <DialogTrigger asChild>
+                <Button>
+                  <PlusCircle className="mr-2 h-4 w-4" /> Add New Student
+                </Button>
+              </DialogTrigger>
+              <DialogContent className="max-w-3xl">
+                <DialogHeader>
+                  <DialogTitle>New Student Registration</DialogTitle>
+                  <DialogDescription>
+                    Fill out the form to register a new student. A parent portal account will be created for the primary guardian.
+                  </DialogDescription>
+                </DialogHeader>
+                <AddStudentForm onStudentAdded={handleStudentAdded} />
+              </DialogContent>
+            </Dialog>
+          )}
         </CardHeader>
         <CardContent>
           <Table>
@@ -181,13 +185,15 @@ export default function StudentsPage() {
                         <Badge variant={student.status === 'Active' ? 'secondary' : 'destructive'}>{student.status}</Badge>
                     </TableCell>
                     <TableCell className="text-right">
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        onClick={() => removeStudent(student.id)}
-                      >
-                        <Trash2 className="h-4 w-4" />
-                      </Button>
+                      {role === 'Admin' && (
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          onClick={() => removeStudent(student.id)}
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      )}
                     </TableCell>
                   </TableRow>
                 ))
