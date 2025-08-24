@@ -261,8 +261,8 @@ export function AddStudentForm({ onStudentAdded }: { onStudentAdded: () => void 
                   <FormItem className="flex flex-col pt-2">
                     <FormLabel>Date of Birth</FormLabel>
                     <Popover>
-                      <PopoverTrigger asChild>
-                        <FormControl>
+                      <FormControl>
+                        <PopoverTrigger asChild>
                           <Button
                             variant={'outline'}
                             className={cn(
@@ -277,8 +277,8 @@ export function AddStudentForm({ onStudentAdded }: { onStudentAdded: () => void 
                             )}
                             <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
                           </Button>
-                        </FormControl>
-                      </PopoverTrigger>
+                        </PopoverTrigger>
+                      </FormControl>
                       <PopoverContent className="w-auto p-0" align="start">
                         <Calendar
                           mode="single"
