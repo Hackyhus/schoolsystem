@@ -240,22 +240,97 @@ export function AddUserForm({ onUserAdded }: { onUserAdded: () => void }) {
             <FormField control={form.control} name="phone" render={({ field }) => ( <FormItem> <FormLabel>Phone Number</FormLabel> <FormControl> <Input placeholder="08012345678" {...field} /> </FormControl> <FormMessage /> </FormItem> )}/>
             <FormField control={form.control} name="stateOfOrigin" render={({ field }) => ( <FormItem> <FormLabel>State of Origin (Password)</FormLabel> <FormControl> <Input placeholder="e.g. Kaduna" {...field} /> </FormControl> <FormDescription>This will be the default password.</FormDescription> <FormMessage /> </FormItem> )}/>
             <FormField control={form.control} name="address" render={({ field }) => ( <FormItem> <FormLabel>Address</FormLabel> <FormControl> <Input placeholder="No. 123, Main St." {...field} /> </FormControl> <FormMessage /> </FormItem> )}/>
-            <FormField control={form.control} name="gender" render={({ field }) => ( <FormItem> <FormLabel>Gender</FormLabel> <Select onValueChange={field.onChange} defaultValue={field.value}> <FormControl> <SelectTrigger> <SelectValue placeholder="Select gender" /> </SelectTrigger> </FormControl> <SelectContent> <SelectItem value="Male">Male</SelectItem> <SelectItem value="Female">Female</SelectItem> </SelectContent> </Select> <FormMessage /> </FormItem> )}/>
-            <FormField control={form.control} name="dob" render={({ field }) => ( <FormItem className="flex flex-col"> <FormLabel>Date of Birth</FormLabel> <Popover> <PopoverTrigger asChild> <FormControl> <Button variant={'outline'} className={cn('pl-3 text-left font-normal', !field.value && 'text-muted-foreground' )}> {field.value ? ( format(field.value, 'PPP') ) : ( <span>Pick a date</span> )} <CalendarIcon className="ml-auto h-4 w-4 opacity-50" /> </Button> </FormControl> </PopoverTrigger> <PopoverContent className="w-auto p-0" align="start"> <Calendar mode="single" selected={field.value} onSelect={field.onChange} disabled={(date) => date > new Date() || date < new Date('1900-01-01')} initialFocus /> </PopoverContent> </Popover> <FormMessage /> </FormItem> )}/>
-            <FormField control={form.control} name="role" render={({ field }) => ( <FormItem> <FormLabel>Role</FormLabel> <Select onValueChange={field.onChange} defaultValue={field.value}> <FormControl> <SelectTrigger> <SelectValue placeholder="Select a role" /> </SelectTrigger> </FormControl> <SelectContent> {availableRoles.map(role => ( <SelectItem key={role} value={role}>{role}</SelectItem> ))} </SelectContent> </Select> <FormMessage /> </FormItem> )}/>
-            <FormField control={form.control} name="department" render={({ field }) => ( <FormItem> <FormLabel>Department</FormLabel> <Select onValueChange={field.onChange} defaultValue={field.value}> <FormControl> <SelectTrigger> <SelectValue placeholder="Select a department" /> </SelectTrigger> </FormControl> <SelectContent> {Object.keys(departmentCodes).map((dept) => ( <SelectItem key={dept} value={dept}>{dept}</SelectItem> ))} </SelectContent> </Select> <FormMessage /> </FormItem> )}/>
-            <FormField control={form.control} name="employmentDate" render={({ field }) => ( <FormItem className="flex flex-col"> <FormLabel>Employment Date</FormLabel> <Popover> <PopoverTrigger asChild> <FormControl> <Button variant={'outline'} className={cn('pl-3 text-left font-normal', !field.value && 'text-muted-foreground' )}> {field.value ? ( format(field.value, 'PPP') ) : ( <span>Pick a date</span> )} <CalendarIcon className="ml-auto h-4 w-4 opacity-50" /> </Button> </FormControl> </PopoverTrigger> <PopoverContent className="w-auto p-0" align="start"> <Calendar mode="single" selected={field.value} onSelect={field.onChange} disabled={(date) => date > new Date()} initialFocus /> </PopoverContent> </Popover> <FormMessage /> </FormItem> )}/>
+            <FormField control={form.control} name="gender" render={({ field }) => ( 
+                <FormItem> 
+                    <FormLabel>Gender</FormLabel> 
+                    <Select onValueChange={field.onChange} defaultValue={field.value}> 
+                        <FormControl> 
+                            <SelectTrigger> <SelectValue placeholder="Select gender" /> </SelectTrigger> 
+                        </FormControl> 
+                        <SelectContent> <SelectItem value="Male">Male</SelectItem> <SelectItem value="Female">Female</SelectItem> </SelectContent> 
+                    </Select> 
+                    <FormMessage /> 
+                </FormItem> 
+            )}/>
+            <FormField control={form.control} name="dob" render={({ field }) => ( 
+                <FormItem className="flex flex-col"> 
+                    <FormLabel>Date of Birth</FormLabel> 
+                    <Popover> 
+                        <PopoverTrigger asChild> 
+                            <FormControl> 
+                                <Button variant={'outline'} className={cn('pl-3 text-left font-normal', !field.value && 'text-muted-foreground' )}> 
+                                    {field.value ? ( format(field.value, 'PPP') ) : ( <span>Pick a date</span> )} 
+                                    <CalendarIcon className="ml-auto h-4 w-4 opacity-50" /> 
+                                </Button> 
+                            </FormControl> 
+                        </PopoverTrigger> 
+                        <PopoverContent className="w-auto p-0" align="start"> 
+                            <Calendar mode="single" selected={field.value} onSelect={field.onChange} disabled={(date) => date > new Date() || date < new Date('1900-01-01')} initialFocus /> 
+                        </PopoverContent> 
+                    </Popover> 
+                    <FormMessage /> 
+                </FormItem> 
+            )}/>
+            <FormField control={form.control} name="role" render={({ field }) => ( 
+                <FormItem> 
+                    <FormLabel>Role</FormLabel> 
+                    <Select onValueChange={field.onChange} defaultValue={field.value}> 
+                        <FormControl> 
+                            <SelectTrigger> <SelectValue placeholder="Select a role" /> </SelectTrigger> 
+                        </FormControl> 
+                        <SelectContent> 
+                            {availableRoles.map(role => ( <SelectItem key={role} value={role}>{role}</SelectItem> ))} 
+                        </SelectContent> 
+                    </Select> 
+                    <FormMessage /> 
+                </FormItem> 
+            )}/>
+            <FormField control={form.control} name="department" render={({ field }) => ( 
+                <FormItem> 
+                    <FormLabel>Department</FormLabel> 
+                    <Select onValueChange={field.onChange} defaultValue={field.value}> 
+                        <FormControl> 
+                            <SelectTrigger> <SelectValue placeholder="Select a department" /> </SelectTrigger> 
+                        </FormControl> 
+                        <SelectContent> 
+                            {Object.keys(departmentCodes).map((dept) => ( <SelectItem key={dept} value={dept}>{dept}</SelectItem> ))} 
+                        </SelectContent> 
+                    </Select> 
+                    <FormMessage /> 
+                </FormItem> 
+            )}/>
+            <FormField control={form.control} name="employmentDate" render={({ field }) => ( 
+                <FormItem className="flex flex-col"> 
+                    <FormLabel>Employment Date</FormLabel> 
+                    <Popover> 
+                        <PopoverTrigger asChild> 
+                            <FormControl> 
+                                <Button variant={'outline'} className={cn('pl-3 text-left font-normal', !field.value && 'text-muted-foreground' )}> 
+                                    {field.value ? ( format(field.value, 'PPP') ) : ( <span>Pick a date</span> )} 
+                                    <CalendarIcon className="ml-auto h-4 w-4 opacity-50" /> 
+                                </Button> 
+                            </FormControl> 
+                        </PopoverTrigger> 
+                        <PopoverContent className="w-auto p-0" align="start"> 
+                            <Calendar mode="single" selected={field.value} onSelect={field.onChange} disabled={(date) => date > new Date()} initialFocus /> 
+                        </PopoverContent> 
+                    </Popover> 
+                    <FormMessage /> 
+                </FormItem> 
+            )}/>
             <FormField control={form.control} name="bankName" render={({ field }) => (
               <FormItem>
                 <FormLabel>Bank Name</FormLabel>
-                 <Combobox
-                    options={NIGERIAN_BANKS}
-                    value={field.value}
-                    onChange={field.onChange}
-                    placeholder="Select a bank"
-                    searchPlaceholder="Search banks..."
-                    notFoundText="No bank found."
-                  />
+                <FormControl>
+                    <Combobox
+                        options={NIGERIAN_BANKS}
+                        value={field.value}
+                        onChange={field.onChange}
+                        placeholder="Select a bank"
+                        searchPlaceholder="Search banks..."
+                        notFoundText="No bank found."
+                    />
+                </FormControl>
                 <FormMessage />
               </FormItem>
             )}/>

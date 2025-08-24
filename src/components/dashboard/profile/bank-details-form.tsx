@@ -142,13 +142,15 @@ export function BankDetailsForm({
             render={({ field }) => (
               <FormItem>
                 <FormLabel>Bank Name</FormLabel>
-                <Combobox
-                  options={NIGERIAN_BANKS}
-                  {...field}
-                  placeholder="Select a bank"
-                  searchPlaceholder="Search banks..."
-                  notFoundText="No bank found."
-                />
+                <FormControl>
+                  <Combobox
+                    options={NIGERIAN_BANKS}
+                    {...field}
+                    placeholder="Select a bank"
+                    searchPlaceholder="Search banks..."
+                    notFoundText="No bank found."
+                  />
+                </FormControl>
                 <FormMessage />
               </FormItem>
             )}
