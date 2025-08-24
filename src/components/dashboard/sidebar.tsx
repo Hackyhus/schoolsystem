@@ -35,6 +35,10 @@ import {
   Users,
   UsersRound,
   Grid,
+  Landmark,
+  Wallet,
+  Briefcase,
+  TrendingUp,
 } from 'lucide-react';
 import Image from 'next/image';
 
@@ -77,7 +81,11 @@ const iconMap: { [key: string]: React.ElementType } = {
   'file-question': FileQuestion,
   'book-copy': BookCopy,
   'ticket': Ticket,
-  'grid': Grid
+  'grid': Grid,
+  'landmark': Landmark,
+  'wallet': Wallet,
+  'briefcase': Briefcase,
+  'trending-up': TrendingUp,
 };
 
 
@@ -92,25 +100,24 @@ const navConfig = {
       { "icon": "activity", "label": "Logs & Security", "path": "/dashboard/logs" }
     ],
   },
-  Principal: {
+  SLT: {
     sidebar_extra: [
-      { "icon": "book", "label": "Lesson Plans", "path": "/dashboard/lesson-notes" },
-      { "icon": "file-question", "label": "Exam Questions", "path": "/dashboard/exam-questions" },
-      { "icon": "file-text", "label": "Reports", "path": "/dashboard/reports" }
-    ],
-  },
-  HeadOfDepartment: { 
-    sidebar_extra: [
-      { "icon": "book-copy", "label": "Lesson Plans", "path": "/dashboard/lesson-notes" },
-      { "icon": "users", "label": "Department Staff", "path": "/dashboard/users" },
-      { "icon": "file-text", "label": "Department Reports", "path": "/dashboard/reports" }
-    ],
-  },
-  Director: {
-    sidebar_extra: [
-      { "icon": "bar-chart", "label": "Analytics", "path": "/dashboard/reports" },
+      { "icon": "trending-up", "label": "Analytics", "path": "/dashboard/reports" },
       { "icon": "users", "label": "Staff Overview", "path": "/dashboard/users" },
-      { "icon": "dollar-sign", "label": "Financials", "path": "/dashboard/system/fees" }
+      { "icon": "users-round", "label": "Student Overview", "path": "/dashboard/students" },
+      { "icon": "book", "label": "Lesson Approvals", "path": "/dashboard/lesson-notes" },
+      { "icon": "dollar-sign", "label": "Financials", "path": "/dashboard/accountant/reports" }, // Points to accountant reports
+    ],
+  },
+  Accountant: {
+    sidebar_extra: [
+      { "icon": "dollar-sign", "label": "Fee Structures", "path": "/dashboard/accountant/fees" },
+      { "icon": "file-invoice", "label": "Invoices", "path": "/dashboard/accountant/invoices" },
+      { "icon": "credit-card", "label": "Payments", "path": "/dashboard/accountant/payments" },
+      { "icon": "wallet", "label": "Expenses", "path": "/dashboard/accountant/expenses" },
+      { "icon": "briefcase", "label": "Payroll", "path": "/dashboard/accountant/payroll" },
+      { "icon": "landmark", "label": "Reconciliation", "path": "/dashboard/accountant/reconciliation" },
+      { "icon": "bar-chart", "label": "Financial Reports", "path": "/dashboard/accountant/reports" },
     ],
   },
   ExamOfficer: {
@@ -129,13 +136,6 @@ const navConfig = {
       { "icon": "file-question", "label": "Exam Questions", "path": "/dashboard/exam-questions" },
       { "icon": "edit-3", "label": "Enter Scores", "path": "/dashboard/scores" },
       { "icon": "users-round", "label": "My Students", "path": "/dashboard/performance" }
-    ],
-  },
-  Accountant: {
-    sidebar_extra: [
-      { "icon": "dollar-sign", "label": "Fees", "path": "/dashboard/system/fees" },
-      { "icon": "credit-card", "label": "Payments", "path": "/dashboard/system/fees" },
-      { "icon": "file-invoice", "label": "Invoices", "path": "/dashboard/system/fees" }
     ],
   },
   Parent: {
@@ -214,7 +214,7 @@ export function DashboardSidebar() {
           <div className="bg-background/10 p-2 rounded-md">
             <Link href="/dashboard" className="flex items-center justify-center">
               <Image
-                src="/school-logo.png"
+                src="https://firebasestorage.googleapis.com/v0/b/haschat-31cbd.appspot.com/o/logo.png?alt=media&token=c34a36f1-e374-4448-9642-4f3680e922b9"
                 alt="Great Insight International Academy Logo"
                 width={200}
                 height={48}

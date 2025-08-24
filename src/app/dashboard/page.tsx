@@ -25,12 +25,20 @@ const DashboardSkeleton = () => (
   </div>
 );
 
-const NewAdminDashboard = dynamic(
+const AdminDashboard = dynamic(
   () => import('@/components/dashboard/admin/new-admin-dashboard').then(mod => mod.NewAdminDashboard),
   { loading: () => <DashboardSkeleton /> }
 );
 const HodDashboard = dynamic(
   () => import('@/components/dashboard/hod/hod-dashboard').then(mod => mod.HodDashboard),
+  { loading: () => <DashboardSkeleton /> }
+);
+const SltDashboard = dynamic(
+  () => import('@/app/dashboard/slt/page').then(mod => mod.default),
+  { loading: () => <DashboardSkeleton /> }
+);
+const AccountantDashboard = dynamic(
+  () => import('@/app/dashboard/accountant/page').then(mod => mod.default),
   { loading: () => <DashboardSkeleton /> }
 );
 const TeacherDashboard = dynamic(
@@ -55,16 +63,15 @@ export default function DashboardPage() {
 
   switch (role) {
     case 'Admin':
-    case 'Principal':
-    case 'Director':
-      return <NewAdminDashboard />;
+      return <AdminDashboard />;
+    case 'SLT':
+      return <SltDashboard />;
     case 'HeadOfDepartment':
       return <HodDashboard />;
+    case 'Accountant':
+      return <AccountantDashboard />;
     case 'ExamOfficer':
         return <ExamOfficerDashboard />;
-    case 'Accountant':
-      // Using HOD dashboard as a placeholder for now
-      return <HodDashboard />;
     case 'Teacher':
       return <TeacherDashboard />;
     case 'Parent':

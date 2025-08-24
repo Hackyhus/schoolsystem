@@ -45,12 +45,9 @@ import { Combobox } from '@/components/ui/combobox';
 
 const availableRoles = [
   'Teacher',
-  'HeadOfDepartment',
-  'Principal',
-  'Director',
+  'SLT',
   'ExamOfficer',
   'Accountant',
-  'Parent',
   'Admin',
 ];
 
@@ -76,6 +73,7 @@ const roleCodes: { [key: string]: string } = {
   HeadOfDepartment: 'HOD',
   Principal: 'PRN',
   Director: 'DIR',
+  SLT: 'SLT',
   ExamOfficer: 'EXO',
   Accountant: 'ACC',
   Admin: 'ADM',
@@ -87,7 +85,7 @@ const formSchema = z.object({
   lastName: z.string().min(1, 'Last name is required.'),
   email: z.string().email('Please enter a valid email.'),
   phone: z.string().min(1, 'Phone number is required.'),
-  role: z.enum(['Teacher', 'HeadOfDepartment', 'Principal', 'Director', 'ExamOfficer', 'Accountant', 'Parent', 'Admin']),
+  role: z.enum(['Teacher', 'SLT', 'ExamOfficer', 'Accountant', 'Admin']),
   stateOfOrigin: z.string().min(1, 'State of Origin is required.'),
   department: z.string().min(1, 'Department is required.'),
   employmentDate: z.date({ required_error: 'Employment date is required.' }),
@@ -256,13 +254,13 @@ export function AddUserForm({ onUserAdded }: { onUserAdded: () => void }) {
                 <FormItem className="flex flex-col"> 
                     <FormLabel>Date of Birth</FormLabel> 
                     <Popover> 
-                        <PopoverTrigger asChild> 
-                            <FormControl> 
-                                <Button variant={'outline'} className={cn('pl-3 text-left font-normal', !field.value && 'text-muted-foreground' )}> 
-                                    {field.value ? ( format(field.value, 'PPP') ) : ( <span>Pick a date</span> )} 
-                                    <CalendarIcon className="ml-auto h-4 w-4 opacity-50" /> 
-                                </Button> 
-                            </FormControl> 
+                        <PopoverTrigger asChild>
+                           <FormControl>
+                            <Button variant={'outline'} className={cn('pl-3 text-left font-normal', !field.value && 'text-muted-foreground' )}> 
+                                {field.value ? ( format(field.value, 'PPP') ) : ( <span>Pick a date</span> )} 
+                                <CalendarIcon className="ml-auto h-4 w-4 opacity-50" /> 
+                            </Button>
+                           </FormControl>
                         </PopoverTrigger> 
                         <PopoverContent className="w-auto p-0" align="start"> 
                             <Calendar mode="single" selected={field.value} onSelect={field.onChange} disabled={(date) => date > new Date() || date < new Date('1900-01-01')} initialFocus /> 
@@ -303,13 +301,13 @@ export function AddUserForm({ onUserAdded }: { onUserAdded: () => void }) {
                 <FormItem className="flex flex-col"> 
                     <FormLabel>Employment Date</FormLabel> 
                     <Popover> 
-                        <PopoverTrigger asChild> 
-                            <FormControl> 
-                                <Button variant={'outline'} className={cn('pl-3 text-left font-normal', !field.value && 'text-muted-foreground' )}> 
-                                    {field.value ? ( format(field.value, 'PPP') ) : ( <span>Pick a date</span> )} 
-                                    <CalendarIcon className="ml-auto h-4 w-4 opacity-50" /> 
-                                </Button> 
-                            </FormControl> 
+                        <PopoverTrigger asChild>
+                           <FormControl>
+                            <Button variant={'outline'} className={cn('pl-3 text-left font-normal', !field.value && 'text-muted-foreground' )}> 
+                                {field.value ? ( format(field.value, 'PPP') ) : ( <span>Pick a date</span> )} 
+                                <CalendarIcon className="ml-auto h-4 w-4 opacity-50" /> 
+                            </Button>
+                           </FormControl>
                         </PopoverTrigger> 
                         <PopoverContent className="w-auto p-0" align="start"> 
                             <Calendar mode="single" selected={field.value} onSelect={field.onChange} disabled={(date) => date > new Date()} initialFocus /> 
