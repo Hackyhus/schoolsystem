@@ -10,6 +10,7 @@ import {
   TrendingUp,
   BookCheck,
   FileWarning,
+  PieChart as PieChartIcon,
 } from 'lucide-react';
 import {
   Card,
@@ -29,9 +30,9 @@ import {
 import { Badge } from '@/components/ui/badge';
 import Link from 'next/link';
 import { useEffect, useState, useCallback } from 'react';
-import { collection, getDocs, query, where, orderBy, limit } from 'firebase/firestore';
+import { collection, getDocs, query, where, orderBy, limit, doc } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
-import type { MockUser, MockLessonNote } from '@/lib/schema';
+import type { MockUser, MockLessonNote, Student } from '@/lib/schema';
 import { useToast } from '@/hooks/use-toast';
 import { Calendar } from '@/components/ui/calendar';
 import {
@@ -44,6 +45,8 @@ import {
 import {
   Area,
   AreaChart,
+  Bar,
+  BarChart,
   CartesianGrid,
   ResponsiveContainer,
   XAxis,
@@ -66,6 +69,17 @@ type MonthlySubmissionsData = {
   submissions: number;
 };
 
+type UserRoleData = {
+  name: string;
+  value: number;
+  fill: string;
+}
+
+type EnrollmentData = {
+  name: string;
+  total: number;
+}
+
 export function NewAdminDashboard() {
   const { toast } = useToast();
   const [stats, setStats] = useState({
@@ -80,6 +94,8 @@ export function NewAdminDashboard() {
   const [submissionStatusData, setSubmissionStatusData] = useState<
     SubmissionStatusData[]
   >([]);
+    const [userRoleData, setUserRoleData] = useState<UserRoleData[]>([]);
+  const [enrollmentData, setEnrollmentData] = useState<EnrollmentData[]>([]);
   const [monthlySubmissions, setMonthlySubmissions] = useState<
     MonthlySubmissionsData[]
   >([]);
@@ -87,13 +103,46 @@ export function NewAdminDashboard() {
   const fetchData = useCallback(async () => {
     setIsLoading(true);
     try {
-      // User counts
+      // User counts and roles
       const usersQuery = query(collection(db, 'users'), orderBy('createdAt', 'desc'));
       const usersSnapshot = await getDocs(usersQuery);
       const allUsers = usersSnapshot.docs.map(doc => doc.data() as MockUser);
       
       const students = allUsers.filter(u => u.role === 'Student');
       const staffList = allUsers.filter(u => u.role !== 'Student' && u.role !== 'Parent');
+
+      const rolesCount: Record<string, number> = {};
+      allUsers.forEach(user => {
+        rolesCount[user.role] = (rolesCount[user.role] || 0) + 1;
+      });
+      
+      const roleColors = {
+        Admin: 'hsl(var(--chart-1))',
+        Teacher: 'hsl(var(--chart-2))',
+        HeadOfDepartment: 'hsl(var(--chart-3))',
+        Parent: 'hsl(var(--chart-4))',
+        ExamOfficer: 'hsl(var(--chart-5))',
+        Student: 'hsl(var(--muted))',
+      };
+
+      setUserRoleData(Object.entries(rolesCount).map(([name, value], i) => ({
+        name,
+        value,
+        fill: (roleColors as any)[name] || `hsl(var(--chart-${(i % 5) + 1}))`,
+      })));
+
+
+      // Student enrollment
+      const studentsCollection = collection(db, 'students');
+      const studentsDocs = await getDocs(studentsCollection);
+      const studentData = studentsDocs.docs.map(d => d.data() as Student);
+      
+      const enrollmentCounts: Record<string, number> = {};
+       studentData.forEach(student => {
+        enrollmentCounts[student.classLevel] = (enrollmentCounts[student.classLevel] || 0) + 1;
+      });
+       setEnrollmentData(Object.entries(enrollmentCounts).map(([name, total]) => ({ name, total })));
+
 
       // Lesson note stats and charts
       const lessonNotesQuery = query(collection(db, 'lessonNotes'));
@@ -111,7 +160,7 @@ export function NewAdminDashboard() {
       ).length;
 
       setStats({
-        students: students.length,
+        students: studentData.length,
         staff: staffList.length,
         pending,
         approved,
@@ -142,18 +191,7 @@ export function NewAdminDashboard() {
       // Prepare data for monthly submissions area chart
       const monthCounts: Record<string, number> = {};
       const monthNames = [
-        'Jan',
-        'Feb',
-        'Mar',
-        'Apr',
-        'May',
-        'Jun',
-        'Jul',
-        'Aug',
-        'Sep',
-        'Oct',
-        'Nov',
-        'Dec',
+        'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec',
       ];
       monthNames.forEach((m) => (monthCounts[m] = 0));
 
@@ -188,23 +226,19 @@ export function NewAdminDashboard() {
   }, [fetchData]);
 
   const chartConfig = {
-    submissions: {
-      label: 'Submissions',
-      color: 'hsl(var(--primary))',
-    },
-    approved: {
-      label: 'Approved',
-      color: 'hsl(var(--chart-2))',
-    },
-    pending: {
-      label: 'Pending',
-      color: 'hsl(var(--chart-4))',
-    },
-    rejected: {
-      label: 'Needs Revision',
-      color: 'hsl(var(--destructive))',
-    },
+    submissions: { label: 'Submissions', color: 'hsl(var(--primary))' },
+    approved: { label: 'Approved', color: 'hsl(var(--chart-2))' },
+    pending: { label: 'Pending', color: 'hsl(var(--chart-4))' },
+    rejected: { label: 'Needs Revision', color: 'hsl(var(--destructive))' },
+    students: { label: 'Students', color: 'hsl(var(--chart-1))'},
+    users: { label: 'Users' }
   };
+  
+   const userRoleChartConfig = userRoleData.reduce((acc, { name, fill }) => {
+    (acc as any)[name] = { label: name, color: fill };
+    return acc;
+  }, { users: { label: 'Users' } });
+
 
   return (
     <div className="flex flex-col gap-8">
@@ -270,6 +304,25 @@ export function NewAdminDashboard() {
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
         {/* Left column */}
         <div className="lg:col-span-2 space-y-6">
+           <Card>
+            <CardHeader>
+                <CardTitle>Student Enrollment by Class</CardTitle>
+                <CardDescription>A breakdown of student population in each class.</CardDescription>
+            </CardHeader>
+            <CardContent>
+               {isLoading ? <Skeleton className="h-[250px] w-full" /> : (
+                <ChartContainer config={chartConfig} className="h-[250px] w-full">
+                    <BarChart data={enrollmentData} margin={{ top: 20, right: 20, bottom: 5, left: 0 }}>
+                        <CartesianGrid vertical={false} />
+                        <XAxis dataKey="name" tickLine={false} axisLine={false} tickMargin={8} />
+                        <YAxis />
+                        <ChartTooltip content={<ChartTooltipContent />} />
+                        <Bar dataKey="total" fill="var(--color-students)" radius={4} />
+                    </BarChart>
+                </ChartContainer>
+               )}
+            </CardContent>
+           </Card>
           <Card>
             <CardHeader>
               <CardTitle>Lesson Note Submissions by Month</CardTitle>
@@ -392,6 +445,45 @@ export function NewAdminDashboard() {
 
         {/* Right column */}
         <div className="lg:col-span-1 space-y-6">
+           <Card>
+            <CardHeader>
+              <CardTitle>User Roles</CardTitle>
+              <CardDescription>
+                Distribution of user roles
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              {isLoading ? (
+                <Skeleton className="h-[250px] w-full" />
+              ) : (
+                <ChartContainer
+                  config={userRoleChartConfig}
+                  className="mx-auto aspect-square h-[250px]"
+                >
+                  <PieChart>
+                    <ChartTooltip
+                      cursor={false}
+                      content={<ChartTooltipContent hideLabel />}
+                    />
+                    <Pie
+                      data={userRoleData}
+                      dataKey="value"
+                      nameKey="name"
+                      innerRadius={60}
+                      strokeWidth={5}
+                    >
+                       {userRoleData.map((entry) => (
+                        <Cell key={`cell-${entry.name}`} fill={entry.fill} />
+                      ))}
+                    </Pie>
+                    <ChartLegend
+                      content={<ChartLegendContent nameKey="name" />}
+                    />
+                  </PieChart>
+                </ChartContainer>
+              )}
+            </CardContent>
+          </Card>
           <Card>
             <CardHeader>
               <CardTitle>Submission Status</CardTitle>
@@ -429,19 +521,6 @@ export function NewAdminDashboard() {
                   </PieChart>
                 </ChartContainer>
               )}
-            </CardContent>
-          </Card>
-          <Card>
-            <CardHeader>
-              <CardTitle>School Calendar</CardTitle>
-              <CardDescription>Key dates and events for the term.</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <Calendar
-                mode="single"
-                selected={new Date()}
-                className="rounded-md border"
-              />
             </CardContent>
           </Card>
         </div>

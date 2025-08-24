@@ -32,6 +32,22 @@ import type { MockLessonNote, MockUser } from '@/lib/schema';
 import { useToast } from '@/hooks/use-toast';
 import { useRole } from '@/context/role-context';
 import { Skeleton } from '@/components/ui/skeleton';
+import {
+  ChartContainer,
+  ChartTooltip,
+  ChartTooltipContent,
+  ChartLegend,
+  ChartLegendContent,
+} from '@/components/ui/chart';
+import { Pie, PieChart, Cell } from 'recharts';
+
+
+type SubmissionStatusData = {
+  name: string;
+  value: number;
+  fill: string;
+};
+
 
 export function HodDashboard() {
   const { user } = useRole();
@@ -44,6 +60,7 @@ export function HodDashboard() {
     rejected: 0,
     staffCount: 0,
   });
+  const [submissionStatusData, setSubmissionStatusData] = useState<SubmissionStatusData[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
   const fetchData = useCallback(async () => {
@@ -60,6 +77,13 @@ export function HodDashboard() {
       const approved = notesList.filter(n => n.status === 'Approved').length;
       const pending = notesList.filter(n => n.status.includes('Pending')).length;
       const rejected = notesList.filter(n => n.status.includes('Rejected') || n.status.includes('Revision')).length;
+      
+      setSubmissionStatusData([
+        { name: 'Approved', value: approved, fill: 'hsl(var(--chart-2))' },
+        { name: 'Pending', value: pending, fill: 'hsl(var(--chart-4))' },
+        { name: 'Rejected', value: rejected, fill: 'hsl(var(--destructive))' },
+      ]);
+
 
       // In a real app, this should filter by the HOD's department
       const staffQuery = query(collection(db, 'users'), where('role', '==', 'Teacher'));
@@ -96,6 +120,12 @@ export function HodDashboard() {
     if (status.includes('Pending')) return 'secondary';
     if (status.includes('Rejected') || status.includes('Revision')) return 'destructive';
     return 'outline';
+  };
+  
+  const chartConfig = {
+    approved: { label: 'Approved', color: 'hsl(var(--chart-2))' },
+    pending: { label: 'Pending', color: 'hsl(var(--chart-4))' },
+    rejected: { label: 'Rejected', color: 'hsl(var(--destructive))' },
   };
 
   return (
@@ -203,37 +233,25 @@ export function HodDashboard() {
         </div>
         
         <div className="lg:col-span-1">
-            <Card>
+             <Card>
                 <CardHeader>
-                    <CardTitle>Department Staff</CardTitle>
-                    <CardDescription>Teachers in your department.</CardDescription>
+                    <CardTitle>Department Submission Status</CardTitle>
+                    <CardDescription>Overview of lesson note statuses in your department.</CardDescription>
                 </CardHeader>
                 <CardContent>
-                    <Table>
-                    <TableHeader>
-                        <TableRow>
-                        <TableHead>Name</TableHead>
-                        <TableHead className="hidden sm:table-cell">Email</TableHead>
-                        </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                        {isLoading ? Array.from({length: 3}).map((_, i) => (
-                           <TableRow key={i}>
-                                <TableCell><Skeleton className="h-5 w-24" /></TableCell>
-                                <TableCell className="hidden sm:table-cell"><Skeleton className="h-5 w-32" /></TableCell>
-                           </TableRow>
-                        )) : staff.length > 0 ? staff.map((s) => (
-                            <TableRow key={s.id}>
-                            <TableCell className="font-medium">{s.name}</TableCell>
-                            <TableCell className="hidden sm:table-cell">{s.email}</TableCell>
-                            </TableRow>
-                        )) : (
-                            <TableRow>
-                            <TableCell colSpan={2} className="h-24 text-center">No staff found.</TableCell>
-                            </TableRow>
-                        )}
-                    </TableBody>
-                    </Table>
+                    {isLoading ? <Skeleton className="h-[250px] w-full" /> : (
+                        <ChartContainer config={chartConfig} className="mx-auto aspect-square h-[250px]">
+                            <PieChart>
+                                <ChartTooltip cursor={false} content={<ChartTooltipContent hideLabel />} />
+                                <Pie data={submissionStatusData} dataKey="value" nameKey="name" innerRadius={60} strokeWidth={5}>
+                                    {submissionStatusData.map((entry) => (
+                                        <Cell key={`cell-${entry.name}`} fill={entry.fill} />
+                                    ))}
+                                </Pie>
+                                <ChartLegend content={<ChartLegendContent nameKey="name" />} />
+                            </PieChart>
+                        </ChartContainer>
+                    )}
                 </CardContent>
             </Card>
         </div>

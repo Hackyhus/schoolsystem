@@ -31,6 +31,9 @@ import { db } from '@/lib/firebase';
 import { useToast } from '@/hooks/use-toast';
 import { useRole } from '@/context/role-context';
 import { Skeleton } from '@/components/ui/skeleton';
+import { Bar, BarChart, CartesianGrid, XAxis, YAxis, ResponsiveContainer } from 'recharts';
+import { ChartContainer, ChartTooltip, ChartTooltipContent } from '@/components/ui/chart';
+
 
 type ExamQuestion = {
     id: string;
@@ -40,10 +43,17 @@ type ExamQuestion = {
     teacherName: string;
 }
 
+type QuestionStatusData = {
+    name: string;
+    value: number;
+    fill: string;
+}
+
 export function ExamOfficerDashboard() {
   const { user } = useRole();
   const { toast } = useToast();
   const [questions, setQuestions] = useState<ExamQuestion[]>([]);
+  const [questionStatusData, setQuestionStatusData] = useState<QuestionStatusData[]>([]);
   const [stats, setStats] = useState({
     subjects: 0,
     teachers: 0,
@@ -55,11 +65,23 @@ export function ExamOfficerDashboard() {
     if (!user) return;
     setIsLoading(true);
     try {
-      // Fetch pending exam questions
-      const questionsQuery = query(collection(db, 'examQuestions'), where('status', '==', 'Pending Review'), orderBy('submittedOn', 'desc'));
-      const questionsSnapshot = await getDocs(questionsQuery);
-      const questionsList = questionsSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as ExamQuestion));
-      setQuestions(questionsList.slice(0, 5)); // Show recent 5
+      // Fetch exam questions for stats
+      const allQuestionsQuery = query(collection(db, 'examQuestions'), orderBy('submittedOn', 'desc'));
+      const allQuestionsSnapshot = await getDocs(allQuestionsQuery);
+      const allQuestionsList = allQuestionsSnapshot.docs.map(doc => doc.data() as ExamQuestion);
+      
+      const pendingQuestions = allQuestionsList.filter(q => q.status.includes('Pending'));
+      const approvedQuestions = allQuestionsList.filter(q => q.status.includes('Approved'));
+      const rejectedQuestions = allQuestionsList.filter(q => q.status.includes('Rejected'));
+      
+      setQuestions(pendingQuestions.slice(0, 5)); // Show recent 5 pending
+
+      setQuestionStatusData([
+          { name: 'Pending', value: pendingQuestions.length, fill: 'hsl(var(--chart-4))' },
+          { name: 'Approved', value: approvedQuestions.length, fill: 'hsl(var(--chart-2))' },
+          { name: 'Rejected', value: rejectedQuestions.length, fill: 'hsl(var(--destructive))' },
+      ]);
+
 
       // Fetch teacher and subject counts
       const teachersQuery = query(collection(db, 'users'), where('role', '==', 'Teacher'));
@@ -73,7 +95,7 @@ export function ExamOfficerDashboard() {
       setStats({
         subjects: subjectsSnapshot.size,
         teachers: teachersSnapshot.size,
-        pending: questionsList.length,
+        pending: pendingQuestions.length,
       });
 
     } catch (error) {
@@ -99,6 +121,13 @@ export function ExamOfficerDashboard() {
     if (status.includes('Rejected')) return 'destructive';
     return 'outline';
   };
+  
+  const chartConfig = {
+    value: { label: 'Count' },
+    approved: { label: 'Approved', color: 'hsl(var(--chart-2))' },
+    pending: { label: 'Pending', color: 'hsl(var(--chart-4))' },
+    rejected: { label: 'Rejected', color: 'hsl(var(--destructive))' },
+  }
 
   return (
     <div className="flex flex-col gap-6">
@@ -141,59 +170,86 @@ export function ExamOfficerDashboard() {
           </CardContent>
         </Card>
       </div>
+      
+       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            <div className="lg:col-span-2">
+                <Card>
+                    <CardHeader>
+                        <CardTitle>Exam Question Review Queue</CardTitle>
+                        <CardDescription>Review and approve exam questions from teachers.</CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                        <Table>
+                        <TableHeader>
+                            <TableRow>
+                            <TableHead>Teacher</TableHead>
+                            <TableHead className="hidden sm:table-cell">Subject & Class</TableHead>
+                            <TableHead>Status</TableHead>
+                            <TableHead className="text-right">Action</TableHead>
+                            </TableRow>
+                        </TableHeader>
+                        <TableBody>
+                            {isLoading ? (
+                                Array.from({length: 3}).map((_, i) => (
+                                    <TableRow key={i}>
+                                        <TableCell><Skeleton className="h-5 w-24" /></TableCell>
+                                        <TableCell className="hidden sm:table-cell"><Skeleton className="h-5 w-32" /></TableCell>
+                                        <TableCell><Skeleton className="h-6 w-28" /></TableCell>
+                                        <TableCell className="text-right"><Skeleton className="h-8 w-20" /></TableCell>
+                                    </TableRow>
+                                ))
+                            ): questions.length > 0 ? questions.map((q) => (
+                            <TableRow key={q.id}>
+                                <TableCell>
+                                    <div className="font-medium">{q.teacherName}</div>
+                                </TableCell>
+                                <TableCell className="hidden sm:table-cell">
+                                    <div>{q.subject}</div>
+                                    <div className="text-sm text-muted-foreground">{q.class}</div>
+                                </TableCell>
+                                <TableCell>
+                                <Badge variant={statusVariant(q.status)}>{q.status}</Badge>
+                                </TableCell>
+                                <TableCell className="text-right">
+                                <Button asChild variant="outline" size="sm">
+                                    <Link href="/dashboard/exam-questions">Review All</Link>
+                                </Button>
+                                </TableCell>
+                            </TableRow>
+                            )) : (
+                                <TableRow>
+                                <TableCell colSpan={4} className="h-24 text-center">No questions in the queue.</TableCell>
+                                </TableRow>
+                            )}
+                        </TableBody>
+                        </Table>
+                    </CardContent>
+                </Card>
+            </div>
+            <div className="lg:col-span-1">
+                 <Card>
+                    <CardHeader>
+                        <CardTitle>Question Submission Status</CardTitle>
+                        <CardDescription>A summary of all submitted exam questions.</CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                         {isLoading ? <Skeleton className="h-[250px] w-full" /> : (
+                             <ChartContainer config={chartConfig} className="h-[250px] w-full">
+                                <ResponsiveContainer>
+                                    <BarChart data={questionStatusData} layout="vertical" margin={{ left: 10, right: 10 }}>
+                                         <XAxis type="number" hide />
+                                        <YAxis dataKey="name" type="category" tickLine={false} axisLine={false} tickMargin={10} width={60} />
+                                        <ChartTooltip cursor={false} content={<ChartTooltipContent hideLabel />} />
+                                        <Bar dataKey="value" radius={5} />
+                                    </BarChart>
+                                </ResponsiveContainer>
+                             </ChartContainer>
+                         )}
+                    </CardContent>
+                </Card>
+            </div>
+       </div>
 
-      <Card>
-          <CardHeader>
-              <CardTitle>Exam Question Review Queue</CardTitle>
-              <CardDescription>Review and approve exam questions from teachers.</CardDescription>
-          </CardHeader>
-          <CardContent>
-              <Table>
-              <TableHeader>
-                  <TableRow>
-                  <TableHead>Teacher</TableHead>
-                  <TableHead className="hidden sm:table-cell">Subject & Class</TableHead>
-                  <TableHead>Status</TableHead>
-                  <TableHead className="text-right">Action</TableHead>
-                  </TableRow>
-              </TableHeader>
-              <TableBody>
-                  {isLoading ? (
-                      Array.from({length: 3}).map((_, i) => (
-                         <TableRow key={i}>
-                              <TableCell><Skeleton className="h-5 w-24" /></TableCell>
-                              <TableCell className="hidden sm:table-cell"><Skeleton className="h-5 w-32" /></TableCell>
-                              <TableCell><Skeleton className="h-6 w-28" /></TableCell>
-                              <TableCell className="text-right"><Skeleton className="h-8 w-20" /></TableCell>
-                         </TableRow>
-                      ))
-                  ): questions.length > 0 ? questions.map((q) => (
-                  <TableRow key={q.id}>
-                      <TableCell>
-                         <div className="font-medium">{q.teacherName}</div>
-                      </TableCell>
-                      <TableCell className="hidden sm:table-cell">
-                        <div>{q.subject}</div>
-                        <div className="text-sm text-muted-foreground">{q.class}</div>
-                      </TableCell>
-                      <TableCell>
-                      <Badge variant={statusVariant(q.status)}>{q.status}</Badge>
-                      </TableCell>
-                      <TableCell className="text-right">
-                      <Button asChild variant="outline" size="sm">
-                         <Link href="/dashboard/exam-questions">Review All</Link>
-                      </Button>
-                      </TableCell>
-                  </TableRow>
-                  )) : (
-                      <TableRow>
-                      <TableCell colSpan={4} className="h-24 text-center">No questions in the queue.</TableCell>
-                      </TableRow>
-                  )}
-              </TableBody>
-              </Table>
-          </CardContent>
-      </Card>
     </div>
   );
 }
