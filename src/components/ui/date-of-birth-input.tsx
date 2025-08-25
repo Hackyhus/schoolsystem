@@ -33,44 +33,57 @@ const months = [
 ];
 
 const currentYear = new Date().getFullYear();
-const years = Array.from({ length: 100 }, (_, i) => currentYear - i - 18); // For users 18+
+const years = Array.from({ length: currentYear - 1950 + 1 }, (_, i) => currentYear - i);
+
 
 export function DateOfBirthInput({ value, onChange, className }: DateOfBirthInputProps) {
-  const [day, setDay] = React.useState<string | undefined>(
-    value ? String(value.getDate()) : undefined
-  );
-  const [month, setMonth] = React.useState<string | undefined>(
-    value ? String(value.getMonth()) : undefined
-  );
-  const [year, setYear] = React.useState<string | undefined>(
-    value ? String(value.getFullYear()) : undefined
-  );
+    const [day, setDay] = React.useState<string | undefined>(
+        value ? String(value.getDate()) : undefined
+    );
+    const [month, setMonth] = React.useState<string | undefined>(
+        value ? String(value.getMonth()) : undefined
+    );
+    const [year, setYear] = React.useState<string | undefined>(
+        value ? String(value.getFullYear()) : undefined
+    );
 
-  // This effect will run only when one of the date parts changes.
-  // It constructs the date and calls the parent's onChange.
-  React.useEffect(() => {
-    // Only attempt to create a date if all parts are selected
-    if (day && month && year) {
-      const newDate = new Date(Number(year), Number(month), Number(day));
-      // Ensure the created date is valid (e.g., handles Feb 30)
-      if (
-        newDate.getFullYear() === Number(year) &&
-        newDate.getMonth() === Number(month) &&
-        newDate.getDate() === Number(day)
-      ) {
-        // Only call onChange if the new date is different from the prop value
-        if (value?.getTime() !== newDate.getTime()) {
-          onChange(newDate);
+    // This effect will run only when one of the date parts changes.
+    // It constructs the date and calls the parent's onChange.
+    React.useEffect(() => {
+        // Only attempt to create a date if all parts are selected
+        if (day && month && year) {
+            const newDate = new Date(Number(year), Number(month), Number(day));
+            // Ensure the created date is valid (e.g., handles Feb 30)
+            if (
+                newDate.getFullYear() === Number(year) &&
+                newDate.getMonth() === Number(month) &&
+                newDate.getDate() === Number(day)
+            ) {
+                 onChange(newDate);
+            } else {
+                // If the date is invalid (e.g. Feb 31), clear the parent state
+                onChange(undefined);
+            }
         }
-      } else {
-        // If the date is invalid (e.g. Feb 31), clear the parent state
-        if (value) onChange(undefined);
-      }
-    } else {
-        // If any part is missing, clear the parent state
-        if (value) onChange(undefined);
-    }
-  }, [day, month, year, onChange, value]);
+    }, [day, month, year, onChange]);
+
+    React.useEffect(() => {
+        // This effect syncs the component's internal state with the external value prop.
+        // It's important for when the form is reset or programmatically changed.
+        if (value) {
+            const newDay = String(value.getDate());
+            const newMonth = String(value.getMonth());
+            const newYear = String(value.getFullYear());
+            if (newDay !== day) setDay(newDay);
+            if (newMonth !== month) setMonth(newMonth);
+            if (newYear !== year) setYear(newYear);
+        } else {
+            // If the external value is cleared, clear internal state.
+            setDay(undefined);
+            setMonth(undefined);
+            setYear(undefined);
+        }
+    }, [value, day, month, year]);
 
   const daysInMonth = (m: number, y: number) => {
     return new Date(y, m + 1, 0).getDate();
