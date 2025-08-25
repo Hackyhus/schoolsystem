@@ -146,7 +146,7 @@ export function PersonalInfoForm({
                 <FormItem>
                 <FormLabel>Full Name</FormLabel>
                 <FormControl>
-                    <Input placeholder="e.g. John Doe" {...field} />
+                    <Input placeholder="e.g. Amina Sani" {...field} />
                 </FormControl>
                 <FormMessage />
                 </FormItem>
@@ -172,7 +172,7 @@ export function PersonalInfoForm({
                 <FormItem>
                 <FormLabel>Next of Kin</FormLabel>
                 <FormControl>
-                    <Input placeholder="e.g. Jane Doe" {...field} />
+                    <Input placeholder="e.g. Ibrahim Sani" {...field} />
                 </FormControl>
                 <FormMessage />
                 </FormItem>

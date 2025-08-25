@@ -42,7 +42,6 @@ import { format } from 'date-fns';
 import { createStaff } from '@/actions/staff-actions';
 import { NIGERIAN_STATES } from '@/lib/nigerian-states';
 import { Combobox } from '@/components/ui/combobox';
-import { Calendar } from '@/components/ui/calendar';
 import { DateOfBirthInput } from '@/components/ui/date-of-birth-input';
 
 
@@ -50,7 +49,7 @@ const formSchema = z.object({
   // Personal Info
   firstName: z.string().min(1, 'First name is required.'),
   lastName: z.string().min(1, 'Last name is required.'),
-  gender: z.enum(['Male', 'Female', 'Other'], { required_error: 'Gender is required.' }),
+  gender: z.enum(['Male', 'Female'], { required_error: 'Gender is required.' }),
   dateOfBirth: z.date({ required_error: 'Date of birth is required.' }),
   stateOfOrigin: z.string().min(1, 'State of origin is required.'),
   profilePicture: z.instanceof(File).optional().refine(file => !file || file.size < 2 * 1024 * 1024, 'Max size is 2MB.'),
@@ -75,7 +74,7 @@ export function AddUserForm({ onUserAdded }: { onUserAdded: () => void }) {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const { departments, isLoading: isAcademicDataLoading } = useAcademicData();
   
-  const departmentOptions = departments?.map(d => ({ value: d.name, label: d.name })) || [];
+  const departmentOptions = departments.map(d => ({ value: d.name, label: d.name }));
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -144,11 +143,11 @@ export function AddUserForm({ onUserAdded }: { onUserAdded: () => void }) {
                     <CardHeader><CardTitle>Personal Information</CardTitle></CardHeader>
                     <CardContent className="space-y-4">
                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                            <FormField control={form.control} name="firstName" render={({ field }) => ( <FormItem><FormLabel>First Name</FormLabel><FormControl><Input placeholder="John" {...field} /></FormControl><FormMessage /></FormItem> )}/>
-                            <FormField control={form.control} name="lastName" render={({ field }) => ( <FormItem><FormLabel>Last Name</FormLabel><FormControl><Input placeholder="Doe" {...field} /></FormControl><FormMessage /></FormItem> )}/>
+                            <FormField control={form.control} name="firstName" render={({ field }) => ( <FormItem><FormLabel>First Name</FormLabel><FormControl><Input placeholder="Yusuf" {...field} /></FormControl><FormMessage /></FormItem> )}/>
+                            <FormField control={form.control} name="lastName" render={({ field }) => ( <FormItem><FormLabel>Last Name</FormLabel><FormControl><Input placeholder="Abdullah" {...field} /></FormControl><FormMessage /></FormItem> )}/>
                         </div>
                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                             <FormField control={form.control} name="gender" render={({ field }) => ( <FormItem><FormLabel>Gender</FormLabel><Select onValueChange={field.onChange} defaultValue={field.value}><FormControl><SelectTrigger><SelectValue placeholder="Select gender" /></SelectTrigger></FormControl><SelectContent><SelectItem value="Male">Male</SelectItem><SelectItem value="Female">Female</SelectItem><SelectItem value="Other">Other</SelectItem></SelectContent></Select><FormMessage /></FormItem> )}/>
+                             <FormField control={form.control} name="gender" render={({ field }) => ( <FormItem><FormLabel>Gender</FormLabel><Select onValueChange={field.onChange} defaultValue={field.value}><FormControl><SelectTrigger><SelectValue placeholder="Select gender" /></SelectTrigger></FormControl><SelectContent><SelectItem value="Male">Male</SelectItem><SelectItem value="Female">Female</SelectItem></SelectContent></Select><FormMessage /></FormItem> )}/>
                             <FormField
                                 control={form.control}
                                 name="dateOfBirth"
@@ -213,11 +212,10 @@ export function AddUserForm({ onUserAdded }: { onUserAdded: () => void }) {
                                         </FormControl>
                                     </PopoverTrigger>
                                     <PopoverContent className="w-auto p-0" align="start">
-                                        <Calendar
-                                        mode="single"
-                                        selected={field.value}
-                                        onSelect={field.onChange}
-                                        disabled={(date) => date > new Date()}
+                                        <DateOfBirthInput
+                                            value={field.value}
+                                            onChange={field.onChange}
+                                            disableFuture
                                         />
                                     </PopoverContent>
                                     </Popover>

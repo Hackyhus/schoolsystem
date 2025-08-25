@@ -175,7 +175,7 @@ export function BankDetailsForm({
               <FormItem>
                 <FormLabel>Account Name</FormLabel>
                 <FormControl>
-                  <Input placeholder="e.g. John Doe" {...field} />
+                  <Input placeholder="e.g. Amina Sani" {...field} />
                 </FormControl>
                 <FormMessage />
               </FormItem>

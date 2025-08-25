@@ -41,7 +41,6 @@ import {
 import { cn } from '@/lib/utils';
 import { format } from 'date-fns';
 import { createStudent } from '@/actions/student-actions';
-import { Calendar } from '@/components/ui/calendar';
 import { DateOfBirthInput } from '@/components/ui/date-of-birth-input';
 
 
@@ -50,7 +49,7 @@ const formSchema = z.object({
   firstName: z.string().min(1, 'First name is required.'),
   lastName: z.string().min(1, 'Last name is required.'),
   middleName: z.string().optional(),
-  gender: z.enum(['Male', 'Female', 'Other'], {
+  gender: z.enum(['Male', 'Female'], {
     required_error: 'Gender is required.',
   }),
   dateOfBirth: z.date({ required_error: 'Date of birth is required.' }),
@@ -153,12 +152,12 @@ export function AddStudentForm({ onStudentAdded }: { onStudentAdded: () => void 
                     <CardHeader><CardTitle>Student Information</CardTitle></CardHeader>
                     <CardContent className="space-y-4">
                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                            <FormField control={form.control} name="firstName" render={({ field }) => ( <FormItem><FormLabel>First Name</FormLabel><FormControl><Input placeholder="John" {...field} /></FormControl><FormMessage /></FormItem> )}/>
-                            <FormField control={form.control} name="lastName" render={({ field }) => ( <FormItem><FormLabel>Last Name</FormLabel><FormControl><Input placeholder="Doe" {...field} /></FormControl><FormMessage /></FormItem> )}/>
+                            <FormField control={form.control} name="firstName" render={({ field }) => ( <FormItem><FormLabel>First Name</FormLabel><FormControl><Input placeholder="Fatima" {...field} /></FormControl><FormMessage /></FormItem> )}/>
+                            <FormField control={form.control} name="lastName" render={({ field }) => ( <FormItem><FormLabel>Last Name</FormLabel><FormControl><Input placeholder="Aliyu" {...field} /></FormControl><FormMessage /></FormItem> )}/>
                         </div>
-                        <FormField control={form.control} name="middleName" render={({ field }) => ( <FormItem><FormLabel>Middle Name</FormLabel><FormControl><Input placeholder="Adebayo" {...field} /></FormControl><FormMessage /></FormItem> )}/>
+                        <FormField control={form.control} name="middleName" render={({ field }) => ( <FormItem><FormLabel>Middle Name</FormLabel><FormControl><Input placeholder="Bello" {...field} /></FormControl><FormMessage /></FormItem> )}/>
                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                            <FormField control={form.control} name="gender" render={({ field }) => ( <FormItem><FormLabel>Gender</FormLabel><Select onValueChange={field.onChange} defaultValue={field.value}><FormControl><SelectTrigger><SelectValue placeholder="Select gender" /></SelectTrigger></FormControl><SelectContent><SelectItem value="Male">Male</SelectItem><SelectItem value="Female">Female</SelectItem><SelectItem value="Other">Other</SelectItem></SelectContent></Select><FormMessage /></FormItem> )}/>
+                            <FormField control={form.control} name="gender" render={({ field }) => ( <FormItem><FormLabel>Gender</FormLabel><Select onValueChange={field.onChange} defaultValue={field.value}><FormControl><SelectTrigger><SelectValue placeholder="Select gender" /></SelectTrigger></FormControl><SelectContent><SelectItem value="Male">Male</SelectItem><SelectItem value="Female">Female</SelectItem></SelectContent></Select><FormMessage /></FormItem> )}/>
                              <FormField
                                 control={form.control}
                                 name="dateOfBirth"
@@ -210,11 +209,10 @@ export function AddStudentForm({ onStudentAdded }: { onStudentAdded: () => void 
                                         </FormControl>
                                     </PopoverTrigger>
                                     <PopoverContent className="w-auto p-0" align="start">
-                                        <Calendar
-                                        mode="single"
-                                        selected={field.value}
-                                        onSelect={field.onChange}
-                                        disabled={(date) => date > new Date()}
+                                        <DateOfBirthInput
+                                            value={field.value}
+                                            onChange={field.onChange}
+                                            disableFuture
                                         />
                                     </PopoverContent>
                                     </Popover>
@@ -232,7 +230,7 @@ export function AddStudentForm({ onStudentAdded }: { onStudentAdded: () => void 
                  <Card>
                     <CardHeader><CardTitle>Guardian & Contact</CardTitle></CardHeader>
                     <CardContent className="space-y-4">
-                         <FormField control={form.control} name="guardianName" render={({ field }) => ( <FormItem><FormLabel>Guardian's Full Name</FormLabel><FormControl><Input placeholder="Jane Doe" {...field} /></FormControl><FormMessage /></FormItem> )}/>
+                         <FormField control={form.control} name="guardianName" render={({ field }) => ( <FormItem><FormLabel>Guardian's Full Name</FormLabel><FormControl><Input placeholder="Aisha Ibrahim" {...field} /></FormControl><FormMessage /></FormItem> )}/>
                          <FormField control={form.control} name="guardianContact" render={({ field }) => ( <FormItem><FormLabel>Guardian's Phone</FormLabel><FormControl><Input placeholder="08012345678" {...field} /></FormControl><FormMessage /></FormItem> )}/>
                          <FormField control={form.control} name="guardianEmail" render={({ field }) => ( <FormItem><FormLabel>Guardian's Email</FormLabel><FormControl><Input placeholder="parent@example.com" {...field} /></FormControl><FormMessage /></FormItem> )}/>
                          <FormField control={form.control} name="address" render={({ field }) => ( <FormItem><FormLabel>Home Address</FormLabel><FormControl><Input placeholder="123, Main Street, Ikeja, Lagos" {...field} /></FormControl><FormMessage /></FormItem> )}/>
