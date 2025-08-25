@@ -36,27 +36,22 @@ import { Skeleton } from '@/components/ui/skeleton';
 const studentPerformance = {
   studentName: 'Adewale Adebayo',
   attendance: [
-    { month: 'January', percentage: 95 },
-    { month: 'February', percentage: 98 },
+    { month: 'January', percentage: 0 },
+    { month: 'February', percentage: 0 },
   ],
-  grades: [
-      { subject: 'Mathematics', score: 85, grade: 'A' },
-      { subject: 'English', score: 76, grade: 'B' },
-  ],
+  grades: [],
 };
-const announcements = [
-    { id: 1, title: 'Mid-term Break', content: 'School closes for mid-term break on Friday.'}
-];
+const announcements: { id: number; title: string; content: string;}[] = [];
 
 const performanceOverTime = [
-  { term: 'Term 1', average: 75 },
-  { term: 'Term 2', average: 82 },
-  { term: 'Term 3', average: 78 },
+  { term: 'Term 1', average: 0 },
+  { term: 'Term 2', average: 0 },
+  { term: 'Term 3', average: 0 },
 ];
 
 const feeHistoryData = [
-  { name: 'Term 1 Fees', value: 100, fill: 'hsl(var(--chart-2))' },
-  { name: 'Term 2 Fees', value: 100, fill: 'hsl(var(--chart-2))' },
+  { name: 'Term 1 Fees', value: 0, fill: 'hsl(var(--chart-2))' },
+  { name: 'Term 2 Fees', value: 0, fill: 'hsl(var(--chart-2))' },
   { name: 'Term 3 Fees', value: 0, fill: 'hsl(var(--destructive))' },
 ];
 
@@ -98,8 +93,8 @@ export function ParentDashboard() {
   }, [user]);
   
   // Using placeholder data until backend logic is complete
-  const { studentName, attendance, grades } = studentPerformance;
-  const overallAttendance = attendance.length > 0 ? attendance.reduce((acc, month) => acc + month.percentage, 0) / attendance.length : 100;
+  const { studentName, attendance, grades }: { studentName: string; attendance: {month: string, percentage: number}[]; grades: {subject: string, score: number, grade: string}[] } = studentPerformance;
+  const overallAttendance = attendance.length > 0 ? attendance.reduce((acc, month) => acc + month.percentage, 0) / attendance.length : 0;
   const averageGrade = grades.length > 0 ? (grades.reduce((acc, g) => acc+g.score, 0) / grades.length) : 0;
 
 
@@ -158,7 +153,7 @@ export function ParentDashboard() {
                         <LineChart data={performanceOverTime} margin={{ top: 5, right: 10, left: -20, bottom: 0 }}>
                             <CartesianGrid vertical={false} />
                             <XAxis dataKey="term" tickLine={false} axisLine={false} tickMargin={8} />
-                            <YAxis domain={[60, 100]} tickFormatter={(value) => `${value}%`} />
+                            <YAxis domain={[0, 100]} tickFormatter={(value) => `${value}%`} />
                             <ChartTooltip content={<ChartTooltipContent />} />
                             <Line type="monotone" dataKey="average" stroke="var(--color-average)" strokeWidth={2} dot={true} />
                         </LineChart>
@@ -255,3 +250,5 @@ export function ParentDashboard() {
     </div>
   );
 }
+
+    

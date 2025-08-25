@@ -39,18 +39,11 @@ import { ChartContainer, ChartTooltip, ChartTooltipContent, ChartLegend, ChartLe
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, AreaChart, Area } from 'recharts';
 
 const classPerformanceData = [
-  { month: 'Jan', average: 65 },
-  { month: 'Feb', average: 70 },
-  { month: 'Mar', average: 75 },
-  { month: 'Apr', average: 80 },
-  { month: 'May', average: 78 },
-];
-
-const submissionHistoryData = [
-  { month: 'Jan', submitted: 4 },
-  { month: 'Feb', submitted: 5 },
-  { month: 'Mar', submitted: 3 },
-  { month: 'Apr', submitted: 6 },
+  { month: 'Jan', average: 0 },
+  { month: 'Feb', average: 0 },
+  { month: 'Mar', average: 0 },
+  { month: 'Apr', average: 0 },
+  { month: 'May', average: 0 },
 ];
 
 const chartConfig = {
@@ -70,26 +63,33 @@ export function TeacherDashboard() {
   const [recentNotes, setRecentNotes] = useState<MockLessonNote[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [submissionHistory, setSubmissionHistory] = useState<{month: string, submitted: number}[]>([]);
 
   const fetchData = useCallback(async () => {
     if (!user) return;
     setIsLoading(true);
     try {
-      // Fetch lesson notes
-      const notesQuery = query(
-        collection(db, 'lessonNotes'), 
-        where('teacherId', '==', user.uid),
-        orderBy('submittedOn', 'desc'),
-        limit(3)
-      );
-      const notesSnapshot = await getDocs(notesQuery);
-      const notesList = notesSnapshot.docs.map(doc => ({id: doc.id, ...doc.data() as MockLessonNote}));
-      setRecentNotes(notesList);
-      
-      // Fetch all notes for stats
-      const allNotesQuery = query(collection(db, 'lessonNotes'), where('teacherId', '==', user.uid));
+      // Fetch all notes for stats and charts
+      const allNotesQuery = query(collection(db, 'lessonNotes'), where('teacherId', '==', user.uid), orderBy('submittedOn', 'desc'));
       const allNotesSnapshot = await getDocs(allNotesQuery);
-      const allNotesList = allNotesSnapshot.docs.map(doc => doc.data() as MockLessonNote);
+      const allNotesList = allNotesSnapshot.docs.map(doc => ({id: doc.id, ...doc.data() as MockLessonNote}));
+      setRecentNotes(allNotesList.slice(0, 3));
+      
+      const monthCounts: Record<string, number> = {};
+      const monthNames = [
+        'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec',
+      ];
+      monthNames.forEach((m) => (monthCounts[m] = 0));
+
+      allNotesList.forEach((note) => {
+        const date = new Date(note.submissionDate);
+        const month = monthNames[date.getMonth()];
+        if (month) {
+          monthCounts[month]++;
+        }
+      });
+      
+      setSubmissionHistory(monthNames.map(month => ({ month, submitted: monthCounts[month] || 0 })));
 
 
       // Fetch exam questions stats
@@ -240,10 +240,9 @@ export function TeacherDashboard() {
             <Card>
                 <CardHeader>
                     <CardTitle>Class Performance Trend</CardTitle>
-                    <CardDescription>Average performance of your primary class over time.</CardDescription>
+                    <CardDescription>Average performance of your primary class over time. (Placeholder)</CardDescription>
                 </CardHeader>
                 <CardContent>
-                    {isLoading ? ( <Skeleton className="h-[250px] w-full" />) : classPerformanceData.length > 0 ? (
                     <ChartContainer config={chartConfig} className="h-[250px] w-full">
                         <LineChart data={classPerformanceData} margin={{ top: 5, right: 10, left: -20, bottom: 0 }}>
                             <CartesianGrid vertical={false} />
@@ -253,11 +252,6 @@ export function TeacherDashboard() {
                             <Line type="monotone" dataKey="average" stroke="var(--color-average)" strokeWidth={2} dot={true} />
                         </LineChart>
                     </ChartContainer>
-                    ) : (
-                        <div className="flex h-[250px] items-center justify-center text-center text-muted-foreground">
-                            <p>No performance data available.</p>
-                        </div>
-                    )}
                 </CardContent>
             </Card>
         </div>
@@ -299,7 +293,7 @@ export function TeacherDashboard() {
                 <CardContent>
                     {isLoading ? ( <Skeleton className="h-[250px] w-full" /> ) : totalSubmissions > 0 ? (
                     <ChartContainer config={chartConfig} className="h-[250px] w-full">
-                        <AreaChart data={submissionHistoryData} margin={{ top: 5, right: 10, left: -10, bottom: 0 }}>
+                        <AreaChart data={submissionHistory} margin={{ top: 5, right: 10, left: -10, bottom: 0 }}>
                             <CartesianGrid vertical={false} />
                             <XAxis dataKey="month" tickLine={false} axisLine={false} tickMargin={8} fontSize={12}/>
                             <YAxis allowDecimals={false} />
@@ -319,3 +313,5 @@ export function TeacherDashboard() {
     </div>
   );
 }
+
+    

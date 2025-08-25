@@ -51,11 +51,11 @@ type SubmissionStatusData = {
 
 // Placeholder data until backend is ready
 const subjectPerformanceData = [
-  { subject: 'Math', average: 78, color: 'hsl(var(--chart-1))' },
-  { subject: 'English', average: 85, color: 'hsl(var(--chart-2))' },
-  { subject: 'Science', average: 72, color: 'hsl(var(--chart-3))' },
-  { subject: 'History', average: 65, color: 'hsl(var(--chart-4))' },
-  { subject: 'Art', average: 91, color: 'hsl(var(--chart-5))' },
+  { subject: 'Math', average: 0, color: 'hsl(var(--chart-1))' },
+  { subject: 'English', average: 0, color: 'hsl(var(--chart-2))' },
+  { subject: 'Science', average: 0, color: 'hsl(var(--chart-3))' },
+  { subject: 'History', average: 0, color: 'hsl(var(--chart-4))' },
+  { subject: 'Art', average: 0, color: 'hsl(var(--chart-5))' },
 ];
 
 export function HodDashboard() {
@@ -305,3 +305,5 @@ export function HodDashboard() {
     </div>
   );
 }
+
+    

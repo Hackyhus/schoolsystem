@@ -87,17 +87,17 @@ type EnrollmentData = {
 }
 
 const financeData = [
-    { name: 'Paid', value: 400, fill: 'hsl(var(--chart-2))' },
-    { name: 'Unpaid', value: 150, fill: 'hsl(var(--destructive))' },
-    { name: 'Overdue', value: 50, fill: 'hsl(var(--chart-4))' },
+    { name: 'Paid', value: 0, fill: 'hsl(var(--chart-2))' },
+    { name: 'Unpaid', value: 0, fill: 'hsl(var(--destructive))' },
+    { name: 'Overdue', value: 0, fill: 'hsl(var(--chart-4))' },
 ]
 
 const attendanceData = [
-  { month: 'Jan', attendance: 95 },
-  { month: 'Feb', attendance: 92 },
-  { month: 'Mar', attendance: 97 },
-  { month: 'Apr', attendance: 94 },
-  { month: 'May', attendance: 98 },
+  { month: 'Jan', attendance: 0 },
+  { month: 'Feb', attendance: 0 },
+  { month: 'Mar', attendance: 0 },
+  { month: 'Apr', attendance: 0 },
+  { month: 'May', attendance: 0 },
 ]
 
 
@@ -129,8 +129,7 @@ export function NewAdminDashboard() {
       const usersSnapshot = await getDocs(usersQuery);
       const allUsers = usersSnapshot.docs.map(doc => ({id: doc.id, ...doc.data()} as MockUser));
       
-      const students = allUsers.filter(u => u.role === 'Student');
-      const staffList = allUsers.filter(u => u.role !== 'Student' && u.role !== 'Parent');
+      const staffList = allUsers.filter(u => u.role !== 'Student' && u.role !== 'Parent' && u.staffId);
 
       const rolesCount: Record<string, number> = {};
       allUsers.forEach(user => {
@@ -263,6 +262,7 @@ export function NewAdminDashboard() {
   }, { users: { label: 'Users' } });
   
   const totalNotes = stats.approved + stats.pending + stats.rejected;
+  const totalUsers = userRoleData.reduce((acc, role) => acc + role.value, 0);
 
 
   return (
@@ -357,7 +357,7 @@ export function NewAdminDashboard() {
               <CardTitle>Lesson Note Submissions by Month</CardTitle>
             </CardHeader>
             <CardContent>
-              {isLoading ? ( <Skeleton className="h-[250px] w-full" /> ) : totalNotes > 0 ? (
+              {isLoading ? ( <Skeleton className="h-[250px] w-full" /> ) : (
                 <ChartContainer
                   config={chartConfig}
                   className="h-[250px] w-full"
@@ -414,10 +414,6 @@ export function NewAdminDashboard() {
                     />
                   </AreaChart>
                 </ChartContainer>
-              ) : (
-                 <div className="flex h-[250px] items-center justify-center text-center text-muted-foreground">
-                    <p>No lesson note submission data to display.</p>
-                </div>
               )}
             </CardContent>
           </Card>
@@ -467,7 +463,7 @@ export function NewAdminDashboard() {
               </CardDescription>
             </CardHeader>
             <CardContent>
-              {isLoading ? ( <Skeleton className="h-[250px] w-full" /> ) : userRoleData.length > 0 ? (
+              {isLoading ? ( <Skeleton className="h-[250px] w-full" /> ) : totalUsers > 0 ? (
                 <ChartContainer
                   config={userRoleChartConfig}
                   className="mx-auto aspect-square h-[250px]"
@@ -587,3 +583,5 @@ export function NewAdminDashboard() {
     </div>
   );
 }
+
+    
