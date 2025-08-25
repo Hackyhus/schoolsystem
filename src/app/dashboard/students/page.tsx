@@ -1,3 +1,4 @@
+
 'use client';
 
 import {
@@ -144,7 +145,7 @@ export default function StudentsPage() {
                 <TableHead className="hidden md:table-cell">Primary Guardian</TableHead>
                 <TableHead>Class</TableHead>
                  <TableHead>Status</TableHead>
-                <TableHead className="text-right">Action</TableHead>
+                {role === 'Admin' && <TableHead className="text-right">Action</TableHead>}
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -166,9 +167,9 @@ export default function StudentsPage() {
                      <TableCell>
                       <Skeleton className="h-6 w-20" />
                     </TableCell>
-                    <TableCell className="text-right">
+                    {role === 'Admin' && <TableCell className="text-right">
                       <Skeleton className="ml-auto h-8 w-8" />
-                    </TableCell>
+                    </TableCell>}
                   </TableRow>
                 ))
               ) : (
@@ -183,8 +184,7 @@ export default function StudentsPage() {
                     <TableCell>
                         <Badge variant={student.status === 'Active' ? 'secondary' : 'destructive'}>{student.status}</Badge>
                     </TableCell>
-                    <TableCell className="text-right">
-                      {role === 'Admin' && (
+                    {role === 'Admin' && <TableCell className="text-right">
                         <Button
                           variant="ghost"
                           size="icon"
@@ -192,15 +192,14 @@ export default function StudentsPage() {
                         >
                           <Trash2 className="h-4 w-4" />
                         </Button>
-                      )}
-                    </TableCell>
+                    </TableCell>}
                   </TableRow>
                 ))
               )}
               {!isLoading && students.length === 0 && (
                 <TableRow>
                   <TableCell
-                    colSpan={6}
+                    colSpan={role === 'Admin' ? 6 : 5}
                     className="h-24 text-center text-muted-foreground"
                   >
                     No students found.

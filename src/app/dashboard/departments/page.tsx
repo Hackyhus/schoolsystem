@@ -134,8 +134,8 @@ export default function DepartmentsPage() {
               <TableRow>
                 <TableHead>Department Name</TableHead>
                 <TableHead>Head of Department (HOD)</TableHead>
-                <TableHead className="hidden md:table-cell">No. of Teachers</TableHead>
-                <TableHead className="hidden md:table-cell">No. of Students</TableHead>
+                <TableHead className="hidden md:table-cell">Teachers</TableHead>
+                <TableHead className="hidden md:table-cell">Students</TableHead>
                 <TableHead className="text-right">Action</TableHead>
               </TableRow>
             </TableHeader>

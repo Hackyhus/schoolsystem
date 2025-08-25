@@ -42,7 +42,7 @@ export default function DashboardLayout({
         <DashboardSidebar />
         <SidebarInset>
           <DashboardHeader />
-          <main className="min-h-[calc(100vh-4rem)] p-4 md:p-8 lg:p-10">
+          <main className="min-h-[calc(100vh-4rem)] p-4 md:p-6 lg:p-8">
             {children}
           </main>
         </SidebarInset>

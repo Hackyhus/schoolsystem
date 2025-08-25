@@ -75,7 +75,7 @@ export function AddUserForm({ onUserAdded }: { onUserAdded: () => void }) {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const { departments, isLoading: isAcademicDataLoading } = useAcademicData();
   
-  const departmentOptions = departments.map(d => ({ value: d.name, label: d.name }));
+  const departmentOptions = departments?.map(d => ({ value: d.name, label: d.name })) || [];
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -143,18 +143,18 @@ export function AddUserForm({ onUserAdded }: { onUserAdded: () => void }) {
                  <Card>
                     <CardHeader><CardTitle>Personal Information</CardTitle></CardHeader>
                     <CardContent className="space-y-4">
-                         <div className="grid grid-cols-2 gap-4">
+                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                             <FormField control={form.control} name="firstName" render={({ field }) => ( <FormItem><FormLabel>First Name</FormLabel><FormControl><Input placeholder="John" {...field} /></FormControl><FormMessage /></FormItem> )}/>
                             <FormField control={form.control} name="lastName" render={({ field }) => ( <FormItem><FormLabel>Last Name</FormLabel><FormControl><Input placeholder="Doe" {...field} /></FormControl><FormMessage /></FormItem> )}/>
                         </div>
-                        <div className="grid grid-cols-2 gap-4">
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                              <FormField control={form.control} name="gender" render={({ field }) => ( <FormItem><FormLabel>Gender</FormLabel><Select onValueChange={field.onChange} defaultValue={field.value}><FormControl><SelectTrigger><SelectValue placeholder="Select gender" /></SelectTrigger></FormControl><SelectContent><SelectItem value="Male">Male</SelectItem><SelectItem value="Female">Female</SelectItem><SelectItem value="Other">Other</SelectItem></SelectContent></Select><FormMessage /></FormItem> )}/>
-                             <FormField
+                            <FormField
                                 control={form.control}
                                 name="dateOfBirth"
                                 render={({ field }) => (
-                                    <FormItem className="flex flex-col">
-                                        <FormLabel>Date of Birth</FormLabel>
+                                    <FormItem className="flex flex-col pt-2">
+                                        <FormLabel className="mb-1">Date of Birth</FormLabel>
                                         <FormControl>
                                             <DateOfBirthInput
                                                 value={field.value}
@@ -185,9 +185,46 @@ export function AddUserForm({ onUserAdded }: { onUserAdded: () => void }) {
                     <CardHeader><CardTitle>Professional Information</CardTitle></CardHeader>
                     <CardContent className="space-y-4">
                          <FormField control={form.control} name="role" render={({ field }) => ( <FormItem><FormLabel>Role</FormLabel><Select onValueChange={field.onChange} defaultValue={field.value}><FormControl><SelectTrigger><SelectValue placeholder="Assign a role" /></SelectTrigger></FormControl><SelectContent><SelectItem value="Admin">Admin</SelectItem><SelectItem value="SLT">SLT</SelectItem><SelectItem value="HeadOfDepartment">Head of Department</SelectItem><SelectItem value="Teacher">Teacher</SelectItem><SelectItem value="Accountant">Accountant</SelectItem><SelectItem value="ExamOfficer">Exam Officer</SelectItem></SelectContent></Select><FormMessage /></FormItem> )}/>
-                        <div className="grid grid-cols-2 gap-4">
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                             <FormField control={form.control} name="department" render={({ field }) => (<FormItem><FormLabel>Department</FormLabel><FormControl><Combobox options={departmentOptions} placeholder="Select Department" searchPlaceholder="Search..." notFoundText="No department found." {...field} /></FormControl><FormMessage /></FormItem>)}/>
-                            <FormField control={form.control} name="dateOfEmployment" render={({ field }) => ( <FormItem className="flex flex-col"><FormLabel>Employment Date</FormLabel><Popover><PopoverTrigger asChild><Button variant={"outline"} className={cn("pl-3 text-left font-normal",!field.value && "text-muted-foreground")}>{field.value ? format(field.value, "PPP") : (<span>Pick a date</span>)}<CalendarIcon className="ml-auto h-4 w-4 opacity-50" /></Button></PopoverTrigger><PopoverContent className="w-auto p-0" align="start"><Calendar mode="single" selected={field.value} onSelect={field.onChange} disabled={(date) =>date > new Date()}/></PopoverContent></Popover><FormMessage /></FormItem> )}/>
+                            <FormField
+                                control={form.control}
+                                name="dateOfEmployment"
+                                render={({ field }) => (
+                                <FormItem className="flex flex-col pt-2">
+                                    <FormLabel className="mb-1">Employment Date</FormLabel>
+                                    <Popover>
+                                    <PopoverTrigger asChild>
+                                        <FormControl>
+                                        <Button
+                                            variant={"outline"}
+                                            className={cn(
+                                            "w-full pl-3 text-left font-normal",
+                                            !field.value && "text-muted-foreground"
+                                            )}
+                                        >
+                                            {field.value ? (
+                                            format(field.value, "PPP")
+                                            ) : (
+                                            <span>Pick a date</span>
+                                            )}
+                                            <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
+                                        </Button>
+                                        </FormControl>
+                                    </PopoverTrigger>
+                                    <PopoverContent className="w-auto p-0" align="start">
+                                        <Calendar
+                                        mode="single"
+                                        selected={field.value}
+                                        onSelect={field.onChange}
+                                        disabled={(date) => date > new Date()}
+                                        />
+                                    </PopoverContent>
+                                    </Popover>
+                                    <FormMessage />
+                                </FormItem>
+                                )}
+                            />
                         </div>
                          <FormField control={form.control} name="documents" render={({ field: { onChange, value, ...rest }}) => ( <FormItem><FormLabel>Upload Documents</FormLabel><FormControl><Input type="file" multiple onChange={(e) => onChange(e.target.files)} {...rest} /></FormControl><FormDescription>CV, credentials, etc.</FormDescription><FormMessage /></FormItem>)}/>
                     </CardContent>

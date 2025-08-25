@@ -1,3 +1,4 @@
+
 'use client';
 
 import {
@@ -45,8 +46,8 @@ export default function UsersPage() {
     setIsLoading(true);
     try {
       const usersRef = collection(db, 'users');
-      // Query for users that are not students
-      const q = query(usersRef, where('role', '!=', 'Student'));
+      // Query for users that have a staffId field to ensure they are staff
+      const q = query(usersRef, where('staffId', '!=', null));
       const querySnapshot = await getDocs(q);
       const usersList = querySnapshot.docs
         .map((doc) => ({ id: doc.id, ...doc.data() } as MockUser))
@@ -111,7 +112,7 @@ export default function UsersPage() {
           <div>
             <CardTitle>All Staff</CardTitle>
             <CardDescription>
-              A list of all non-student users in the system.
+              A list of all staff members in the system.
             </CardDescription>
           </div>
            <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
@@ -159,7 +160,7 @@ export default function UsersPage() {
                       <Skeleton className="h-6 w-24" />
                     </TableCell>
                     <TableCell className="text-right">
-                      <Skeleton className="ml-auto h-8 w-8" />
+                      <Skeleton className="ml-auto h-8 w-20" />
                     </TableCell>
                   </TableRow>
                 ))
