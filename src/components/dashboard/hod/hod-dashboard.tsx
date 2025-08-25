@@ -250,17 +250,19 @@ export function HodDashboard() {
                     <CardDescription>Average performance in subjects across your department. (Placeholder)</CardDescription>
                 </CardHeader>
                 <CardContent>
-                    <ResponsiveContainer width="100%" height={250}>
-                         <BarChartRecharts data={subjectPerformanceData}>
-                            <CartesianGrid vertical={false} />
-                            <XAxis dataKey="subject" tickLine={false} axisLine={false} tickMargin={8} fontSize={12} />
-                            <YAxis domain={[0, 100]} />
-                             <ChartTooltip content={<ChartTooltipContent indicator="dot" />} />
-                            <BarChartRecharts dataKey="average" radius={4}>
-                                {subjectPerformanceData.map(entry => <Cell key={entry.subject} fill={entry.color} />)}
-                            </BarChartRecharts>
-                         </BarChartRecharts>
+                  <ChartContainer config={chartConfig} className="w-full h-[250px]">
+                    <ResponsiveContainer width="100%" height="100%">
+                        <BarChartRecharts data={subjectPerformanceData}>
+                          <CartesianGrid vertical={false} />
+                          <XAxis dataKey="subject" tickLine={false} axisLine={false} tickMargin={8} fontSize={12} />
+                          <YAxis domain={[0, 100]} />
+                          <ChartTooltip content={<ChartTooltipContent indicator="dot" />} />
+                          <BarChartRecharts dataKey="average" radius={4}>
+                            {subjectPerformanceData.map(entry => <Cell key={entry.subject} fill={entry.color} />)}
+                          </BarChartRecharts>
+                        </BarChartRecharts>
                     </ResponsiveContainer>
+                  </ChartContainer>
                 </CardContent>
             </Card>
         </div>
@@ -305,5 +307,3 @@ export function HodDashboard() {
     </div>
   );
 }
-
-    
