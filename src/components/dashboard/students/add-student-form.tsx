@@ -23,7 +23,7 @@ import {
 } from '@/components/ui/select';
 import { Input } from '@/components/ui/input';
 import { useToast } from '@/hooks/use-toast';
-import { CalendarIcon, Loader2, UploadCloud } from 'lucide-react';
+import { Loader2, UploadCloud } from 'lucide-react';
 import { useState } from 'react';
 import { useAcademicData } from '@/hooks/use-academic-data';
 import {
@@ -33,13 +33,6 @@ import {
   CardHeader,
   CardTitle,
 } from '@/components/ui/card';
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from '@/components/ui/popover';
-import { cn } from '@/lib/utils';
-import { format } from 'date-fns';
 import { createStudent } from '@/actions/student-actions';
 import { DateOfBirthInput } from '@/components/ui/date-of-birth-input';
 
@@ -158,18 +151,16 @@ export function AddStudentForm({ onStudentAdded }: { onStudentAdded: () => void 
                         <FormField control={form.control} name="middleName" render={({ field }) => ( <FormItem><FormLabel>Middle Name</FormLabel><FormControl><Input placeholder="Bello" {...field} /></FormControl><FormMessage /></FormItem> )}/>
                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                             <FormField control={form.control} name="gender" render={({ field }) => ( <FormItem><FormLabel>Gender</FormLabel><Select onValueChange={field.onChange} defaultValue={field.value}><FormControl><SelectTrigger><SelectValue placeholder="Select gender" /></SelectTrigger></FormControl><SelectContent><SelectItem value="Male">Male</SelectItem><SelectItem value="Female">Female</SelectItem></SelectContent></Select><FormMessage /></FormItem> )}/>
-                             <FormField
+                            <FormField
                                 control={form.control}
                                 name="dateOfBirth"
                                 render={({ field }) => (
                                     <FormItem className="flex flex-col pt-2">
                                         <FormLabel className="mb-1">Date of Birth</FormLabel>
-                                        <FormControl>
-                                            <DateOfBirthInput
-                                                value={field.value}
-                                                onChange={field.onChange}
-                                            />
-                                        </FormControl>
+                                        <DateOfBirthInput
+                                            value={field.value}
+                                            onChange={field.onChange}
+                                        />
                                         <FormMessage />
                                     </FormItem>
                                 )}
@@ -189,33 +180,10 @@ export function AddStudentForm({ onStudentAdded }: { onStudentAdded: () => void 
                                 render={({ field }) => (
                                 <FormItem className="flex flex-col pt-2">
                                     <FormLabel className="mb-1">Admission Date</FormLabel>
-                                    <Popover>
-                                    <PopoverTrigger asChild>
-                                        <FormControl>
-                                        <Button
-                                            variant={"outline"}
-                                            className={cn(
-                                            "w-full pl-3 text-left font-normal",
-                                            !field.value && "text-muted-foreground"
-                                            )}
-                                        >
-                                            {field.value ? (
-                                            format(field.value, "PPP")
-                                            ) : (
-                                            <span>Pick a date</span>
-                                            )}
-                                            <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
-                                        </Button>
-                                        </FormControl>
-                                    </PopoverTrigger>
-                                    <PopoverContent className="w-auto p-0" align="start">
-                                        <DateOfBirthInput
-                                            value={field.value}
-                                            onChange={field.onChange}
-                                            disableFuture
-                                        />
-                                    </PopoverContent>
-                                    </Popover>
+                                    <DateOfBirthInput
+                                        value={field.value}
+                                        onChange={field.onChange}
+                                    />
                                     <FormMessage />
                                 </FormItem>
                                 )}

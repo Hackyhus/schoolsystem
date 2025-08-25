@@ -18,7 +18,7 @@ import {
 } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { PlusCircle, Trash2 } from 'lucide-react';
+import { PlusCircle, Trash2, Eye } from 'lucide-react';
 import { useEffect, useState, useCallback } from 'react';
 import { collection, getDocs, deleteDoc, doc, query, orderBy } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
@@ -35,6 +35,7 @@ import {
 } from '@/components/ui/dialog';
 import { AddStudentForm } from '@/components/dashboard/students/add-student-form';
 import { useRole } from '@/context/role-context';
+import Link from 'next/link';
 
 
 export default function StudentsPage() {
@@ -145,7 +146,7 @@ export default function StudentsPage() {
                 <TableHead className="hidden md:table-cell">Primary Guardian</TableHead>
                 <TableHead>Class</TableHead>
                  <TableHead>Status</TableHead>
-                {role === 'Admin' && <TableHead className="text-right">Action</TableHead>}
+                <TableHead className="text-right">Action</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -167,9 +168,9 @@ export default function StudentsPage() {
                      <TableCell>
                       <Skeleton className="h-6 w-20" />
                     </TableCell>
-                    {role === 'Admin' && <TableCell className="text-right">
+                    <TableCell className="text-right">
                       <Skeleton className="ml-auto h-8 w-8" />
-                    </TableCell>}
+                    </TableCell>
                   </TableRow>
                 ))
               ) : (
@@ -184,15 +185,20 @@ export default function StudentsPage() {
                     <TableCell>
                         <Badge variant={student.status === 'Active' ? 'secondary' : 'destructive'}>{student.status}</Badge>
                     </TableCell>
-                    {role === 'Admin' && <TableCell className="text-right">
-                        <Button
+                    <TableCell className="text-right">
+                       <Button asChild variant="outline" size="icon" className="mr-2">
+                         <Link href={`/dashboard/students/${student.id}`}>
+                           <Eye className="h-4 w-4" />
+                         </Link>
+                       </Button>
+                      {role === 'Admin' && <Button
                           variant="ghost"
                           size="icon"
                           onClick={() => removeStudent(student.id)}
                         >
                           <Trash2 className="h-4 w-4" />
-                        </Button>
-                    </TableCell>}
+                        </Button>}
+                    </TableCell>
                   </TableRow>
                 ))
               )}

@@ -17,7 +17,7 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import { Button } from '@/components/ui/button';
-import { PlusCircle, MoreHorizontal } from 'lucide-react';
+import { PlusCircle, MoreHorizontal, Edit, Trash2 } from 'lucide-react';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useEffect, useState, useCallback } from 'react';
 import { useToast } from '@/hooks/use-toast';
@@ -29,6 +29,12 @@ import {
   DialogTitle,
   DialogTrigger,
 } from '@/components/ui/dialog';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
 import { AddDepartmentForm } from '@/components/dashboard/departments/add-department-form';
 import { dbService } from '@/lib/firebase';
 import type { QueryConstraint } from '@/services/types';
@@ -94,6 +100,17 @@ export default function DepartmentsPage() {
     fetchDepartments();
     setIsModalOpen(false);
   };
+  
+  const handleEdit = (dept: Department) => {
+    // TODO: Implement edit functionality
+    toast({ title: "Note", description: `Edit functionality for ${dept.name} coming soon.` });
+  };
+  
+  const handleDelete = (dept: Department) => {
+    // TODO: Implement delete functionality
+    toast({ title: "Note", description: `Delete functionality for ${dept.name} coming soon.` });
+  };
+
 
   return (
     <div className="space-y-8">
@@ -158,9 +175,21 @@ export default function DepartmentsPage() {
                     <TableCell className="hidden md:table-cell">{dept.teacherCount}</TableCell>
                     <TableCell className="hidden md:table-cell">{dept.studentCount}</TableCell>
                     <TableCell className="text-right">
-                      <Button variant="ghost" size="icon">
-                        <MoreHorizontal className="h-4 w-4" />
-                      </Button>
+                      <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
+                              <Button variant="ghost" size="icon">
+                                <MoreHorizontal className="h-4 w-4" />
+                              </Button>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent>
+                              <DropdownMenuItem onClick={() => handleEdit(dept)}>
+                                <Edit className="mr-2 h-4 w-4" /> Edit
+                              </DropdownMenuItem>
+                              <DropdownMenuItem onClick={() => handleDelete(dept)} className="text-destructive">
+                                <Trash2 className="mr-2 h-4 w-4" /> Delete
+                              </DropdownMenuItem>
+                          </DropdownMenuContent>
+                      </DropdownMenu>
                     </TableCell>
                   </TableRow>
                 ))
