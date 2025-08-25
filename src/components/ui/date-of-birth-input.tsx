@@ -26,14 +26,14 @@ const months = [
   { value: '5', label: 'June' },
   { value: '6', label: 'July' },
   { value: '7', label: 'August' },
-  { value: '8', label: 'September' },
+  { value: '8', 'label': 'September' },
   { value: '9', label: 'October' },
   { value: '10', label: 'November' },
   { value: '11', label: 'December' },
 ];
 
 const currentYear = new Date().getFullYear();
-const years = Array.from({ length: currentYear - 1950 + 1 }, (_, i) => currentYear - i);
+const years = Array.from({ length: 100 }, (_, i) => currentYear - i);
 
 
 export function DateOfBirthInput({ value, onChange, className }: DateOfBirthInputProps) {
@@ -47,56 +47,37 @@ export function DateOfBirthInput({ value, onChange, className }: DateOfBirthInpu
         value ? String(value.getFullYear()) : undefined
     );
 
-    const handleDateChange = React.useCallback((newDate?: Date) => {
-        onChange(newDate);
-    }, [onChange]);
-    
-    // This effect ensures the parent form's state is updated whenever a valid date
-    // can be constructed from the component's internal state.
-    React.useEffect(() => {
-        if (day && month && year) {
-            const newDate = new Date(Number(year), Number(month), Number(day));
-             if (
-                newDate.getFullYear() === Number(year) &&
-                newDate.getMonth() === Number(month) &&
-                newDate.getDate() === Number(day)
+     const handleDateChange = React.useCallback((d: string | undefined, m: string | undefined, y: string | undefined) => {
+        if (d && m && y) {
+            const newDate = new Date(Number(y), Number(m), Number(d));
+            if (
+                newDate.getFullYear() === Number(y) &&
+                newDate.getMonth() === Number(m) &&
+                newDate.getDate() === Number(d)
             ) {
-                // Only call onChange if the new date is different from the parent's state
-                if (value?.getTime() !== newDate.getTime()) {
-                    handleDateChange(newDate);
+                 if (value?.getTime() !== newDate.getTime()) {
+                    onChange(newDate);
                 }
-            } else {
-                 if (value !== undefined) {
-                    handleDateChange(undefined);
-                }
+            } else if (value !== undefined) {
+                onChange(undefined);
             }
-        } else {
-            // If any part is missing, ensure the parent state is also cleared
-            if (value !== undefined) {
-                handleDateChange(undefined);
-            }
+        } else if (value !== undefined) {
+             onChange(undefined);
         }
-    }, [day, month, year, value, handleDateChange]);
+    }, [onChange, value]);
 
-    // This effect syncs internal state with the external `value` prop.
-    // This is important for form resets or programmatic changes.
-     React.useEffect(() => {
-        if (value) {
-            const newDay = String(value.getDate());
-            const newMonth = String(value.getMonth());
-            const newYear = String(value.getFullYear());
-            if (newDay !== day) setDay(newDay);
-            if (newMonth !== month) setMonth(newMonth);
-            if (newYear !== year) setYear(newYear);
-        } else {
-            setDay(undefined);
-            setMonth(undefined);
-            setYear(undefined);
-        }
-    // We only want this to run when the EXTERNAL value changes.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [value]);
-
+    const onDayChange = (newDay: string) => {
+        setDay(newDay);
+        handleDateChange(newDay, month, year);
+    }
+    const onMonthChange = (newMonth: string) => {
+        setMonth(newMonth);
+        handleDateChange(day, newMonth, year);
+    }
+    const onYearChange = (newYear: string) => {
+        setYear(newYear);
+        handleDateChange(day, month, newYear);
+    }
 
   const daysInMonth = (m: number, y: number) => {
     return new Date(y, m + 1, 0).getDate();
@@ -109,7 +90,7 @@ export function DateOfBirthInput({ value, onChange, className }: DateOfBirthInpu
 
   return (
     <div className={cn('grid grid-cols-3 gap-2', className)}>
-      <Select value={day} onValueChange={setDay}>
+      <Select value={day} onValueChange={onDayChange}>
         <SelectTrigger>
           <SelectValue placeholder="Day" />
         </SelectTrigger>
@@ -121,7 +102,7 @@ export function DateOfBirthInput({ value, onChange, className }: DateOfBirthInpu
           ))}
         </SelectContent>
       </Select>
-      <Select value={month} onValueChange={setMonth}>
+      <Select value={month} onValueChange={onMonthChange}>
         <SelectTrigger>
           <SelectValue placeholder="Month" />
         </SelectTrigger>
@@ -133,7 +114,7 @@ export function DateOfBirthInput({ value, onChange, className }: DateOfBirthInpu
           ))}
         </SelectContent>
       </Select>
-      <Select value={year} onValueChange={setYear}>
+      <Select value={year} onValueChange={onYearChange}>
         <SelectTrigger>
           <SelectValue placeholder="Year" />
         </SelectTrigger>

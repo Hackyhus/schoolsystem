@@ -93,6 +93,7 @@ export function AddUserForm({ onUserAdded }: { onUserAdded: () => void }) {
       email: '',
       address: '',
       department: '',
+      stateOfOrigin: '',
     },
   });
 
@@ -109,10 +110,7 @@ export function AddUserForm({ onUserAdded }: { onUserAdded: () => void }) {
     
     const formData = new FormData();
     const finalValues = { ...values };
-    if (!showDepartmentField) {
-        finalValues.department = 'N/A'; // Assign a default if not shown
-    }
-
+    
     Object.entries(finalValues).forEach(([key, value]) => {
       if (value) {
         if (value instanceof Date) {
@@ -164,8 +162,8 @@ export function AddUserForm({ onUserAdded }: { onUserAdded: () => void }) {
                     <CardHeader><CardTitle>Personal Information</CardTitle></CardHeader>
                     <CardContent className="space-y-4">
                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                            <FormField control={form.control} name="firstName" render={({ field }) => ( <FormItem><FormLabel>First Name</FormLabel><FormControl><Input placeholder="Yusuf" {...field} /></FormControl><FormMessage /></FormItem> )}/>
-                            <FormField control={form.control} name="lastName" render={({ field }) => ( <FormItem><FormLabel>Last Name</FormLabel><FormControl><Input placeholder="Abdullah" {...field} /></FormControl><FormMessage /></FormItem> )}/>
+                            <FormField control={form.control} name="firstName" render={({ field }) => ( <FormItem><FormLabel>First Name</FormLabel><FormControl><Input placeholder="Amina" {...field} /></FormControl><FormMessage /></FormItem> )}/>
+                            <FormField control={form.control} name="lastName" render={({ field }) => ( <FormItem><FormLabel>Last Name</FormLabel><FormControl><Input placeholder="Sadiq" {...field} /></FormControl><FormMessage /></FormItem> )}/>
                         </div>
                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                              <FormField control={form.control} name="gender" render={({ field }) => ( <FormItem><FormLabel>Gender</FormLabel><Select onValueChange={field.onChange} defaultValue={field.value}><FormControl><SelectTrigger><SelectValue placeholder="Select gender" /></SelectTrigger></FormControl><SelectContent><SelectItem value="Male">Male</SelectItem><SelectItem value="Female">Female</SelectItem></SelectContent></Select><FormMessage /></FormItem> )}/>
@@ -175,12 +173,10 @@ export function AddUserForm({ onUserAdded }: { onUserAdded: () => void }) {
                                 render={({ field }) => (
                                     <FormItem className="flex flex-col pt-2">
                                         <FormLabel className="mb-1">Date of Birth</FormLabel>
-                                        <FormControl>
                                             <DateOfBirthInput
                                                 value={field.value}
                                                 onChange={field.onChange}
                                             />
-                                        </FormControl>
                                         <FormMessage />
                                     </FormItem>
                                 )}
@@ -196,7 +192,7 @@ export function AddUserForm({ onUserAdded }: { onUserAdded: () => void }) {
                 <Card>
                     <CardHeader><CardTitle>Contact & Account Details</CardTitle></CardHeader>
                     <CardContent className="space-y-4">
-                         <FormField control={form.control} name="email" render={({ field }) => ( <FormItem><FormLabel>Email Address</FormLabel><FormControl><Input type="email" placeholder="name@giia.com.ng" {...field} /></FormControl><FormMessage /></FormItem> )}/>
+                         <FormField control={form.control} name="email" render={({ field }) => ( <FormItem><FormLabel>Email Address</FormLabel><FormControl><Input type="email" placeholder="amina.sadiq@giia.com.ng" {...field} /></FormControl><FormMessage /></FormItem> )}/>
                          <FormField control={form.control} name="phone" render={({ field }) => ( <FormItem><FormLabel>Phone Number</FormLabel><FormControl><Input placeholder="08012345678" {...field} /></FormControl><FormMessage /></FormItem> )}/>
                          <FormField control={form.control} name="address" render={({ field }) => ( <FormItem><FormLabel>Home Address</FormLabel><FormControl><Input placeholder="123, Main Street, Lagos" {...field} /></FormControl><FormMessage /></FormItem> )}/>
                     </CardContent>

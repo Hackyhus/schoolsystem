@@ -10,7 +10,7 @@ const staffSchema = z.object({
   lastName: z.string().min(1),
   gender: z.enum(['Male', 'Female']),
   dateOfBirth: z.string(),
-  stateOfOrigin: z.string().min(1),
+  stateOfOrigin: z.string().min(1, 'State of Origin is required and will be the default password.'),
   phone: z.string().min(1),
   email: z.string().email(),
   address: z.string().min(1),
@@ -73,9 +73,10 @@ export async function createStaff(formData: FormData) {
     const staffId = await generateStaffId(staffData.role);
 
     // 2. Create user in Firebase Auth
+    // Use state of origin as default password, regardless of length.
     const authUser = await authService.createUser({
         email: staffData.email,
-        password: staffData.stateOfOrigin, // Use state of origin as default password
+        password: staffData.stateOfOrigin, 
     });
 
     // 3. Upload profile picture if it exists
@@ -119,6 +120,9 @@ export async function createStaff(formData: FormData) {
     // Handle specific Firebase auth errors
     if (error.code === 'auth/email-already-in-use') {
       return { error: 'This email is already registered.' };
+    }
+     if (error.code === 'auth/weak-password') {
+      return { error: 'The password is too weak. Firebase requires at least 6 characters.' };
     }
     return { error: error.message || 'An unexpected server error occurred.' };
   }
