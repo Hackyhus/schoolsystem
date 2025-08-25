@@ -42,9 +42,11 @@ async function generateStaffId(role: string): Promise<string> {
     const roleCode = ROLE_CODES[role] || 'GEN';
     const year = new Date().getFullYear().toString().slice(-2);
 
-    // Get the count of existing staff to determine the next sequential number.
-    const staffCount = await dbService.getCountFromServer('users', [{ type: 'where', fieldPath: 'staffId', opStr: '!=', value: null }]);
-    const nextId = (staffCount + 1).toString().padStart(4, '0');
+    // Get the count of existing staff *for the specific role* to determine the next sequential number.
+    const staffCountForRole = await dbService.getCountFromServer('users', [
+        { type: 'where', fieldPath: 'role', opStr: '==', value: role }
+    ]);
+    const nextId = (staffCountForRole + 1).toString().padStart(4, '0');
 
     return `GIIA${year}${roleCode}${nextId}`;
 }
