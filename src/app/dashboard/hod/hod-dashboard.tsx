@@ -271,7 +271,8 @@ export function HodDashboard() {
                     <CardDescription>Average performance in subjects across your department. (Placeholder)</CardDescription>
                 </CardHeader>
                 <CardContent>
-                    <ResponsiveContainer width="100%" height={250}>
+                  <ChartContainer config={chartConfig} className="w-full h-[250px]">
+                    <ResponsiveContainer width="100%" height="100%">
                          <BarChartRecharts data={subjectPerformanceData}>
                             <CartesianGrid vertical={false} />
                             <XAxis dataKey="subject" tickLine={false} axisLine={false} tickMargin={8} fontSize={12} />
@@ -282,6 +283,7 @@ export function HodDashboard() {
                             </BarChartRecharts>
                          </BarChartRecharts>
                     </ResponsiveContainer>
+                   </ChartContainer>
                 </CardContent>
             </Card>
         </div>
@@ -326,4 +328,3 @@ export function HodDashboard() {
     </div>
   );
 }
-
