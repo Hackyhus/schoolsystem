@@ -1,3 +1,4 @@
+
 'use server';
 
 import { z } from 'zod';
@@ -15,7 +16,6 @@ const studentSchema = z.object({
   guardianName: z.string().min(1),
   guardianContact: z.string().min(1),
   guardianEmail: z.string().email(),
-  admissionNumber: z.string().min(1),
   class: z.string().min(1),
   admissionDate: z.string(),
   session: z.string().min(1),
@@ -23,6 +23,17 @@ const studentSchema = z.object({
   profilePicture: z.instanceof(File).optional(),
   documents: z.array(z.instanceof(File)).optional(),
 });
+
+async function generateStudentId(): Promise<string> {
+    const year = new Date().getFullYear().toString().slice(-2);
+
+    // Get the count of existing students to determine the next sequential number.
+    const studentCount = await dbService.getCountFromServer('students');
+    const nextId = (studentCount + 1).toString().padStart(4, '0');
+
+    return `GIIA/STU/${year}/${nextId}`;
+}
+
 
 export async function createStudent(formData: FormData) {
   try {
@@ -43,10 +54,13 @@ export async function createStudent(formData: FormData) {
 
     const { profilePicture, documents: studentDocs, ...studentData } = parsed.data;
 
+    // 1. Generate Student ID
+    const studentId = await generateStudentId();
+
     let profilePictureUrl = '';
     if (profilePicture) {
       const { downloadURL } = await storageService.uploadFile(
-        `student-photos/${Date.now()}-${profilePicture.name}`,
+        `student-photos/${studentId}/${Date.now()}-${profilePicture.name}`,
         profilePicture
       );
       profilePictureUrl = downloadURL;
@@ -57,7 +71,7 @@ export async function createStudent(formData: FormData) {
         uploadedDocuments = await Promise.all(
             studentDocs.map(async (doc) => {
                 const { downloadURL, storagePath } = await storageService.uploadFile(
-                    `student-documents/${studentData.admissionNumber}/${Date.now()}-${doc.name}`,
+                    `student-documents/${studentId}/${Date.now()}-${doc.name}`,
                     doc
                 );
                 return { documentType: doc.name.split('.').slice(0, -1).join('.'), fileUrl: downloadURL, storagePath };
@@ -66,7 +80,7 @@ export async function createStudent(formData: FormData) {
     }
 
     const newStudent: Omit<Student, 'id' | 'createdAt' | 'status'> & { createdAt: any, status: string } = {
-        studentId: studentData.admissionNumber,
+        studentId: studentId,
         firstName: studentData.firstName,
         lastName: studentData.lastName,
         middleName: studentData.middleName,

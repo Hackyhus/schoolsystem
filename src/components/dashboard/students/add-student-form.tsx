@@ -66,7 +66,6 @@ const formSchema = z.object({
   guardianEmail: z.string().email('Invalid email address.'),
 
   // Academic Info
-  admissionNumber: z.string().min(1, 'Admission number is required.'),
   class: z.string().min(1, 'Please select a class.'),
   admissionDate: z.date({ required_error: 'Admission date is required.' }),
   session: z
@@ -94,7 +93,6 @@ export function AddStudentForm({ onStudentAdded }: { onStudentAdded: () => void 
       guardianName: '',
       guardianContact: '',
       guardianEmail: '',
-      admissionNumber: '',
       session: `${new Date().getFullYear()}/${new Date().getFullYear() + 1}`,
       medicalConditions: '',
     },
@@ -185,13 +183,10 @@ export function AddStudentForm({ onStudentAdded }: { onStudentAdded: () => void 
                     <CardHeader><CardTitle>Academic Information</CardTitle></CardHeader>
                     <CardContent className="space-y-4">
                         <div className="grid grid-cols-2 gap-4">
-                             <FormField control={form.control} name="admissionNumber" render={({ field }) => ( <FormItem><FormLabel>Admission No.</FormLabel><FormControl><Input placeholder="GIIA/STU/..." {...field} /></FormControl><FormMessage /></FormItem> )}/>
                              <FormField control={form.control} name="class" render={({ field }) => ( <FormItem><FormLabel>Class</FormLabel><Select onValueChange={field.onChange} defaultValue={field.value} disabled={isAcademicDataLoading}><FormControl><SelectTrigger><SelectValue placeholder={isAcademicDataLoading ? "Loading..." : "Select Class"} /></SelectTrigger></FormControl><SelectContent>{classes.map(c => <SelectItem key={c.id} value={c.name}>{c.name}</SelectItem>)}</SelectContent></Select><FormMessage /></FormItem> )}/>
-                        </div>
-                        <div className="grid grid-cols-2 gap-4">
                              <FormField control={form.control} name="admissionDate" render={({ field }) => ( <FormItem className="flex flex-col"><FormLabel>Admission Date</FormLabel><Popover><PopoverTrigger asChild><FormControl><Button variant={"outline"} className={cn("pl-3 text-left font-normal",!field.value && "text-muted-foreground")}>{field.value ? format(field.value, "PPP") : (<span>Pick a date</span>)}<CalendarIcon className="ml-auto h-4 w-4 opacity-50" /></Button></FormControl></PopoverTrigger><PopoverContent className="w-auto p-0" align="start"><Calendar mode="single" selected={field.value} onSelect={field.onChange} disabled={(date) =>date > new Date()}/></PopoverContent></Popover><FormMessage /></FormItem> )}/>
-                             <FormField control={form.control} name="session" render={({ field }) => ( <FormItem><FormLabel>Session</FormLabel><FormControl><Input placeholder="2023/2024" {...field} /></FormControl><FormMessage /></FormItem> )}/>
                         </div>
+                        <FormField control={form.control} name="session" render={({ field }) => ( <FormItem><FormLabel>Session</FormLabel><FormControl><Input placeholder="2023/2024" {...field} /></FormControl><FormMessage /></FormItem> )}/>
                     </CardContent>
                 </Card>
             </div>
