@@ -124,7 +124,7 @@ export async function createStaff(formData: FormData) {
       return { error: 'This email is already registered.' };
     }
      if (error.code === 'auth/weak-password') {
-      return { error: `The password '${error.customData?._tokenResponse?.password}' is too weak. It must be at least 6 characters.` };
+      return { error: `The password is too weak. It must be at least 6 characters.` };
     }
     return { error: error.message || 'An unexpected server error occurred.' };
   }
