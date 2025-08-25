@@ -127,7 +127,7 @@ export function NewAdminDashboard() {
       // User counts and roles
       const usersQuery = query(collection(db, 'users'), orderBy('createdAt', 'desc'));
       const usersSnapshot = await getDocs(usersQuery);
-      const allUsers = usersSnapshot.docs.map(doc => doc.data() as MockUser);
+      const allUsers = usersSnapshot.docs.map(doc => ({id: doc.id, ...doc.data()} as MockUser));
       
       const students = allUsers.filter(u => u.role === 'Student');
       const staffList = allUsers.filter(u => u.role !== 'Student' && u.role !== 'Parent');
@@ -144,6 +144,8 @@ export function NewAdminDashboard() {
         Parent: 'hsl(var(--chart-4))',
         ExamOfficer: 'hsl(var(--chart-5))',
         Student: 'hsl(var(--muted))',
+        SLT: 'hsl(var(--chart-1))',
+        Accountant: 'hsl(var(--chart-5))',
       };
 
       setUserRoleData(Object.entries(rolesCount).map(([name, value], i) => ({
@@ -565,7 +567,7 @@ export function NewAdminDashboard() {
                         </TableRow>
                       ))
                     : recentStaff.slice(0, 4).map((user) => (
-                        <TableRow key={user.id}>
+                        <TableRow key={user.staffId}>
                           <TableCell>{user.name}</TableCell>
                           <TableCell>
                             <Badge
