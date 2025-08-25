@@ -219,14 +219,14 @@ export function DashboardSidebar() {
   return (
     <Sidebar collapsible="icon">
        <SidebarHeader className="border-b border-sidebar-border">
-          <div className="bg-background/10 p-2 rounded-md">
+          <div className="bg-background/10 p-2 rounded-md group-data-[collapsible=icon]:p-1">
             <Link href="/dashboard" className="flex items-center justify-center">
               <Image
-                src="https://firebasestorage.googleapis.com/v0/b/haschat-31cbd.appspot.com/o/logo.png?alt=media&token=c34a36f1-e374-4448-9642-4f3680e922b9"
+                src="/school-logo.png"
                 alt="Great Insight International Academy Logo"
                 width={200}
                 height={48}
-                className="w-auto h-10"
+                className="w-auto h-10 group-data-[collapsible=icon]:h-8"
               />
             </Link>
           </div>

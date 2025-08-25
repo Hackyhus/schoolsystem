@@ -172,8 +172,8 @@ export default function ExamQuestionsPage() {
               <TableRow>
                 <TableHead>Subject</TableHead>
                 <TableHead>Class</TableHead>
-                 {role !== 'Teacher' && <TableHead>Teacher</TableHead>}
-                <TableHead>Submitted On</TableHead>
+                 {role !== 'Teacher' && <TableHead className="hidden md:table-cell">Teacher</TableHead>}
+                <TableHead className="hidden md:table-cell">Submitted On</TableHead>
                 <TableHead>Status</TableHead>
                 <TableHead className="text-right">Action</TableHead>
               </TableRow>
@@ -184,8 +184,8 @@ export default function ExamQuestionsPage() {
                     <TableRow key={i}>
                       <TableCell><Skeleton className="h-5 w-24" /></TableCell>
                       <TableCell><Skeleton className="h-5 w-16" /></TableCell>
-                      {role !== 'Teacher' && <TableCell><Skeleton className="h-5 w-24" /></TableCell>}
-                      <TableCell><Skeleton className="h-5 w-24" /></TableCell>
+                      {role !== 'Teacher' && <TableCell className="hidden md:table-cell"><Skeleton className="h-5 w-24" /></TableCell>}
+                      <TableCell className="hidden md:table-cell"><Skeleton className="h-5 w-24" /></TableCell>
                       <TableCell><Skeleton className="h-6 w-28" /></TableCell>
                       <TableCell className="text-right"><Skeleton className="h-8 w-40" /></TableCell>
                     </TableRow>
@@ -194,8 +194,8 @@ export default function ExamQuestionsPage() {
                 <TableRow key={q.id}>
                   <TableCell className="font-medium">{q.subject}</TableCell>
                   <TableCell>{q.class}</TableCell>
-                   {role !== 'Teacher' && <TableCell>{q.teacherName}</TableCell>}
-                  <TableCell>{format(new Date(q.submittedOn.seconds * 1000), 'PPP')}</TableCell>
+                   {role !== 'Teacher' && <TableCell className="hidden md:table-cell">{q.teacherName}</TableCell>}
+                  <TableCell className="hidden md:table-cell">{format(new Date(q.submittedOn.seconds * 1000), 'PPP')}</TableCell>
                   <TableCell>
                     <Badge variant={statusVariant(q.status)}>{q.status}</Badge>
                   </TableCell>
