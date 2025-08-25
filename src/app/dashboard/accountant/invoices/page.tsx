@@ -2,6 +2,8 @@
 'use client';
 
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { FileText } from "lucide-react";
 
 export default function InvoicesPage() {
     return (
@@ -14,11 +16,18 @@ export default function InvoicesPage() {
             </div>
             <Card>
                 <CardHeader>
-                    <CardTitle>Coming Soon</CardTitle>
+                    <CardTitle>Invoice Management</CardTitle>
                     <CardDescription>
-                        This section is under construction. You will be able to manage student invoices here.
+                        This module will allow for the bulk generation of invoices for all students based on the defined fee structures. Accountants can view the status of all invoices (paid, pending, overdue), send reminders to parents, and track the overall revenue collection for the term. A secure payment gateway will be integrated to facilitate online payments.
+                        <br /><br />
+                        <strong className="text-primary">This feature is currently in development and will be available once the project is approved.</strong>
                     </CardDescription>
                 </CardHeader>
+                <CardContent>
+                    <Button disabled>
+                        <FileText className="mr-2 h-4 w-4" /> Generate Invoices
+                    </Button>
+                </CardContent>
             </Card>
         </div>
     );

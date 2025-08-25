@@ -18,11 +18,13 @@ export default function ExamRegistrationPage() {
                 <CardHeader>
                     <CardTitle>Student Exam Entry</CardTitle>
                     <CardDescription>
-                       This feature is coming soon. You will be able to manage student entries and special arrangements.
+                       This module enables the Exam Officer to formally register students for internal and external examinations. It will support managing student entries, assigning exam numbers, and noting any special arrangements (e.g., extra time). This ensures a formal and organized process for all major assessments.
+                       <br /><br />
+                        <strong className="text-primary">This feature is currently in development and will be available once the project is approved.</strong>
                     </CardDescription>
                 </CardHeader>
                 <CardContent>
-                    <Button>
+                    <Button disabled>
                         <PlusCircle className="mr-2 h-4 w-4" />
                         Register Student
                     </Button>

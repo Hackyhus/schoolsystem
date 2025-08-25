@@ -2,6 +2,8 @@
 'use client';
 
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { PlusCircle } from "lucide-react";
 
 export default function FeesPage() {
     return (
@@ -14,11 +16,18 @@ export default function FeesPage() {
             </div>
             <Card>
                 <CardHeader>
-                    <CardTitle>Coming Soon</CardTitle>
+                    <CardTitle>Manage School Fees</CardTitle>
                     <CardDescription>
-                        This section is under construction. You will be able to manage fee structures and line items here.
+                        Here, the Accountant can create and manage detailed fee structures for each class and academic term. This includes defining various line items such as tuition, PTA levies, extracurricular fees, and more. Once defined, these structures will be used to automatically generate invoices for all students.
+                        <br /><br />
+                        <strong className="text-primary">This feature is currently in development and will be available once the project is approved.</strong>
                     </CardDescription>
                 </CardHeader>
+                <CardContent>
+                    <Button disabled>
+                        <PlusCircle className="mr-2 h-4 w-4" /> Create New Fee Structure
+                    </Button>
+                </CardContent>
             </Card>
         </div>
     );
