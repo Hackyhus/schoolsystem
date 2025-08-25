@@ -8,18 +8,26 @@ import { serverTimestamp } from 'firebase/firestore';
 const staffSchema = z.object({
   firstName: z.string().min(1),
   lastName: z.string().min(1),
-  gender: z.enum(['Male', 'Female', 'Other']),
+  gender: z.enum(['Male', 'Female']),
   dateOfBirth: z.string(),
   stateOfOrigin: z.string().min(1),
   phone: z.string().min(1),
   email: z.string().email(),
   address: z.string().min(1),
   role: z.enum(['Admin', 'SLT', 'HeadOfDepartment', 'Teacher', 'Accountant', 'ExamOfficer']),
-  department: z.string().min(1),
+  department: z.string().optional(),
   dateOfEmployment: z.string(),
   profilePicture: z.instanceof(File).optional(),
   documents: z.array(z.instanceof(File)).optional(),
-});
+}).refine(data => {
+    if (['HeadOfDepartment', 'Teacher'].includes(data.role)) {
+      return !!data.department && data.department.length > 0;
+    }
+    return true;
+  }, {
+    message: "Department is required for this role.",
+    path: ["department"],
+  });
 
 const ROLE_CODES: { [key: string]: string } = {
     Admin: 'ADM',
@@ -35,8 +43,7 @@ async function generateStaffId(role: string): Promise<string> {
     const year = new Date().getFullYear().toString().slice(-2);
 
     // Get the count of existing staff to determine the next sequential number.
-    // This is a simple way, but for high concurrency, a dedicated counter in Firestore might be better.
-    const staffCount = await dbService.getCountFromServer('users');
+    const staffCount = await dbService.getCountFromServer('users', [{ type: 'where', fieldPath: 'staffId', opStr: '!=', value: null }]);
     const nextId = (staffCount + 1).toString().padStart(3, '0');
 
     return `GIIA/${roleCode}/${year}/${nextId}`;
@@ -57,7 +64,7 @@ export async function createStaff(formData: FormData) {
 
     if (!parsed.success) {
         console.error('Zod Errors:', parsed.error.flatten().fieldErrors);
-        return { error: 'Invalid form data provided.' };
+        return { error: 'Invalid form data provided. ' + parsed.error.flatten().formErrors.join(', ') };
     }
     
     const { profilePicture, documents: staffDocs, ...staffData } = parsed.data;
@@ -89,7 +96,7 @@ export async function createStaff(formData: FormData) {
         email: staffData.email,
         phone: staffData.phone,
         role: staffData.role,
-        department: staffData.department,
+        department: staffData.department || 'N/A',
         stateOfOrigin: staffData.stateOfOrigin,
         generatedPassword: staffData.stateOfOrigin,
         status: 'active',
@@ -112,9 +119,6 @@ export async function createStaff(formData: FormData) {
     // Handle specific Firebase auth errors
     if (error.code === 'auth/email-already-in-use') {
       return { error: 'This email is already registered.' };
-    }
-    if (error.code === 'auth/weak-password') {
-        return { error: 'The default password (State of Origin) is too weak. Please choose a different state or handle this case.' };
     }
     return { error: error.message || 'An unexpected server error occurred.' };
   }

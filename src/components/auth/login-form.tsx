@@ -89,9 +89,9 @@ export function LoginForm() {
       if (user) {
         setRole(userData.role);
 
-        // 3. Show password change reminder if needed
+        // 3. Show password change reminder if needed (case-insensitive check)
         const isDefaultPassword = (userData.stateOfOrigin && values.password.toLowerCase() === userData.stateOfOrigin.toLowerCase()) || 
-                                (userData.generatedPassword && values.password === userData.generatedPassword);
+                                (userData.generatedPassword && values.password.toLowerCase() === userData.generatedPassword.toLowerCase());
         
         if (isDefaultPassword) {
            toast({
@@ -126,7 +126,7 @@ export function LoginForm() {
             <FormItem>
               <FormLabel>Staff/Student ID or Email</FormLabel>
               <FormControl>
-                <Input placeholder="e.g. GIIA24TEA0001 or name@giia.com.ng" {...field} />
+                <Input placeholder="e.g. GIIA/TEA/24/001 or name@giia.com.ng" {...field} />
               </FormControl>
               <FormMessage />
             </FormItem>

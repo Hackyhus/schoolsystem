@@ -2,7 +2,7 @@
 'use client';
 
 import { zodResolver } from '@hookform/resolvers/zod';
-import { useForm } from 'react-hook-form';
+import { useForm, useWatch } from 'react-hook-form';
 import * as z from 'zod';
 import { Button } from '@/components/ui/button';
 import {
@@ -61,12 +61,20 @@ const formSchema = z.object({
 
   // Professional Info
   role: z.enum(['Admin', 'SLT', 'HeadOfDepartment', 'Teacher', 'Accountant', 'ExamOfficer'], { required_error: 'Role is required.' }),
-  department: z.string().min(1, 'Department is required.'),
+  department: z.string().optional(),
   dateOfEmployment: z.date({ required_error: 'Employment date is required.' }),
 
   // Documents
   documents: z.instanceof(FileList).optional(),
-});
+}).refine(data => {
+    if (['HeadOfDepartment', 'Teacher'].includes(data.role)) {
+      return !!data.department && data.department.length > 0;
+    }
+    return true;
+  }, {
+    message: "Department is required for Teacher and HOD roles.",
+    path: ["department"],
+  });
 
 
 export function AddUserForm({ onUserAdded }: { onUserAdded: () => void }) {
@@ -88,11 +96,24 @@ export function AddUserForm({ onUserAdded }: { onUserAdded: () => void }) {
     },
   });
 
+  const selectedRole = useWatch({
+    control: form.control,
+    name: 'role'
+  });
+
+  const showDepartmentField = ['HeadOfDepartment', 'Teacher'].includes(selectedRole);
+
+
    async function onSubmit(values: z.infer<typeof formSchema>) {
     setIsSubmitting(true);
     
     const formData = new FormData();
-    Object.entries(values).forEach(([key, value]) => {
+    const finalValues = { ...values };
+    if (!showDepartmentField) {
+        finalValues.department = 'N/A'; // Assign a default if not shown
+    }
+
+    Object.entries(finalValues).forEach(([key, value]) => {
       if (value) {
         if (value instanceof Date) {
           formData.append(key, value.toISOString());
@@ -175,7 +196,7 @@ export function AddUserForm({ onUserAdded }: { onUserAdded: () => void }) {
                 <Card>
                     <CardHeader><CardTitle>Contact & Account Details</CardTitle></CardHeader>
                     <CardContent className="space-y-4">
-                         <FormField control={form.control} name="email" render={({ field }) => ( <FormItem><FormLabel>Email Address</FormLabel><FormControl><Input type="email" placeholder="name@giia.sch.ng" {...field} /></FormControl><FormMessage /></FormItem> )}/>
+                         <FormField control={form.control} name="email" render={({ field }) => ( <FormItem><FormLabel>Email Address</FormLabel><FormControl><Input type="email" placeholder="name@giia.com.ng" {...field} /></FormControl><FormMessage /></FormItem> )}/>
                          <FormField control={form.control} name="phone" render={({ field }) => ( <FormItem><FormLabel>Phone Number</FormLabel><FormControl><Input placeholder="08012345678" {...field} /></FormControl><FormMessage /></FormItem> )}/>
                          <FormField control={form.control} name="address" render={({ field }) => ( <FormItem><FormLabel>Home Address</FormLabel><FormControl><Input placeholder="123, Main Street, Lagos" {...field} /></FormControl><FormMessage /></FormItem> )}/>
                     </CardContent>
@@ -183,9 +204,13 @@ export function AddUserForm({ onUserAdded }: { onUserAdded: () => void }) {
                  <Card>
                     <CardHeader><CardTitle>Professional Information</CardTitle></CardHeader>
                     <CardContent className="space-y-4">
-                         <FormField control={form.control} name="role" render={({ field }) => ( <FormItem><FormLabel>Role</FormLabel><Select onValueChange={field.onChange} defaultValue={field.value}><FormControl><SelectTrigger><SelectValue placeholder="Assign a role" /></SelectTrigger></FormControl><SelectContent><SelectItem value="Admin">Admin</SelectItem><SelectItem value="SLT">SLT</SelectItem><SelectItem value="HeadOfDepartment">Head of Department</SelectItem><SelectItem value="Teacher">Teacher</SelectItem><SelectItem value="Accountant">Accountant</SelectItem><SelectItem value="ExamOfficer">Exam Officer</SelectItem></SelectContent></Select><FormMessage /></FormItem> )}/>
+                        <div className={cn("grid grid-cols-1 gap-4", showDepartmentField ? "sm:grid-cols-2" : "grid-cols-1")}>
+                            <FormField control={form.control} name="role" render={({ field }) => ( <FormItem><FormLabel>Role</FormLabel><Select onValueChange={field.onChange} defaultValue={field.value}><FormControl><SelectTrigger><SelectValue placeholder="Assign a role" /></SelectTrigger></FormControl><SelectContent><SelectItem value="Admin">Admin</SelectItem><SelectItem value="SLT">SLT</SelectItem><SelectItem value="HeadOfDepartment">Head of Department</SelectItem><SelectItem value="Teacher">Teacher</SelectItem><SelectItem value="Accountant">Accountant</SelectItem><SelectItem value="ExamOfficer">Exam Officer</SelectItem></SelectContent></Select><FormMessage /></FormItem> )}/>
+                            {showDepartmentField && (
+                               <FormField control={form.control} name="department" render={({ field }) => (<FormItem><FormLabel>Department</FormLabel><FormControl><Combobox options={departmentOptions} placeholder="Select Department" searchPlaceholder="Search..." notFoundText="No department found." {...field} /></FormControl><FormMessage /></FormItem>)}/>
+                            )}
+                        </div>
                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                            <FormField control={form.control} name="department" render={({ field }) => (<FormItem><FormLabel>Department</FormLabel><FormControl><Combobox options={departmentOptions} placeholder="Select Department" searchPlaceholder="Search..." notFoundText="No department found." {...field} /></FormControl><FormMessage /></FormItem>)}/>
                             <FormField
                                 control={form.control}
                                 name="dateOfEmployment"
@@ -215,7 +240,6 @@ export function AddUserForm({ onUserAdded }: { onUserAdded: () => void }) {
                                         <DateOfBirthInput
                                             value={field.value}
                                             onChange={field.onChange}
-                                            disableFuture
                                         />
                                     </PopoverContent>
                                     </Popover>
