@@ -44,9 +44,9 @@ async function generateStaffId(role: string): Promise<string> {
 
     // Get the count of existing staff to determine the next sequential number.
     const staffCount = await dbService.getCountFromServer('users', [{ type: 'where', fieldPath: 'staffId', opStr: '!=', value: null }]);
-    const nextId = (staffCount + 1).toString().padStart(3, '0');
+    const nextId = (staffCount + 1).toString().padStart(4, '0');
 
-    return `GIIA-${roleCode}-${year}-${nextId}`;
+    return `GIIA${year}${roleCode}${nextId}`;
 }
 
 
@@ -122,7 +122,7 @@ export async function createStaff(formData: FormData) {
       return { error: 'This email is already registered.' };
     }
      if (error.code === 'auth/weak-password') {
-      return { error: 'The password is too weak. It must be at least 6 characters.' };
+      return { error: `The password '${error.customData?._tokenResponse?.password}' is too weak. It must be at least 6 characters.` };
     }
     return { error: error.message || 'An unexpected server error occurred.' };
   }
