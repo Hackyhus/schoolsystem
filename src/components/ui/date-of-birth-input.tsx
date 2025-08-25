@@ -47,6 +47,10 @@ export function DateOfBirthInput({ value, onChange, className }: DateOfBirthInpu
         value ? String(value.getFullYear()) : undefined
     );
 
+    const handleDateChange = React.useCallback((newDate?: Date) => {
+        onChange(newDate);
+    }, [onChange]);
+    
     // This effect ensures the parent form's state is updated whenever a valid date
     // can be constructed from the component's internal state.
     React.useEffect(() => {
@@ -59,20 +63,20 @@ export function DateOfBirthInput({ value, onChange, className }: DateOfBirthInpu
             ) {
                 // Only call onChange if the new date is different from the parent's state
                 if (value?.getTime() !== newDate.getTime()) {
-                    onChange(newDate);
+                    handleDateChange(newDate);
                 }
             } else {
                  if (value !== undefined) {
-                    onChange(undefined);
+                    handleDateChange(undefined);
                 }
             }
         } else {
             // If any part is missing, ensure the parent state is also cleared
             if (value !== undefined) {
-                onChange(undefined);
+                handleDateChange(undefined);
             }
         }
-    }, [day, month, year, onChange, value]);
+    }, [day, month, year, value, handleDateChange]);
 
     // This effect syncs internal state with the external `value` prop.
     // This is important for form resets or programmatic changes.
