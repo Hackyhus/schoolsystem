@@ -35,6 +35,7 @@ import {
 } from '@/components/ui/dialog';
 import Link from 'next/link';
 import { Badge } from '@/components/ui/badge';
+import Image from 'next/image';
 
 export default function UsersPage() {
   const [users, setUsers] = useState<MockUser[]>([]);
@@ -123,6 +124,14 @@ export default function UsersPage() {
             </DialogTrigger>
             <DialogContent className="max-w-4xl">
                 <DialogHeader>
+                    <div className="mx-auto mb-4">
+                        <Image
+                            src="/school-logo.png"
+                            alt="Great Insight International Academy Logo"
+                            width={250}
+                            height={60}
+                        />
+                    </div>
                     <DialogTitle>Create New Staff Profile</DialogTitle>
                     <DialogDescription>
                        Fill out the details to create a new staff account. The default password will be their State of Origin.
