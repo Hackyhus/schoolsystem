@@ -71,7 +71,7 @@ export default function UsersPage() {
   const removeUser = async (userId: string) => {
     if (
       !confirm(
-        'Are you sure you want to delete this user? This action cannot be undone.'
+        'Are you sure you want to delete this staff member? This action cannot be undone.'
       )
     )
       return;
@@ -80,8 +80,8 @@ export default function UsersPage() {
       // A more robust solution would use a Cloud Function to delete the Auth user.
       await deleteDoc(doc(db, 'users', userId));
       toast({
-        title: 'User Removed',
-        description: 'The user has been successfully deleted from the list.',
+        title: 'Staff Member Removed',
+        description: 'The staff member has been successfully deleted.',
       });
       fetchUsers(); // Refresh the list
     } catch (error) {
@@ -89,7 +89,7 @@ export default function UsersPage() {
       toast({
         variant: 'destructive',
         title: 'Error',
-        description: 'Could not remove the user.',
+        description: 'Could not remove the staff member.',
       });
     }
   };
