@@ -20,19 +20,66 @@ import { useTheme } from '@/context/theme-context';
 import Link from 'next/link';
 import { NotificationBell } from './notifications/notification-bell';
 
+const PAGE_TITLES: { [key: string]: string } = {
+    '/dashboard': 'Dashboard',
+    '/dashboard/users': 'Manage Staff',
+    '/dashboard/students': 'Manage Students',
+    '/dashboard/departments': 'Manage Departments',
+    '/dashboard/system': 'System Configuration',
+    '/dashboard/db': 'Database Management',
+    '/dashboard/logs': 'Logs & Security',
+    '/dashboard/reports': 'Reports & Analytics',
+    '/dashboard/lesson-notes': 'Lesson Plans',
+    '/dashboard/exam-questions': 'Test & Exam Questions',
+    '/dashboard/scores': 'Enter Scores',
+    '/dashboard/performance': 'Student Performance',
+    '/dashboard/accountant/fees': 'Fee Structures',
+    '/dashboard/accountant/invoices': 'Invoices',
+    '/dashboard/accountant/payments': 'Payments',
+    '/dashboard/accountant/expenses': 'Expenses & Budgeting',
+    '/dashboard/accountant/payroll': 'Payroll',
+    '/dashboard/accountant/reconciliation': 'Bank Reconciliation',
+    '/dashboard/accountant/reports': 'Financial Reports',
+    '/dashboard/exam-officer': 'Exam Officer Dashboard',
+    '/dashboard/timetable': 'Exam Timetable',
+    '/dashboard/exam-registration': 'Exam Registration',
+    '/dashboard/seating-plan': 'Seating Plan Generator',
+    '/dashboard/system/roles': 'Roles & Permissions',
+    '/dashboard/system/school-info': 'School Information',
+    '/dashboard/system/grading': 'Grading System',
+    '/dashboard/system/academic-year': 'Academic Year',
+    '/dashboard/system/fees': 'System Fee Structure',
+    '/dashboard/system/classes-subjects': 'Classes & Subjects',
+    '/profile': 'My Profile',
+    '/dashboard/notifications': 'Notifications',
+    '/dashboard/settings': 'Settings',
+};
+
 export function DashboardHeader() {
-  const { role, logout } = useRole();
+  const { user, role, logout } = useRole();
   const { theme, setTheme } = useTheme();
   const pathname = usePathname();
 
   const getPageTitle = () => {
+    if (PAGE_TITLES[pathname]) {
+        return PAGE_TITLES[pathname];
+    }
     const segments = pathname.split('/').filter(Boolean);
-    if (segments.length === 1) return 'Dashboard';
-    const title = segments[segments.length-1].replace(/-/g, ' ');
+    if (segments.length > 2) {
+        // For dynamic routes like /dashboard/users/[id]
+        const base = segments.slice(0, 2).join('/');
+        const pageKey = `/${base}`;
+        if (PAGE_TITLES[pageKey]) {
+            return PAGE_TITLES[pageKey].replace('Manage', 'View');
+        }
+    }
+    const title = segments[segments.length - 1]?.replace(/-/g, ' ') || 'Dashboard';
     return title.charAt(0).toUpperCase() + title.slice(1);
   };
 
-  const userInitials = role ? role.substring(0, 2).toUpperCase() : '..';
+  const userInitials = user?.displayName
+    ? user.displayName.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase()
+    : role?.substring(0, 2).toUpperCase() || '..';
 
   return (
     <header className="sticky top-0 z-10 flex h-16 items-center gap-4 border-b bg-background px-4 md:px-6">
@@ -57,10 +104,10 @@ export function DashboardHeader() {
               className="flex items-center gap-2 rounded-full px-2 py-1"
             >
               <Avatar className="h-8 w-8">
-                <AvatarImage src="https://placehold.co/40x40.png" alt={role ?? ''} data-ai-hint="person portrait" />
+                <AvatarImage src={user?.photoURL || undefined} alt={user?.displayName || role || ''} data-ai-hint="person portrait" />
                 <AvatarFallback>{userInitials}</AvatarFallback>
               </Avatar>
-              <span className="hidden md:inline">{role}</span>
+              <span className="hidden md:inline">{user?.displayName || role}</span>
               <ChevronDown className="hidden h-4 w-4 md:inline" />
             </Button>
           </DropdownMenuTrigger>

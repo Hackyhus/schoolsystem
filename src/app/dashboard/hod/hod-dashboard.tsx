@@ -89,11 +89,15 @@ export function HodDashboard() {
       const notesSnapshot = await getDocs(notesQuery);
       const notesList = notesSnapshot.docs.map(doc => {
         const data = doc.data() as MockLessonNote;
-        let formattedDate = '';
-        if (data.submittedOn?.seconds) {
-            formattedDate = format(new Date(data.submittedOn.seconds * 1000), 'PPP');
-        } else if (typeof data.submissionDate === 'string') {
-             formattedDate = format(new Date(data.submissionDate), 'PPP');
+        let formattedDate = 'Invalid Date';
+        try {
+          if (data.submittedOn?.seconds) {
+              formattedDate = format(new Date(data.submittedOn.seconds * 1000), 'PPP');
+          } else if (typeof data.submissionDate === 'string' && !isNaN(new Date(data.submissionDate).getTime())) {
+               formattedDate = format(new Date(data.submissionDate), 'PPP');
+          }
+        } catch(e) {
+            console.warn(`Could not parse date for note ${doc.id}:`, data.submittedOn || data.submissionDate);
         }
 
         return { 
@@ -278,7 +282,7 @@ export function HodDashboard() {
                             <XAxis dataKey="subject" tickLine={false} axisLine={false} tickMargin={8} fontSize={12} />
                             <YAxis domain={[0, 100]} />
                              <ChartTooltip content={<ChartTooltipContent indicator="dot" />} />
-                            <BarRechart dataKey="average" radius={4}>
+                             <BarRechart dataKey="average" radius={4}>
                                 {subjectPerformanceData.map(entry => <Cell key={entry.subject} fill={entry.color} />)}
                             </BarRechart>
                          </BarChartRecharts>
@@ -327,3 +331,4 @@ export function HodDashboard() {
       </div>
     </div>
   );
+}

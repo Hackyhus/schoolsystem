@@ -56,7 +56,7 @@ export function LoginForm() {
         const q = query(usersRef, where('email', '==', userEmail));
         const querySnapshot = await getDocs(q);
         if (querySnapshot.empty) {
-            throw new Error("Invalid credentials");
+            throw new Error("auth/user-not-found");
         }
         userData = querySnapshot.docs[0].data();
 
@@ -66,7 +66,7 @@ export function LoginForm() {
         const q = query(usersRef, where('staffId', '==', staffId));
         const querySnapshot = await getDocs(q);
         if (querySnapshot.empty) {
-           throw new Error("Invalid credentials");
+           throw new Error("auth/user-not-found");
         }
         userData = querySnapshot.docs[0].data();
         userEmail = userData.email;
@@ -74,7 +74,7 @@ export function LoginForm() {
       
 
       if (!userEmail || !userData) {
-        throw new Error("Invalid credentials");
+        throw new Error("auth/user-not-found");
       }
 
       // 2. Sign in with the user's email and provided password
@@ -108,10 +108,18 @@ export function LoginForm() {
         router.push('/dashboard');
       }
     } catch (error: any) {
+        let description = 'An unexpected error occurred.';
+        if (error.message === 'auth/user-not-found' || error.code === 'auth/user-not-found') {
+            description = 'No user found with that ID or Email.';
+        } else if (error.code === 'auth/wrong-password') {
+            description = 'Incorrect password. Please try again.';
+        } else if (error.code === 'auth/invalid-credential') {
+             description = 'Invalid credentials provided.';
+        }
        toast({
         variant: 'destructive',
         title: 'Login Failed',
-        description: 'Invalid ID/Email or Password.',
+        description,
       });
     }
   }
@@ -126,7 +134,7 @@ export function LoginForm() {
             <FormItem>
               <FormLabel>Staff/Student ID or Email</FormLabel>
               <FormControl>
-                <Input placeholder="e.g. GIIA/TEA/24/001 or name@giia.com.ng" {...field} />
+                <Input placeholder="e.g. GIIA24TEA0001 or name@giia.com.ng" {...field} />
               </FormControl>
               <FormMessage />
             </FormItem>
