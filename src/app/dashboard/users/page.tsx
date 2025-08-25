@@ -182,7 +182,7 @@ export default function UsersPage() {
                       <Button
                         variant="ghost"
                         size="icon"
-                        onClick={() => removeUser(user.id.toString())}
+                        onClick={() => removeUser(user.id)}
                       >
                         <Trash2 className="h-4 w-4" />
                       </Button>
