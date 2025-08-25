@@ -187,7 +187,7 @@ export default function StudentsPage() {
                     </TableCell>
                     <TableCell className="text-right">
                        <Button asChild variant="outline" size="icon" className="mr-2">
-                         <Link href={`/dashboard/students/${student.id}`}>
+                         <Link href={`/dashboard/students/${student.studentId}`}>
                            <Eye className="h-4 w-4" />
                          </Link>
                        </Button>

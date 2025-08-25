@@ -175,7 +175,7 @@ export default function UsersPage() {
                     </TableCell>
                     <TableCell className="text-right space-x-2">
                        <Button asChild variant="outline" size="icon">
-                         <Link href={`/dashboard/users/${user.id}`}>
+                         <Link href={`/dashboard/users/${user.staffId}`}>
                            <Edit className="h-4 w-4" />
                          </Link>
                        </Button>

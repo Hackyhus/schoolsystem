@@ -3,7 +3,7 @@
 
 import { useEffect, useState, useCallback } from 'react';
 import { notFound, useParams, useRouter } from 'next/navigation';
-import { doc, onSnapshot } from 'firebase/firestore';
+import { collection, query, where, getDocs, onSnapshot, doc } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import type { Student } from '@/lib/schema';
 import { useRole } from '@/context/role-context';
@@ -32,28 +32,32 @@ export default function StudentProfilePage() {
 
   const studentId = Array.isArray(id) ? id[0] : id;
 
-  const fetchStudent = useCallback(() => {
+  const fetchStudent = useCallback(async () => {
     setIsLoading(true);
-    const docRef = doc(db, 'students', studentId);
-    const unsubscribe = onSnapshot(docRef, (docSnap) => {
-      if (docSnap.exists()) {
-        setStudent({ id: docSnap.id, ...docSnap.data() } as Student);
-      } else {
-        notFound();
-      }
-      setIsLoading(false);
-    }, (error) => {
-        console.error("Error fetching student:", error);
-        setIsLoading(false);
-        notFound();
-    });
+    if (!studentId) return;
 
-    return () => unsubscribe();
+    const studentsRef = collection(db, 'students');
+    const q = query(studentsRef, where('studentId', '==', studentId));
+
+    try {
+        const querySnapshot = await getDocs(q);
+        if (!querySnapshot.empty) {
+            const studentDoc = querySnapshot.docs[0];
+            const studentData = { id: studentDoc.id, ...studentDoc.data() } as Student;
+            setStudent(studentData);
+        } else {
+            notFound();
+        }
+    } catch(error) {
+        console.error("Error fetching student by studentId:", error);
+        notFound();
+    } finally {
+        setIsLoading(false);
+    }
   }, [studentId]);
 
   useEffect(() => {
-    const unsubscribe = fetchStudent();
-    return () => unsubscribe();
+    fetchStudent();
   }, [fetchStudent]);
 
   if (isLoading) {
@@ -123,9 +127,9 @@ export default function StudentProfilePage() {
                 <div className="p-4">
                     <h3 className="font-semibold text-lg mb-2 flex items-center"><User className="mr-2 h-5 w-5 text-primary" /> Personal Details</h3>
                     <div className="text-sm space-y-1 text-muted-foreground">
-                        <p><strong>Date of Birth:</strong> {student.dateOfBirth ? format(new Date(student.dateOfBirth.seconds * 1000), 'PPP') : 'N/A'}</p>
+                        <p><strong>Date of Birth:</strong> {student.dateOfBirth?.seconds ? format(new Date(student.dateOfBirth.seconds * 1000), 'PPP') : 'N/A'}</p>
                         <p><strong>Gender:</strong> {student.gender}</p>
-                        <p><strong>Admission Date:</strong> {student.admissionDate ? format(new Date(student.admissionDate.seconds * 1000), 'PPP') : 'N/A'}</p>
+                        <p><strong>Admission Date:</strong> {student.admissionDate?.seconds ? format(new Date(student.admissionDate.seconds * 1000), 'PPP') : 'N/A'}</p>
                         <p><strong>Session:</strong> {student.sessionYear}</p>
                     </div>
                 </div>

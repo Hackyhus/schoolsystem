@@ -1,8 +1,9 @@
+
 'use client';
 
 import { useEffect, useState, useCallback } from 'react';
 import { notFound, useParams, useRouter } from 'next/navigation';
-import { doc, getDoc, onSnapshot } from 'firebase/firestore';
+import { doc, onSnapshot, collection, query, where, getDocs } from 'firebase/firestore';
 import { db, auth } from '@/lib/firebase';
 import type { MockUser } from '@/lib/schema';
 import { useRole } from '@/context/role-context';
@@ -33,33 +34,38 @@ export default function UserProfilePage() {
   const [personalInfoModalOpen, setPersonalInfoModalOpen] = useState(false);
   const { role: currentUserRole } = useRole();
 
-  const userId = Array.isArray(id) ? id[0] : id;
+  const staffId = Array.isArray(id) ? id[0] : id;
 
-  const fetchUser = useCallback(() => {
+  const fetchUser = useCallback(async () => {
     setIsLoading(true);
-    const docRef = doc(db, 'users', userId);
-    const unsubscribe = onSnapshot(docRef, (docSnap) => {
-      if (docSnap.exists()) {
-        setUser({ id: docSnap.id, ...docSnap.data() } as MockUser);
-      } else {
-        notFound();
-      }
-      setIsLoading(false);
-    }, (error) => {
-        console.error("Error fetching user:", error);
-        setIsLoading(false);
-    });
+    if (!staffId) return;
 
-    return () => unsubscribe();
-  }, [userId]);
+    const usersRef = collection(db, 'users');
+    const q = query(usersRef, where('staffId', '==', staffId));
+
+    try {
+        const querySnapshot = await getDocs(q);
+        if (!querySnapshot.empty) {
+            const userDoc = querySnapshot.docs[0];
+            const userData = { id: userDoc.id, ...userDoc.data() } as MockUser;
+            setUser(userData);
+        } else {
+            notFound();
+        }
+    } catch (error) {
+        console.error("Error fetching user by staffId:", error);
+        notFound();
+    } finally {
+        setIsLoading(false);
+    }
+  }, [staffId]);
 
   useEffect(() => {
-    const unsubscribe = fetchUser();
-    return () => unsubscribe();
+    fetchUser();
   }, [fetchUser]);
 
   const handleUpdate = () => {
-    // Re-fetch handled by onSnapshot
+    fetchUser(); // Re-fetch to ensure data is fresh
     setPersonalInfoModalOpen(false);
   };
   
@@ -150,7 +156,7 @@ export default function UserProfilePage() {
                      <div className="space-y-4 text-sm">
                         <p><strong>Role:</strong> {user.role}</p>
                         <p><strong>Department:</strong> {user.department}</p>
-                        <p><strong>Employment Date:</strong> {user.employmentDate ? new Date(user.employmentDate.seconds * 1000).toLocaleDateString() : 'N/A'}</p>
+                        <p><strong>Employment Date:</strong> {user.employmentDate?.seconds ? new Date(user.employmentDate.seconds * 1000).toLocaleDateString() : 'N/A'}</p>
                      </div>
                    )}
                 </CardContent>
@@ -163,7 +169,7 @@ export default function UserProfilePage() {
                 <CardContent className="space-y-2 text-sm">
                    <p><strong>Phone:</strong> {user.phone}</p>
                    <p><strong>Address:</strong> {user.personalInfo?.address}</p>
-                   <p><strong>Date of Birth:</strong> {user.personalInfo?.dob ? new Date(user.personalInfo.dob.seconds * 1000).toLocaleDateString() : 'N/A'}</p>
+                   <p><strong>Date of Birth:</strong> {user.personalInfo?.dob?.seconds ? new Date(user.personalInfo.dob.seconds * 1000).toLocaleDateString() : 'N/A'}</p>
                    <p><strong>Gender:</strong> {user.personalInfo?.gender}</p>
                    <p><strong>Next of Kin:</strong> {user.personalInfo?.nextOfKin || 'N/A'}</p>
                    <p><strong>State of Origin:</strong> {user.stateOfOrigin}</p>
