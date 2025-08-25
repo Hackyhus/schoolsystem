@@ -41,6 +41,7 @@ import {
   ChartLegendContent,
 } from '@/components/ui/chart';
 import { Pie, PieChart, Cell, BarChart as BarChartRecharts, XAxis, YAxis, CartesianGrid, ResponsiveContainer } from 'recharts';
+import { format } from 'date-fns';
 
 
 type SubmissionStatusData = {
@@ -58,10 +59,16 @@ const subjectPerformanceData = [
   { subject: 'Art', average: 0, color: 'hsl(var(--chart-5))' },
 ];
 
+type LessonNoteWithDate = Omit<MockLessonNote, 'submissionDate' | 'submittedOn'> & {
+  submissionDate: string | { seconds: number; nanoseconds: number; }; // Keep original for type safety
+  submittedOn?: any;
+  formattedDate: string;
+};
+
 export function HodDashboard() {
   const { user } = useRole();
   const { toast } = useToast();
-  const [notes, setNotes] = useState<MockLessonNote[]>([]);
+  const [notes, setNotes] = useState<LessonNoteWithDate[]>([]);
   const [staff, setStaff] = useState<MockUser[]>([]);
   const [stats, setStats] = useState({
     pending: 0,
@@ -78,9 +85,23 @@ export function HodDashboard() {
     try {
       // In a real app, these queries would be scoped by the HOD's department.
       // For now, we fetch all relevant data to demonstrate the UI.
-      const notesQuery = query(collection(db, 'lessonNotes'), orderBy('submissionDate', 'desc'));
+      const notesQuery = query(collection(db, 'lessonNotes'), orderBy('submittedOn', 'desc'));
       const notesSnapshot = await getDocs(notesQuery);
-      const notesList = notesSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as MockLessonNote));
+      const notesList = notesSnapshot.docs.map(doc => {
+        const data = doc.data() as MockLessonNote;
+        let formattedDate = '';
+        if (data.submittedOn?.seconds) {
+            formattedDate = format(new Date(data.submittedOn.seconds * 1000), 'PPP');
+        } else if (typeof data.submissionDate === 'string') {
+             formattedDate = format(new Date(data.submissionDate), 'PPP');
+        }
+
+        return { 
+            id: doc.id, 
+            ...data,
+            formattedDate: formattedDate
+        } as LessonNoteWithDate;
+      });
       setNotes(notesList.slice(0, 5)); // Show recent 5
 
       const approved = notesList.filter(n => n.status === 'Approved').length;
@@ -305,3 +326,4 @@ export function HodDashboard() {
     </div>
   );
 }
+
