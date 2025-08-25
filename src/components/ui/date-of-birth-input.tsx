@@ -36,14 +36,25 @@ const currentYear = new Date().getFullYear();
 const years = Array.from({ length: currentYear - 1949 }, (_, i) => currentYear - i);
 
 export function DateOfBirthInput({ value, onChange, className }: DateOfBirthInputProps) {
-  const [day, setDay] = React.useState<string>(value ? String(value.getDate()) : '');
-  const [month, setMonth] = React.useState<string>(value ? String(value.getMonth()) : '');
-  const [year, setYear] = React.useState<string>(value ? String(value.getFullYear()) : '');
+  const [day, setDay] = React.useState<string>('');
+  const [month, setMonth] = React.useState<string>('');
+  const [year, setYear] = React.useState<string>('');
+  const [isClient, setIsClient] = React.useState(false);
 
   React.useEffect(() => {
+    setIsClient(true);
+    if (value) {
+      setDay(String(value.getDate()));
+      setMonth(String(value.getMonth()));
+      setYear(String(value.getFullYear()));
+    }
+  }, [value]);
+  
+  React.useEffect(() => {
+    if (!isClient) return;
+
     if (day && month && year) {
       const newDate = new Date(Number(year), Number(month), Number(day));
-      // Check if the created date is valid
       if (
         newDate.getFullYear() === Number(year) &&
         newDate.getMonth() === Number(month) &&
@@ -56,7 +67,7 @@ export function DateOfBirthInput({ value, onChange, className }: DateOfBirthInpu
     } else {
         onChange(undefined);
     }
-  }, [day, month, year, onChange]);
+  }, [day, month, year, onChange, isClient]);
 
   const daysInMonth = (m: number, y: number) => {
     return new Date(y, m + 1, 0).getDate();
@@ -64,6 +75,9 @@ export function DateOfBirthInput({ value, onChange, className }: DateOfBirthInpu
 
   const dayOptions = year && month ? Array.from({ length: daysInMonth(Number(month), Number(year)) }, (_, i) => i + 1) : Array.from({ length: 31 }, (_, i) => i + 1);
 
+  if (!isClient) {
+    return null; // or a skeleton loader
+  }
 
   return (
     <div className={cn('grid grid-cols-3 gap-2', className)}>

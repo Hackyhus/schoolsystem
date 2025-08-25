@@ -8,7 +8,6 @@ import { Analytics } from "@vercel/analytics/react"
 export const metadata: Metadata = {
   title: 'InsightConnect Portal',
   description: 'A role-based portal for staff and parents of Great Insight International Academy (GIIA).',
-  manifest: '/manifest.json',
 };
 
 export default function RootLayout({
