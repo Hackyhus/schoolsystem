@@ -47,29 +47,36 @@ export function DateOfBirthInput({ value, onChange, className }: DateOfBirthInpu
         value ? String(value.getFullYear()) : undefined
     );
 
-    // This effect will run only when one of the date parts changes.
-    // It constructs the date and calls the parent's onChange.
+    // This effect ensures the parent form's state is updated whenever a valid date
+    // can be constructed from the component's internal state.
     React.useEffect(() => {
-        // Only attempt to create a date if all parts are selected
         if (day && month && year) {
             const newDate = new Date(Number(year), Number(month), Number(day));
-            // Ensure the created date is valid (e.g., handles Feb 30)
-            if (
+             if (
                 newDate.getFullYear() === Number(year) &&
                 newDate.getMonth() === Number(month) &&
                 newDate.getDate() === Number(day)
             ) {
-                 onChange(newDate);
+                // Only call onChange if the new date is different from the parent's state
+                if (value?.getTime() !== newDate.getTime()) {
+                    onChange(newDate);
+                }
             } else {
-                // If the date is invalid (e.g. Feb 31), clear the parent state
+                 if (value !== undefined) {
+                    onChange(undefined);
+                }
+            }
+        } else {
+            // If any part is missing, ensure the parent state is also cleared
+            if (value !== undefined) {
                 onChange(undefined);
             }
         }
-    }, [day, month, year, onChange]);
+    }, [day, month, year, onChange, value]);
 
-    React.useEffect(() => {
-        // This effect syncs the component's internal state with the external value prop.
-        // It's important for when the form is reset or programmatically changed.
+    // This effect syncs internal state with the external `value` prop.
+    // This is important for form resets or programmatic changes.
+     React.useEffect(() => {
         if (value) {
             const newDay = String(value.getDate());
             const newMonth = String(value.getMonth());
@@ -78,12 +85,14 @@ export function DateOfBirthInput({ value, onChange, className }: DateOfBirthInpu
             if (newMonth !== month) setMonth(newMonth);
             if (newYear !== year) setYear(newYear);
         } else {
-            // If the external value is cleared, clear internal state.
             setDay(undefined);
             setMonth(undefined);
             setYear(undefined);
         }
-    }, [value, day, month, year]);
+    // We only want this to run when the EXTERNAL value changes.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [value]);
+
 
   const daysInMonth = (m: number, y: number) => {
     return new Date(y, m + 1, 0).getDate();
