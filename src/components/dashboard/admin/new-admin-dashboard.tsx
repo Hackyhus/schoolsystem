@@ -133,10 +133,13 @@ export function NewAdminDashboard() {
 
       const rolesCount: Record<string, number> = {};
       allUsers.forEach(user => {
-        rolesCount[user.role] = (rolesCount[user.role] || 0) + 1;
+        if (!user.role) return;
+        // Standardize role names for accurate counting
+        const roleName = user.role.charAt(0).toUpperCase() + user.role.slice(1).toLowerCase();
+        rolesCount[roleName] = (rolesCount[roleName] || 0) + 1;
       });
       
-      const roleColors = {
+      const roleColors: {[key: string]: string} = {
         Admin: 'hsl(var(--chart-1))',
         Teacher: 'hsl(var(--chart-2))',
         HeadOfDepartment: 'hsl(var(--chart-3))',
@@ -150,7 +153,7 @@ export function NewAdminDashboard() {
       setUserRoleData(Object.entries(rolesCount).map(([name, value], i) => ({
         name,
         value,
-        fill: (roleColors as any)[name] || `hsl(var(--chart-${(i % 5) + 1}))`,
+        fill: roleColors[name] || `hsl(var(--chart-${(i % 5) + 1}))`,
       })));
 
 
@@ -256,10 +259,12 @@ export function NewAdminDashboard() {
     users: { label: 'Users' }
   };
   
-   const userRoleChartConfig = userRoleData.reduce((acc, { name, fill }) => {
-    (acc as any)[name] = { label: name, color: fill };
+  const userRoleChartConfig = userRoleData.reduce((acc, { name, fill }) => {
+    // Sanitize the key to be valid for object property access
+    const key = name.replace(/\s+/g, '');
+    (acc as any)[key] = { label: name, color: fill };
     return acc;
-  }, { users: { label: 'Users' } });
+  }, {});
   
   const totalNotes = stats.approved + stats.pending + stats.rejected;
   const totalUsers = userRoleData.reduce((acc, role) => acc + role.value, 0);
@@ -462,7 +467,7 @@ export function NewAdminDashboard() {
                 Distribution of user roles
               </CardDescription>
             </CardHeader>
-            <CardContent>
+            <CardContent className="flex justify-center">
               {isLoading ? ( <Skeleton className="h-[250px] w-full" /> ) : totalUsers > 0 ? (
                 <ChartContainer
                   config={userRoleChartConfig}
@@ -503,7 +508,7 @@ export function NewAdminDashboard() {
                 Overview of all lesson notes
               </CardDescription>
             </CardHeader>
-            <CardContent>
+            <CardContent className="flex justify-center">
               {isLoading ? ( <Skeleton className="h-[250px] w-full" /> ) : totalNotes > 0 ? (
                 <ChartContainer
                   config={chartConfig}
@@ -583,5 +588,3 @@ export function NewAdminDashboard() {
     </div>
   );
 }
-
-    
