@@ -166,7 +166,30 @@ export function NewAdminDashboard() {
        studentData.forEach(student => {
         enrollmentCounts[student.classLevel] = (enrollmentCounts[student.classLevel] || 0) + 1;
       });
-       setEnrollmentData(Object.entries(enrollmentCounts).map(([name, total]) => ({ name, total })));
+
+      const classOrder = ['Pre-Nursery', 'Nursery 1', 'Nursery 2', 'Nursery 3', 'Primary 1', 'Primary 2', 'Primary 3', 'Primary 4', 'Primary 5', 'Primary 6', 'JSS 1', 'JSS 2', 'JSS 3', 'SS 1', 'SS 2', 'SS 3'];
+      const getSortValue = (className: string) => {
+          const index = classOrder.indexOf(className);
+          if (index !== -1) return index;
+
+          const match = className.match(/(\D+)(\d+)/);
+          if(match) {
+              const prefix = match[1].trim().toUpperCase();
+              const num = parseInt(match[2], 10);
+              let base = 100; // Default for others
+              if(prefix === 'PRIMARY') base = 10;
+              if(prefix === 'JSS') base = 20;
+              if(prefix === 'SS') base = 30;
+              return base + num;
+          }
+          return 1000; // Put unknown classes at the end
+      }
+      
+      const sortedEnrollmentData = Object.entries(enrollmentCounts)
+          .map(([name, total]) => ({ name, total }))
+          .sort((a, b) => getSortValue(a.name) - getSortValue(b.name));
+
+      setEnrollmentData(sortedEnrollmentData);
 
 
       // Lesson note stats and charts
@@ -592,5 +615,7 @@ export function NewAdminDashboard() {
     </div>
   );
 }
+
+    
 
     
