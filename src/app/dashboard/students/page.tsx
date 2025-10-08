@@ -18,7 +18,7 @@ import {
 } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { PlusCircle, Trash2, Eye } from 'lucide-react';
+import { PlusCircle, Trash2, Eye, Upload } from 'lucide-react';
 import { useEffect, useState, useCallback } from 'react';
 import { collection, getDocs, deleteDoc, doc, query, orderBy } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
@@ -36,12 +36,14 @@ import {
 import { AddStudentForm } from '@/components/dashboard/students/add-student-form';
 import { useRole } from '@/context/role-context';
 import Link from 'next/link';
+import { BulkStudentUploadDialog } from '@/components/dashboard/students/bulk-student-upload-dialog';
 
 
 export default function StudentsPage() {
   const [students, setStudents] = useState<Student[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isAddModalOpen, setIsAddModalOpen] = useState(false);
+  const [isBulkModalOpen, setIsBulkModalOpen] = useState(false);
   const { toast } = useToast();
   const { role } = useRole();
 
@@ -79,14 +81,12 @@ export default function StudentsPage() {
     )
       return;
     try {
-      // This only deletes from the 'students' collection.
-      // A more robust solution would use a Cloud Function to also handle associated parent users and documents.
       await deleteDoc(doc(db, 'students', studentId));
       toast({
         title: 'Student Removed',
         description: 'The student has been successfully deleted.',
       });
-      fetchStudents(); // Refresh the list
+      fetchStudents(); 
     } catch (error) {
       console.error('Error removing student:', error);
       toast({
@@ -99,7 +99,8 @@ export default function StudentsPage() {
 
   const handleStudentAdded = () => {
     fetchStudents();
-    setIsModalOpen(false); // Close the modal
+    setIsAddModalOpen(false);
+    setIsBulkModalOpen(false);
   };
 
   return (
@@ -119,22 +120,32 @@ export default function StudentsPage() {
             </CardDescription>
           </div>
           {role === 'Admin' && (
-            <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
-              <DialogTrigger asChild>
-                <Button>
-                  <PlusCircle className="mr-2 h-4 w-4" /> Add New Student
-                </Button>
-              </DialogTrigger>
-              <DialogContent className="max-w-4xl">
-                <DialogHeader>
-                  <DialogTitle>Enroll New Student</DialogTitle>
-                  <DialogDescription>
-                    Fill in the form below to add a new student to the school database.
-                  </DialogDescription>
-                </DialogHeader>
-                <AddStudentForm onStudentAdded={handleStudentAdded} />
-              </DialogContent>
-            </Dialog>
+            <div className="flex gap-2">
+              <Dialog open={isBulkModalOpen} onOpenChange={setIsBulkModalOpen}>
+                <DialogTrigger asChild>
+                   <Button variant="outline">
+                    <Upload className="mr-2 h-4 w-4" /> Bulk Upload
+                  </Button>
+                </DialogTrigger>
+                <BulkStudentUploadDialog onUploadComplete={handleStudentAdded} />
+              </Dialog>
+              <Dialog open={isAddModalOpen} onOpenChange={setIsAddModalOpen}>
+                <DialogTrigger asChild>
+                  <Button>
+                    <PlusCircle className="mr-2 h-4 w-4" /> Add New Student
+                  </Button>
+                </DialogTrigger>
+                <DialogContent className="max-w-4xl">
+                  <DialogHeader>
+                    <DialogTitle>Enroll New Student</DialogTitle>
+                    <DialogDescription>
+                      Fill in the form below to add a new student to the school database.
+                    </DialogDescription>
+                  </DialogHeader>
+                  <AddStudentForm onStudentAdded={handleStudentAdded} />
+                </DialogContent>
+              </Dialog>
+            </div>
           )}
         </CardHeader>
         <CardContent>
