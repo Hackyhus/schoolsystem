@@ -10,7 +10,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { useToast } from '@/hooks/use-toast';
 import { useAcademicData } from '@/hooks/use-academic-data';
 import { useRole } from '@/context/role-context';
-import { collection, getDocs, query, where, writeBatch, doc } from 'firebase/firestore';
+import { collection, getDocs, query, where, writeBatch, doc, updateDoc } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import type { Student, Score } from '@/lib/schema';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -189,7 +189,10 @@ export default function ScoresPage() {
     try {
         const scoreRef = doc(db, 'scores', score.id);
         await updateDoc(scoreRef, { status: newStatus });
-        setScores(prev => ({ ...prev, [studentId]: { ...prev[studentId], status: newStatus } }));
+        setScores(prev => ({ 
+            ...prev, 
+            [studentId]: { ...prev[studentId], status: newStatus } 
+        }));
         toast({ title: `Score ${newStatus}` });
     } catch (error) {
         console.error('Error reviewing score:', error);
