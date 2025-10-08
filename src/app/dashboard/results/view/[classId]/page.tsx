@@ -5,12 +5,16 @@ import { useState, useEffect, useCallback } from 'react';
 import { useParams, notFound } from 'next/navigation';
 import { collection, query, where, getDocs, orderBy } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
-import type { ReportCard } from '@/lib/schema';
+import type { ReportCard, Student } from '@/lib/schema';
 import { Button } from '@/components/ui/button';
-import { Printer, Loader2, AlertCircle } from 'lucide-react';
+import { Printer, Loader2, AlertCircle, Eye } from 'lucide-react';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { ReportCardTemplate } from '@/components/dashboard/results/report-card-template';
 import { Skeleton } from '@/components/ui/skeleton';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { Badge } from '@/components/ui/badge';
+import Link from 'next/link';
 
 export default function ViewClassResultsPage() {
   const params = useParams();
@@ -25,7 +29,6 @@ export default function ViewClassResultsPage() {
     setIsLoading(true);
     setError(null);
     try {
-      // Query only by class to avoid needing a composite index
       const reportsQuery = query(
         collection(db, 'reportCards'),
         where('class', '==', className)
@@ -40,7 +43,6 @@ export default function ViewClassResultsPage() {
         const reports = querySnapshot.docs.map(
           (doc) => ({ id: doc.id, ...doc.data() } as ReportCard)
         );
-        // Sort the results by classRank on the client side
         reports.sort((a, b) => a.classRank - b.classRank);
         setReportCards(reports);
       }
@@ -56,22 +58,25 @@ export default function ViewClassResultsPage() {
     fetchReports();
   }, [fetchReports]);
 
-  const handlePrint = () => {
-    window.print();
-  };
-  
-  if(isLoading) {
+  if (isLoading) {
     return (
-        <div className="space-y-4">
-            <Skeleton className="h-10 w-48" />
-            <Skeleton className="h-8 w-64" />
-            <div className="space-y-8">
-                {Array.from({ length: 2 }).map((_, i) => (
-                    <Skeleton key={i} className="h-[500px] w-full" />
-                ))}
+      <div className="space-y-4">
+        <Skeleton className="h-10 w-48" />
+        <Skeleton className="h-8 w-64" />
+        <Card>
+          <CardHeader>
+            <Skeleton className="h-8 w-1/2" />
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-2">
+              <Skeleton className="h-12 w-full" />
+              <Skeleton className="h-12 w-full" />
+              <Skeleton className="h-12 w-full" />
             </div>
-        </div>
-    )
+          </CardContent>
+        </Card>
+      </div>
+    );
   }
 
   if (error) {
@@ -83,29 +88,59 @@ export default function ViewClassResultsPage() {
       </Alert>
     );
   }
-  
+
   return (
     <div className="space-y-6">
-      <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between print:hidden">
-        <div>
-           <h1 className="font-headline text-3xl font-bold">
-            Report Cards for {className}
-          </h1>
-          <p className="text-muted-foreground">
-            Displaying {reportCards.length} generated report cards for the {reportCards[0]?.term}, {reportCards[0]?.session} session.
-          </p>
-        </div>
-        <Button onClick={handlePrint} size="lg">
-          <Printer className="mr-2 h-4 w-4" />
-          Print All Reports
-        </Button>
+      <div>
+        <h1 className="font-headline text-3xl font-bold">
+          Results for {className}
+        </h1>
+        <p className="text-muted-foreground">
+          Displaying {reportCards.length} generated report cards for the{' '}
+          {reportCards[0]?.term}, {reportCards[0]?.session} session.
+        </p>
       </div>
 
-      <div className="space-y-12">
-        {reportCards.map((report) => (
-          <ReportCardTemplate key={report.id} reportCard={report} />
-        ))}
-      </div>
+      <Card>
+        <CardHeader>
+          <CardTitle>Class Summary</CardTitle>
+          <CardDescription>
+            Click on a student to view their individual report card.
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Rank</TableHead>
+                <TableHead>Student Name</TableHead>
+                <TableHead>Average</TableHead>
+                <TableHead>Grade</TableHead>
+                <TableHead className="text-right">Action</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {reportCards.map((report) => (
+                <TableRow key={report.id}>
+                  <TableCell className="font-bold">{report.classRank}</TableCell>
+                  <TableCell>{report.studentName}</TableCell>
+                  <TableCell>{report.average.toFixed(1)}%</TableCell>
+                  <TableCell>
+                    <Badge>{report.overallGrade}</Badge>
+                  </TableCell>
+                  <TableCell className="text-right">
+                    <Button asChild variant="outline" size="sm">
+                      <Link href={`/dashboard/results/report/${report.id}`}>
+                        <Eye className="mr-2 h-4 w-4" /> View Report
+                      </Link>
+                    </Button>
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        </CardContent>
+      </Card>
     </div>
   );
 }

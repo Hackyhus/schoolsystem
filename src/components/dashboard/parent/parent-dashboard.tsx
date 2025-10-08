@@ -4,7 +4,7 @@ import {
   BarChart,
   CalendarCheck,
   Megaphone,
-  LineChart as LineChartIcon,
+  FileText,
   DollarSign
 } from 'lucide-react';
 import {
@@ -25,29 +25,18 @@ import {
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
 import { ChartContainer, ChartTooltip, ChartTooltipContent, ChartLegend, ChartLegendContent } from '@/components/ui/chart';
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, PieChart, Pie, Cell } from 'recharts';
+import { PieChart, Pie, Cell } from 'recharts';
 import { useRole } from '@/context/role-context';
-import { useEffect, useState } from 'react';
-import { collection, query, where, getDocs } from 'firebase/firestore';
+import { useEffect, useState, useCallback } from 'react';
+import { collection, query, where, getDocs, orderBy, limit } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import { Skeleton } from '@/components/ui/skeleton';
+import type { Student, ReportCard } from '@/lib/schema';
+import Link from 'next/link';
+import { Button } from '@/components/ui/button';
 
 // Mock data, to be replaced with live data
-const studentPerformance = {
-  studentName: 'Adewale Adebayo',
-  attendance: [
-    { month: 'January', percentage: 0 },
-    { month: 'February', percentage: 0 },
-  ],
-  grades: [],
-};
 const announcements: { id: number; title: string; content: string;}[] = [];
-
-const performanceOverTime = [
-  { term: 'Term 1', average: 0 },
-  { term: 'Term 2', average: 0 },
-  { term: 'Term 3', average: 0 },
-];
 
 const feeHistoryData = [
   { name: 'Term 1 Fees', value: 0, fill: 'hsl(var(--chart-2))' },
@@ -65,47 +54,55 @@ const chartConfig = {
 export function ParentDashboard() {
   const { user } = useRole();
   const [isLoading, setIsLoading] = useState(true);
-  const [childData, setChildData] = useState<any | null>(null);
+  const [childData, setChildData] = useState<Student | null>(null);
+  const [latestReport, setLatestReport] = useState<ReportCard | null>(null);
+
+  const fetchChildAndReportData = useCallback(async () => {
+    if (!user) {
+        setIsLoading(false);
+        return;
+    };
+    setIsLoading(true);
+    try {
+      // Find the student linked to the logged-in parent
+      const studentsRef = collection(db, 'students');
+      const studentQuery = query(studentsRef, where('guardians', 'array-contains-any', [{ email: user.email }]));
+      const studentSnapshot = await getDocs(studentQuery);
+
+      if (!studentSnapshot.empty) {
+        const studentDoc = studentSnapshot.docs[0];
+        const student = { id: studentDoc.id, ...studentDoc.data() } as Student;
+        setChildData(student);
+
+        // Once we have the student, fetch their latest report card
+        const reportsRef = collection(db, 'reportCards');
+        const reportQuery = query(
+            reportsRef, 
+            where('studentId', '==', student.studentId), 
+            orderBy('generatedAt', 'desc'), 
+            limit(1)
+        );
+        const reportSnapshot = await getDocs(reportQuery);
+        
+        if (!reportSnapshot.empty) {
+            const reportDoc = reportSnapshot.docs[0];
+            setLatestReport({ id: reportDoc.id, ...reportDoc.data() } as ReportCard);
+        }
+      }
+    } catch (error) {
+      console.error("Error fetching child's data or report:", error);
+    } finally {
+      setIsLoading(false);
+    }
+  }, [user]);
 
   useEffect(() => {
-    const fetchChildData = async () => {
-      if (!user) return;
-      setIsLoading(true);
-      try {
-        // This query finds a student where the current user is listed as a guardian.
-        const studentsRef = collection(db, 'students');
-        const q = query(studentsRef, where('guardians', 'array-contains-any', [{ userId: user.uid, email: user.email }]));
-        const querySnapshot = await getDocs(q);
-
-        if (!querySnapshot.empty) {
-          // Assuming one child per parent for now. A real app would handle multiple.
-          const studentDoc = querySnapshot.docs[0];
-          setChildData(studentDoc.data());
-        }
-      } catch (error) {
-        console.error("Error fetching child's data:", error);
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
-    fetchChildData();
-  }, [user]);
+    fetchChildAndReportData();
+  }, [fetchChildAndReportData]);
   
-  // Using placeholder data until backend logic is complete
-  const { studentName, attendance, grades }: { studentName: string; attendance: {month: string, percentage: number}[]; grades: {subject: string, score: number, grade: string}[] } = studentPerformance;
-  const overallAttendance = attendance.length > 0 ? attendance.reduce((acc, month) => acc + month.percentage, 0) / attendance.length : 0;
-  const averageGrade = grades.length > 0 ? (grades.reduce((acc, g) => acc+g.score, 0) / grades.length) : 0;
-
-
-  const gradeColor = (grade: string) => {
-    if (grade === 'A') return 'bg-green-500 hover:bg-green-500';
-    if (grade === 'B') return 'bg-blue-500 hover:bg-blue-500';
-    if (grade === 'C') return 'bg-yellow-500 hover:bg-yellow-500';
-    return 'bg-red-500 hover:bg-red-500';
-  }
   
   const studentDisplayName = childData ? `${childData.firstName} ${childData.lastName}` : "your child";
+  const overallAttendance = 0; // Placeholder
 
   return (
     <div className="flex flex-col gap-6">
@@ -116,7 +113,28 @@ export function ParentDashboard() {
         </p>
       </div>
 
-      <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">
+      <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
+        <Card>
+          <CardHeader className="flex-row items-center justify-between pb-2">
+            <CardTitle className="text-sm font-medium">Latest Result</CardTitle>
+            <FileText className="h-6 w-6 text-primary" />
+          </CardHeader>
+          <CardContent>
+            {isLoading ? <Skeleton className="h-16 w-full" /> : latestReport ? (
+                <>
+                    <div className="text-2xl font-bold">{latestReport.overallGrade} ({latestReport.average.toFixed(1)}%)</div>
+                    <p className="text-xs text-muted-foreground">
+                       Class Rank: {latestReport.classRank}
+                    </p>
+                    <Button asChild size="sm" className="mt-2">
+                        <Link href={`/dashboard/results/report/${latestReport.id}`}>View Full Report</Link>
+                    </Button>
+                </>
+            ) : (
+                <p className="text-sm text-muted-foreground pt-2">No report card available yet for this term.</p>
+            )}
+          </CardContent>
+        </Card>
         <Card>
           <CardHeader className="flex-row items-center justify-between pb-2">
             <CardTitle className="text-sm font-medium">Overall Attendance</CardTitle>
@@ -125,18 +143,7 @@ export function ParentDashboard() {
           <CardContent>
             <div className="text-2xl font-bold">{overallAttendance.toFixed(1)}%</div>
             <Progress value={overallAttendance} className="mt-2 h-2" />
-          </CardContent>
-        </Card>
-         <Card>
-          <CardHeader className="flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium">Average Grade</CardTitle>
-            <BarChart className="h-6 w-6 text-primary" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">
-              {grades.length > 0 ? averageGrade.toFixed(1) : "N/A"}%
-            </div>
-             <p className="text-xs text-muted-foreground">across all subjects</p>
+             <p className="text-xs text-muted-foreground pt-2">Attendance data is coming soon.</p>
           </CardContent>
         </Card>
       </div>
@@ -145,82 +152,7 @@ export function ParentDashboard() {
         <div className="lg:col-span-2 space-y-6">
             <Card>
                 <CardHeader>
-                    <CardTitle>Academic Performance Over Time</CardTitle>
-                    <CardDescription>Tracking your ward's termly average score.</CardDescription>
-                </CardHeader>
-                <CardContent>
-                    <ChartContainer config={chartConfig} className="h-[250px] w-full">
-                        <LineChart data={performanceOverTime} margin={{ top: 5, right: 10, left: -20, bottom: 0 }}>
-                            <CartesianGrid vertical={false} />
-                            <XAxis dataKey="term" tickLine={false} axisLine={false} tickMargin={8} />
-                            <YAxis domain={[0, 100]} tickFormatter={(value) => `${value}%`} />
-                            <ChartTooltip content={<ChartTooltipContent />} />
-                            <Line type="monotone" dataKey="average" stroke="var(--color-average)" strokeWidth={2} dot={true} />
-                        </LineChart>
-                    </ChartContainer>
-                </CardContent>
-            </Card>
-            <Card>
-                <CardHeader>
-                    <CardTitle>Recent Grades</CardTitle>
-                    <CardDescription>
-                    A snapshot of {studentDisplayName}'s latest academic results.
-                    </CardDescription>
-                </CardHeader>
-                <CardContent>
-                    <Table>
-                    <TableHeader>
-                        <TableRow>
-                        <TableHead>Subject</TableHead>
-                        <TableHead>Score</TableHead>
-                        <TableHead className="text-right">Grade</TableHead>
-                        </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                        {grades.length > 0 ? (
-                        grades.slice(0, 5).map((g: any) => (
-                            <TableRow key={g.subject}>
-                            <TableCell className="font-medium">{g.subject}</TableCell>
-                            <TableCell>{g.score}</TableCell>
-                            <TableCell className="text-right">
-                                <Badge className={`text-white ${gradeColor(g.grade)}`}>{g.grade}</Badge>
-                            </TableCell>
-                            </TableRow>
-                        ))
-                        ) : (
-                        <TableRow>
-                            <TableCell colSpan={3} className="h-24 text-center">
-                            No grades available yet.
-                            </TableCell>
-                        </TableRow>
-                        )}
-                    </TableBody>
-                    </Table>
-                </CardContent>
-            </Card>
-        </div>
-
-        <div className="lg:col-span-1 space-y-6">
-             <Card>
-                <CardHeader>
-                    <CardTitle>Fee Payment History</CardTitle>
-                    <CardDescription>Status of school fee payments.</CardDescription>
-                </CardHeader>
-                <CardContent>
-                    <ChartContainer config={chartConfig} className="mx-auto aspect-square h-[250px]">
-                        <PieChart>
-                            <ChartTooltip content={<ChartTooltipContent hideLabel />} />
-                            <Pie data={feeHistoryData} dataKey="value" nameKey="name" innerRadius={50}>
-                                {feeHistoryData.map((entry) => <Cell key={entry.name} fill={entry.fill} />)}
-                            </Pie>
-                            <ChartLegend content={<ChartLegendContent className="flex-wrap" nameKey="name" />} />
-                        </PieChart>
-                    </ChartContainer>
-                </CardContent>
-            </Card>
-            <Card>
-                <CardHeader>
-                    <CardTitle>School Announcements</CardTitle>
+                    <CardTitle>Recent Announcements</CardTitle>
                     <CardDescription>
                     Important updates from the school administration.
                     </CardDescription>
@@ -246,9 +178,27 @@ export function ParentDashboard() {
                 </CardContent>
             </Card>
         </div>
+
+        <div className="lg:col-span-1 space-y-6">
+             <Card>
+                <CardHeader>
+                    <CardTitle>Fee Payment History</CardTitle>
+                    <CardDescription>Status of school fee payments.</CardDescription>
+                </CardHeader>
+                <CardContent>
+                    <ChartContainer config={chartConfig} className="mx-auto aspect-square h-[250px]">
+                        <PieChart>
+                            <ChartTooltip content={<ChartTooltipContent hideLabel />} />
+                            <Pie data={feeHistoryData} dataKey="value" nameKey="name" innerRadius={50}>
+                                {feeHistoryData.map((entry) => <Cell key={entry.name} fill={entry.fill} />)}
+                            </Pie>
+                            <ChartLegend content={<ChartLegendContent className="flex-wrap" nameKey="name" />} />
+                        </PieChart>
+                    </ChartContainer>
+                </CardContent>
+            </Card>
+        </div>
       </div>
     </div>
   );
 }
-
-    
