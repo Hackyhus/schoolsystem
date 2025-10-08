@@ -5,7 +5,7 @@ import React from 'react';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
 import * as z from 'zod';
-import { collection, doc, setDoc, updateDoc } from 'firebase/firestore';
+import { collection, doc, setDoc, updateDoc, getDoc } from 'firebase/firestore';
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { Button } from '@/components/ui/button';
 import {
@@ -26,7 +26,7 @@ import {
 } from '@/components/ui/select';
 import { Input } from '@/components/ui/input';
 import { useToast } from '@/hooks/use-toast';
-import { db, storage } from '@/lib/firebase';
+import { db, storage, dbService } from '@/lib/firebase';
 import { UploadCloud, Loader2 } from 'lucide-react';
 import { useRole } from '@/context/role-context';
 import { useState, useEffect } from 'react';
@@ -136,6 +136,11 @@ export function AddLessonNoteForm({
 
       const uploadResult = await uploadBytes(storageRef, file);
       const downloadURL = await getDownloadURL(uploadResult.ref);
+      
+      // Fetch the user's profile from Firestore to get their full name
+      const userDoc = await dbService.getDoc<{ name: string }>('users', user.uid);
+      const teacherName = userDoc?.name || user.displayName || 'Unknown Teacher';
+
 
       if (isResubmission && existingNoteData) {
         // Update the existing document
@@ -163,7 +168,7 @@ export function AddLessonNoteForm({
           fileUrl: downloadURL,
           storagePath: uploadResult.ref.fullPath,
           teacherId: user.uid,
-          teacherName: user.displayName || 'Unknown Teacher',
+          teacherName: teacherName,
           status: status,
           submissionDate: new Date().toLocaleDateString('en-CA'), // YYYY-MM-DD
           submittedOn: new Date(),
