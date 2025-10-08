@@ -10,12 +10,36 @@ import {
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Download, Upload } from 'lucide-react';
+import * as XLSX from 'xlsx';
 
 export function BulkStudentUploadDialog({ onUploadComplete }: { onUploadComplete: () => void }) {
-  // Placeholder function to generate and download the template
   const handleDownloadTemplate = () => {
-    // In the next step, we'll implement this to generate a real XLSX file
-    alert("Template download functionality will be implemented next.");
+    // Define the headers for the template. This should match the fields needed for student creation.
+    const headers = [
+      "firstName", "lastName", "middleName", "gender",
+      "dateOfBirth(YYYY-MM-DD)", "address", "guardianName", "guardianContact",
+      "guardianEmail", "class", "admissionDate(YYYY-MM-DD)", "session(YYYY/YYYY)", "medicalConditions"
+    ];
+    
+    // Create a new workbook
+    const workbook = XLSX.utils.book_new();
+    
+    // Create a worksheet with the headers
+    const worksheet = XLSX.utils.aoa_to_sheet([headers]);
+    
+    // Add some example data to guide the user
+    const exampleData = [
+        {"firstName":"Aisha","lastName":"Bello","middleName":"Grace","gender":"Female","dateOfBirth(YYYY-MM-DD)":"2010-05-15","address":"15, Ribadu Road, Ikoyi, Lagos","guardianName":"Fatima Bello","guardianContact":"08023456789","guardianEmail":"f.bello@example.com","class":"JSS 1","admissionDate(YYYY-MM-DD)":"2023-09-05","session(YYYY/YYYY)":"2023/2024","medicalConditions":"Asthma"},
+        {"firstName":"Emeka","lastName":"Okoro","middleName":"","gender":"Male","dateOfBirth(YYYY-MM-DD)":"2011-02-20","address":"23, Admiralty Way, Lekki, Lagos","guardianName":"Ngozi Okoro","guardianContact":"08098765432","guardianEmail":"n.okoro@example.com","class":"Primary 6","admissionDate(YYYY-MM-DD)":"2023-09-05","session(YYYY/YYYY)":"2023/2024","medicalConditions":"N/A"}
+    ];
+
+    XLSX.utils.sheet_add_json(worksheet, exampleData, { origin: 'A2', skipHeader: true });
+
+    // Append the worksheet to the workbook
+    XLSX.utils.book_append_sheet(workbook, worksheet, "Students");
+    
+    // Write the workbook and trigger a download
+    XLSX.writeFile(workbook, "student-upload-template.xlsx");
   };
 
   return (
