@@ -12,27 +12,23 @@ import { useAcademicData } from '@/hooks/use-academic-data';
 import { useRole } from '@/context/role-context';
 import { collection, getDocs, query, where, writeBatch, doc } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
-import type { MockUser } from '@/lib/schema';
+import type { MockUser, Student, Score } from '@/lib/schema';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Badge } from '@/components/ui/badge';
-import { ThumbsDown, ThumbsUp, Save, Loader2, Send } from 'lucide-react';
+import { ThumbsDown, ThumbsUp, Save, Loader2, Send, Upload } from 'lucide-react';
+import { Dialog, DialogTrigger, DialogContent } from '@/components/ui/dialog';
+import { BulkScoresUploadDialog } from '@/components/dashboard/scores/bulk-scores-upload-dialog';
 
-type Score = {
-  id?: string; // Firestore document ID
-  caScore: number;
-  examScore: number;
-  totalScore: number;
-  status: 'Draft' | 'Pending' | 'Approved' | 'Rejected';
-};
 
 export default function ScoresPage() {
   const { role, user } = useRole();
   const [selectedClass, setSelectedClass] = useState('');
   const [selectedSubject, setSelectedSubject] = useState('');
-  const [students, setStudents] = useState<MockUser[]>([]);
+  const [students, setStudents] = useState<Student[]>([]);
   const [scores, setScores] = useState<Record<string, Score>>({});
   const [isLoading, setIsLoading] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isBulkUploadOpen, setIsBulkUploadOpen] = useState(false);
   const { toast } = useToast();
   const { classes, subjects, isLoading: isAcademicDataLoading } = useAcademicData();
 
@@ -50,11 +46,11 @@ export default function ScoresPage() {
       // 1. Fetch students for the selected class
       const studentsQuery = query(collection(db, 'students'), where('classLevel', '==', selectedClass));
       const studentsSnapshot = await getDocs(studentsQuery);
-      const studentsList = studentsSnapshot.docs.map(doc => ({ id: doc.data().studentId, ...doc.data() } as MockUser));
+      const studentsList = studentsSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Student));
       setStudents(studentsList);
       
       // 2. Fetch existing scores for these students, for this subject/term
-      const studentIds = studentsList.map(s => s.id);
+      const studentIds = studentsList.map(s => s.studentId);
       if (studentIds.length === 0) {
         setScores({});
         setIsLoading(false);
@@ -77,7 +73,7 @@ export default function ScoresPage() {
       // 3. Initialize scores for all students, using existing data or defaults
       const initialScores: Record<string, Score> = {};
       studentsList.forEach((student) => {
-        initialScores[student.id] = existingScores[student.id] || { caScore: 0, examScore: 0, totalScore: 0, status: 'Draft' };
+        initialScores[student.studentId] = existingScores[student.studentId] || { id: '', caScore: 0, examScore: 0, totalScore: 0, status: 'Draft' };
       });
       setScores(initialScores);
 
@@ -98,7 +94,6 @@ export default function ScoresPage() {
     setScores(prevScores => {
       const studentScore = { ...prevScores[studentId] };
       
-      // Basic validation
       if (field === 'caScore' && numericValue > 40) return prevScores;
       if (field === 'examScore' && numericValue > 60) return prevScores;
 
@@ -141,7 +136,7 @@ export default function ScoresPage() {
         title: asDraft ? 'Scores Saved as Draft' : 'Scores Submitted!',
         description: asDraft ? 'Your progress has been saved.' : 'The scores have been submitted to the Exam Officer for review.',
       });
-      await handleLoadData(); // Refresh data from DB
+      await handleLoadData();
     } catch (error) {
       console.error('Error saving scores:', error);
       toast({ variant: 'destructive', title: 'Error', description: 'Could not save scores.' });
@@ -201,7 +196,7 @@ export default function ScoresPage() {
   };
 
 
-  const statusVariant = (status: string) => {
+  const statusVariant = (status: Score['status']) => {
     if (status === 'Approved') return 'default';
     if (status === 'Pending') return 'secondary';
     if (status === 'Rejected') return 'destructive';
@@ -214,6 +209,11 @@ export default function ScoresPage() {
     }
     return false;
   };
+  
+  const onUploadComplete = () => {
+    setIsBulkUploadOpen(false);
+    handleLoadData(); // Refresh the data to show newly uploaded scores
+  }
 
   const renderContent = () => {
     if (isLoading) {
@@ -256,18 +256,18 @@ export default function ScoresPage() {
           <TableBody>
             {students.map((student) => (
               <TableRow key={student.id}>
-                <TableCell className="font-medium">{student.name}</TableCell>
+                <TableCell className="font-medium">{student.firstName} {student.lastName}</TableCell>
                 <TableCell>
-                  <Input type="number" max={40} value={scores[student.id]?.caScore || 0} onChange={(e) => handleScoreChange(student.id, 'caScore', e.target.value)} disabled={!isSheetEditable(scores[student.id]?.status)} />
+                  <Input type="number" max={40} value={scores[student.studentId]?.caScore || 0} onChange={(e) => handleScoreChange(student.studentId, 'caScore', e.target.value)} disabled={!isSheetEditable(scores[student.studentId]?.status)} />
                 </TableCell>
                 <TableCell>
-                  <Input type="number" max={60} value={scores[student.id]?.examScore || 0} onChange={(e) => handleScoreChange(student.id, 'examScore', e.target.value)} disabled={!isSheetEditable(scores[student.id]?.status)} />
+                  <Input type="number" max={60} value={scores[student.studentId]?.examScore || 0} onChange={(e) => handleScoreChange(student.studentId, 'examScore', e.target.value)} disabled={!isSheetEditable(scores[student.studentId]?.status)} />
                 </TableCell>
                 <TableCell className="text-right font-medium">
-                  {scores[student.id]?.totalScore || 0}
+                  {scores[student.studentId]?.totalScore || 0}
                 </TableCell>
                 <TableCell className="text-right">
-                    <Badge variant={statusVariant(scores[student.id]?.status)}>{scores[student.id]?.status}</Badge>
+                    <Badge variant={statusVariant(scores[student.studentId]?.status)}>{scores[student.studentId]?.status}</Badge>
                 </TableCell>
               </TableRow>
             ))}
@@ -290,16 +290,16 @@ export default function ScoresPage() {
           <TableBody>
             {students.map((student) => (
               <TableRow key={student.id}>
-                <TableCell className="font-medium">{student.name}</TableCell>
-                <TableCell>{scores[student.id]?.totalScore || 0}</TableCell>
+                <TableCell className="font-medium">{student.firstName} {student.lastName}</TableCell>
+                <TableCell>{scores[student.studentId]?.totalScore || 0}</TableCell>
                 <TableCell>
-                  <Badge variant={statusVariant(scores[student.id]?.status)}>{scores[student.id]?.status}</Badge>
+                  <Badge variant={statusVariant(scores[student.studentId]?.status)}>{scores[student.studentId]?.status}</Badge>
                 </TableCell>
                 <TableCell className="text-right space-x-2">
-                  <Button size="sm" variant="outline" onClick={() => handleReview(student.id, 'Approved')} disabled={scores[student.id]?.status !== 'Pending'}>
+                  <Button size="sm" variant="outline" onClick={() => handleReview(student.studentId, 'Approved')} disabled={scores[student.studentId]?.status !== 'Pending'}>
                     <ThumbsUp className="mr-2 h-4 w-4" /> Approve
                   </Button>
-                  <Button size="sm" variant="destructive" onClick={() => handleReview(student.id, 'Rejected')} disabled={scores[student.id]?.status !== 'Pending'}>
+                  <Button size="sm" variant="destructive" onClick={() => handleReview(student.studentId, 'Rejected')} disabled={scores[student.studentId]?.status !== 'Pending'}>
                     <ThumbsDown className="mr-2 h-4 w-4" /> Reject
                   </Button>
                 </TableCell>
@@ -350,8 +350,21 @@ export default function ScoresPage() {
               {isLoading ? 'Loading...' : 'Load Data'}
             </Button>
             <div className="ml-auto flex gap-2">
-              {role === 'Teacher' && students.length > 0 && (
+               {role === 'Teacher' && students.length > 0 && (
                 <>
+                  <Dialog open={isBulkUploadOpen} onOpenChange={setIsBulkUploadOpen}>
+                    <DialogTrigger asChild>
+                       <Button variant="outline">
+                         <Upload className="mr-2 h-4 w-4"/> Bulk Upload Scores
+                       </Button>
+                    </DialogTrigger>
+                    <BulkScoresUploadDialog 
+                        students={students} 
+                        class={selectedClass}
+                        subject={selectedSubject}
+                        onUploadComplete={onUploadComplete} 
+                    />
+                  </Dialog>
                   <Button variant="outline" onClick={() => handleSaveScores(true)} disabled={isSubmitting}>
                     {isSubmitting ? <Loader2 className="mr-2 h-4 w-4 animate-spin"/> : <Save className="mr-2 h-4 w-4" />}
                     Save Draft
@@ -378,3 +391,5 @@ export default function ScoresPage() {
     </div>
   );
 }
+
+    
