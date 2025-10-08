@@ -82,10 +82,12 @@ export type Student = {
     studentId: string; // GIIA/STU/24/0001
     firstName: string;
     lastName: string;
+    middleName?: string;
     gender: 'Male' | 'Female' | 'Other';
     dateOfBirth: any; // Firestore Timestamp
     classLevel: string;
     sessionYear: string;
+    profilePicture?: string;
     guardians: Guardian[];
     contacts: EmergencyContact[];
     documents?: StudentDocument[];
@@ -189,4 +191,5 @@ export type MockLessonNote = {
     content: string; // this is legacy, should be removed later
     hod_review: string | null;
     admin_review: string | null;
+    submittedOn?: any;
 };
