@@ -114,7 +114,7 @@ const navConfig = {
   HeadOfDepartment: {
      sidebar_extra: [
       { "icon": "book", "label": "Lesson Approvals", "path": "/dashboard/lesson-notes" },
-      { "icon": "bar-chart", "label": "Dept. Analytics", "path": "/dashboard/reports" },
+      { "icon": "bar-chart", "label": "Dept. Analytics", "path": "/dashboard/hod/analytics" },
       { "icon": "users", "label": "My Teachers", "path": "/dashboard/users" },
     ],
   },

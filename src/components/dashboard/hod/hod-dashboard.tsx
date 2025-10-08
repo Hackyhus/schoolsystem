@@ -28,7 +28,7 @@ import { Button } from '@/components/ui/button';
 import Link from 'next/link';
 import { useEffect, useState, useCallback } from 'react';
 import { collection, query, where, getDocs, orderBy, limit } from 'firebase/firestore';
-import { db } from '@/lib/firebase';
+import { db, dbService } from '@/lib/firebase';
 import type { MockLessonNote, MockUser } from '@/lib/schema';
 import { useToast } from '@/hooks/use-toast';
 import { useRole } from '@/context/role-context';
@@ -40,7 +40,8 @@ import {
   ChartLegend,
   ChartLegendContent,
 } from '@/components/ui/chart';
-import { Pie, PieChart, Cell, Bar, BarChart as BarChartRecharts, XAxis, YAxis, CartesianGrid, ResponsiveContainer } from 'recharts';
+import { Pie, PieChart, Cell } from 'recharts';
+import { format } from 'date-fns';
 
 
 type SubmissionStatusData = {
@@ -49,20 +50,16 @@ type SubmissionStatusData = {
   fill: string;
 };
 
-// Placeholder data until backend is ready
-const subjectPerformanceData = [
-  { subject: 'Math', average: 0, color: 'hsl(var(--chart-1))' },
-  { subject: 'English', average: 0, color: 'hsl(var(--chart-2))' },
-  { subject: 'Science', average: 0, color: 'hsl(var(--chart-3))' },
-  { subject: 'History', average: 0, color: 'hsl(var(--chart-4))' },
-  { subject: 'Art', average: 0, color: 'hsl(var(--chart-5))' },
-];
+type LessonNoteWithDate = Omit<MockLessonNote, 'submissionDate' | 'submittedOn'> & {
+  submissionDate: string | { seconds: number; nanoseconds: number; }; // Keep original for type safety
+  submittedOn?: any;
+  formattedDate: string;
+};
 
 export function HodDashboard() {
   const { user } = useRole();
   const { toast } = useToast();
-  const [notes, setNotes] = useState<MockLessonNote[]>([]);
-  const [staff, setStaff] = useState<MockUser[]>([]);
+  const [notes, setNotes] = useState<LessonNoteWithDate[]>([]);
   const [stats, setStats] = useState({
     pending: 0,
     approved: 0,
@@ -76,11 +73,48 @@ export function HodDashboard() {
     if (!user) return;
     setIsLoading(true);
     try {
-      // In a real app, these queries would be scoped by the HOD's department.
-      // For now, we fetch all relevant data to demonstrate the UI.
-      const notesQuery = query(collection(db, 'lessonNotes'), orderBy('submissionDate', 'desc'));
+      const hodUser = await dbService.getDoc<MockUser>('users', user.uid);
+      if (!hodUser || !hodUser.department) {
+        toast({ title: "Error", description: "Could not determine your department." });
+        setIsLoading(false);
+        return;
+      }
+
+      // Get all teachers in that department
+      const departmentTeachers = await dbService.getDocs<MockUser>('users', [
+        { type: 'where', fieldPath: 'department', opStr: '==', value: hodUser.department },
+        { type: 'where', fieldPath: 'role', opStr: '==', value: 'Teacher' },
+      ]);
+      const teacherIds = departmentTeachers.map(t => t.id);
+
+      if (teacherIds.length === 0) {
+        setStats({ pending: 0, approved: 0, rejected: 0, staffCount: 0 });
+        setIsLoading(false);
+        return;
+      }
+
+      const notesQuery = query(collection(db, 'lessonNotes'), where('teacherId', 'in', teacherIds), orderBy('submittedOn', 'desc'));
       const notesSnapshot = await getDocs(notesQuery);
-      const notesList = notesSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as MockLessonNote));
+      
+      const notesList = notesSnapshot.docs.map(doc => {
+        const data = doc.data() as MockLessonNote;
+        let formattedDate = 'Invalid Date';
+        try {
+          if (data.submittedOn?.seconds) {
+              formattedDate = format(new Date(data.submittedOn.seconds * 1000), 'PPP');
+          } else if (typeof data.submissionDate === 'string' && !isNaN(new Date(data.submissionDate).getTime())) {
+               formattedDate = format(new Date(data.submissionDate), 'PPP');
+          }
+        } catch(e) {
+            console.warn(`Could not parse date for note ${doc.id}:`, data.submittedOn || data.submissionDate);
+        }
+
+        return { 
+            id: doc.id, 
+            ...data,
+            formattedDate: formattedDate
+        } as LessonNoteWithDate;
+      });
       setNotes(notesList.slice(0, 5)); // Show recent 5
 
       const approved = notesList.filter(n => n.status === 'Approved').length;
@@ -93,18 +127,11 @@ export function HodDashboard() {
         { name: 'Rejected', value: rejected, fill: 'hsl(var(--destructive))' },
       ]);
 
-
-      // In a real app, this should filter by the HOD's department
-      const staffQuery = query(collection(db, 'users'), where('role', '==', 'Teacher'));
-      const staffSnapshot = await getDocs(staffQuery);
-      const staffList = staffSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as unknown as MockUser));
-      setStaff(staffList.slice(0, 5));
-      
       setStats({
         pending,
         approved,
         rejected,
-        staffCount: staffList.length,
+        staffCount: departmentTeachers.length,
       });
 
     } catch (error) {
@@ -112,7 +139,7 @@ export function HodDashboard() {
        toast({
         variant: "destructive",
         title: "Error",
-        description: "Could not fetch dashboard data.",
+        description: "Could not fetch dashboard data. Firestore indexes may be required.",
       });
     } finally {
       setIsLoading(false);
@@ -135,9 +162,6 @@ export function HodDashboard() {
     approved: { label: 'Approved', color: 'hsl(var(--chart-2))' },
     pending: { label: 'Pending', color: 'hsl(var(--chart-4))' },
     rejected: { label: 'Rejected', color: 'hsl(var(--destructive))' },
-    average: { label: 'Average Score', color: 'hsl(var(--chart-1))' },
-    graded: { label: 'Graded', color: 'hsl(var(--chart-2))' },
-    pendingGrade: { label: 'Pending', color: 'hsl(var(--chart-4))' },
   };
 
   const totalNotes = stats.approved + stats.pending + stats.rejected;
@@ -195,7 +219,7 @@ export function HodDashboard() {
       </div>
 
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
-        <div className="lg:col-span-2 space-y-6">
+        <div className="lg:col-span-2">
             <Card>
                 <CardHeader>
                     <CardTitle>Lesson Plan Approval Queue</CardTitle>
@@ -223,7 +247,7 @@ export function HodDashboard() {
                         <TableRow key={note.id}>
                             <TableCell>
                             <div className="font-medium">{note.teacherName}</div>
-                            <div className="text-sm text-muted-foreground">{note.title}</div>
+                            <div className="text-sm text-muted-foreground hidden md:table-cell">{note.title}</div>
                             </TableCell>
                             <TableCell className="hidden sm:table-cell">{note.subject}</TableCell>
                             <TableCell>
@@ -244,30 +268,9 @@ export function HodDashboard() {
                     </Table>
                 </CardContent>
             </Card>
-            <Card>
-                <CardHeader>
-                    <CardTitle>Class Averages by Subject</CardTitle>
-                    <CardDescription>Average performance in subjects across your department. (Placeholder)</CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <ChartContainer config={chartConfig} className="w-full h-[250px]">
-                    <ResponsiveContainer width="100%" height="100%">
-                        <BarChartRecharts data={subjectPerformanceData}>
-                          <CartesianGrid vertical={false} />
-                          <XAxis dataKey="subject" tickLine={false} axisLine={false} tickMargin={8} fontSize={12} />
-                          <YAxis domain={[0, 100]} />
-                          <ChartTooltip content={<ChartTooltipContent indicator="dot" />} />
-                          <Bar dataKey="average" radius={4}>
-                            {subjectPerformanceData.map(entry => <Cell key={entry.subject} fill={entry.color} />)}
-                          </Bar>
-                        </BarChartRecharts>
-                    </ResponsiveContainer>
-                  </ChartContainer>
-                </CardContent>
-            </Card>
         </div>
         
-        <div className="lg:col-span-1 space-y-6">
+        <div className="lg:col-span-1">
              <Card>
                 <CardHeader>
                     <CardTitle>Department Submission Status</CardTitle>
@@ -291,15 +294,6 @@ export function HodDashboard() {
                             <p>No submission data available.</p>
                         </div>
                     )}
-                </CardContent>
-            </Card>
-            <Card>
-                <CardHeader>
-                    <CardTitle>Grading Progress</CardTitle>
-                    <CardDescription>Status of score entry for the current term. (Placeholder)</CardDescription>
-                </CardHeader>
-                <CardContent className="flex items-center justify-center h-[250px]">
-                    <p className="text-sm text-muted-foreground">Chart coming soon</p>
                 </CardContent>
             </Card>
         </div>
