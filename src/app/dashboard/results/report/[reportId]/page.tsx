@@ -85,13 +85,25 @@ export default function IndividualReportPage() {
           body {
             background-color: #fff;
           }
-          main, .no-print {
+          .printable-area {
+            display: block;
+            position: absolute;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            padding: 1rem;
+          }
+          .no-print {
             display: none !important;
           }
-          .printable-area {
-            display: block !important;
-            margin: 0;
-            padding: 0;
+          /* Hide sidebar and header during print */
+          header, [data-sidebar="sidebar"] {
+            display: none !important;
+          }
+           main {
+            padding: 0 !important;
+            margin: 0 !important;
           }
         }
       `}</style>
@@ -106,11 +118,12 @@ export default function IndividualReportPage() {
             Print Report
             </Button>
         </div>
-      </div>
-      <div className="printable-area -m-8 hidden">
-        <ReportCardTemplate reportCard={reportCard} />
+
+        <div className="printable-area">
+          <ReportCardTemplate reportCard={reportCard} />
+        </div>
+
       </div>
     </>
   );
 }
-
