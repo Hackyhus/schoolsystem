@@ -1,7 +1,7 @@
 
 'use client';
 
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -32,8 +32,8 @@ export default function ScoresPage() {
   const { toast } = useToast();
   const { classes, subjects, isLoading: isAcademicDataLoading } = useAcademicData();
 
-  const handleLoadData = async () => {
-    if (!selectedClass || !selectedSubject) {
+  const handleLoadData = useCallback(async (cls: string, subj: string) => {
+    if (!cls || !subj) {
       toast({
         variant: 'destructive',
         title: 'Selection Required',
@@ -44,7 +44,7 @@ export default function ScoresPage() {
     setIsLoading(true);
     try {
       // 1. Fetch students for the selected class
-      const studentsQuery = query(collection(db, 'students'), where('classLevel', '==', selectedClass));
+      const studentsQuery = query(collection(db, 'students'), where('classLevel', '==', cls));
       const studentsSnapshot = await getDocs(studentsQuery);
       const studentsList = studentsSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Student));
       setStudents(studentsList);
@@ -60,7 +60,7 @@ export default function ScoresPage() {
       const scoresQuery = query(
         collection(db, 'scores'),
         where('studentId', 'in', studentIds),
-        where('subject', '==', selectedSubject),
+        where('subject', '==', subj),
         // where('term', '==', currentTerm) // Add term logic later
       );
       const scoresSnapshot = await getDocs(scoresQuery);
@@ -87,7 +87,40 @@ export default function ScoresPage() {
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [toast]);
+  
+  // Load initial state from localStorage and auto-fetch data
+  useEffect(() => {
+    const savedClass = localStorage.getItem('scores-selectedClass');
+    const savedSubject = localStorage.getItem('scores-selectedSubject');
+    if (savedClass) {
+        setSelectedClass(savedClass);
+    }
+    if (savedSubject) {
+        setSelectedSubject(savedSubject);
+    }
+    if (savedClass && savedSubject) {
+        handleLoadData(savedClass, savedSubject);
+    }
+  }, [handleLoadData]);
+
+  // Save selection to localStorage whenever it changes
+  useEffect(() => {
+    if (selectedClass) {
+        localStorage.setItem('scores-selectedClass', selectedClass);
+    } else {
+        localStorage.removeItem('scores-selectedClass');
+    }
+  }, [selectedClass]);
+
+  useEffect(() => {
+    if (selectedSubject) {
+        localStorage.setItem('scores-selectedSubject', selectedSubject);
+    } else {
+        localStorage.removeItem('scores-selectedSubject');
+    }
+  }, [selectedSubject]);
+
 
   const handleScoreChange = (studentId: string, field: 'caScore' | 'examScore', value: string) => {
     const numericValue = Number(value) || 0;
@@ -136,7 +169,7 @@ export default function ScoresPage() {
         title: asDraft ? 'Scores Saved as Draft' : 'Scores Submitted!',
         description: asDraft ? 'Your progress has been saved.' : 'The scores have been submitted to the Exam Officer for review.',
       });
-      await handleLoadData();
+      await handleLoadData(selectedClass, selectedSubject);
     } catch (error) {
       console.error('Error saving scores:', error);
       toast({ variant: 'destructive', title: 'Error', description: 'Could not save scores.' });
@@ -212,7 +245,7 @@ export default function ScoresPage() {
   
   const onUploadComplete = () => {
     setIsBulkUploadOpen(false);
-    handleLoadData(); // Refresh the data to show newly uploaded scores
+    handleLoadData(selectedClass, selectedSubject); // Refresh the data to show newly uploaded scores
   }
 
   const renderContent = () => {
@@ -232,6 +265,15 @@ export default function ScoresPage() {
       );
     }
 
+    if (students.length === 0 && (selectedClass || selectedSubject)) {
+      return (
+        <div className="flex h-48 flex-col items-center justify-center rounded-md border border-dashed text-center">
+          <h3 className="text-lg font-medium">No Students Found</h3>
+          <p className="text-sm text-muted-foreground">There are no students enrolled in {selectedClass}.</p>
+        </div>
+      );
+    }
+    
     if (students.length === 0) {
       return (
         <div className="flex h-48 flex-col items-center justify-center rounded-md border border-dashed text-center">
@@ -346,7 +388,8 @@ export default function ScoresPage() {
                 </SelectContent>
               </Select>
             </div>
-            <Button onClick={handleLoadData} disabled={isLoading || isAcademicDataLoading || isSubmitting}>
+            <Button onClick={() => handleLoadData(selectedClass, selectedSubject)} disabled={isLoading || isAcademicDataLoading || isSubmitting}>
+              {isLoading ? <Loader2 className="mr-2 h-4 w-4 animate-spin"/> : null}
               {isLoading ? 'Loading...' : 'Load Data'}
             </Button>
             <div className="ml-auto flex gap-2">
