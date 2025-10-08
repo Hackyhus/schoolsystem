@@ -57,7 +57,8 @@ export function BulkStudentUploadDialog({ onUploadComplete }: { onUploadComplete
     reader.onload = (e) => {
         try {
             const data = e.target?.result;
-            const workbook = XLSX.read(data, { type: 'binary', cellDates: true });
+            // Set cellDates to false to ensure dates are parsed as strings, not Date objects.
+            const workbook = XLSX.read(data, { type: 'binary', cellDates: false });
             const sheetName = workbook.SheetNames[0];
             const worksheet = workbook.Sheets[sheetName];
             const json = XLSX.utils.sheet_to_json(worksheet);
