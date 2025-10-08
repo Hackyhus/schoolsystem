@@ -132,7 +132,7 @@ const navConfig = {
     sidebar_extra: [
       { "icon": "file-question", "label": "Review Questions", "path": "/dashboard/exam-questions" },
       { "icon": "edit-3", "label": "Review Scores", "path": "/dashboard/scores" },
-      { "icon": "check-square", "label": "Generate Results", "path": "/dashboard/reports" },
+      { "icon": "check-square", "label": "Generate Results", "path": "/dashboard/results/generate" },
       { "icon": "calendar", "label": "Timetable", "path": "/dashboard/timetable" },
       { "icon": "ticket", "label": "Exam Registration", "path": "/dashboard/exam-registration" },
       { "icon": "grid", "label": "Seating Plans", "path": "/dashboard/seating-plan" },

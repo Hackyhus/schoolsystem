@@ -2,6 +2,7 @@
 'use client';
 
 import {
+  Dialog,
   DialogContent,
   DialogHeader,
   DialogTitle,
@@ -19,6 +20,8 @@ import type { Student } from '@/lib/schema';
 import { bulkUpdateScores } from '@/actions/score-actions';
 
 interface BulkScoresUploadDialogProps {
+    open: boolean;
+    onOpenChange: (open: boolean) => void;
     students: Student[];
     class: string;
     subject: string;
@@ -26,7 +29,7 @@ interface BulkScoresUploadDialogProps {
 }
 
 
-export function BulkScoresUploadDialog({ students, class: className, subject, onUploadComplete }: BulkScoresUploadDialogProps) {
+export function BulkScoresUploadDialog({ open, onOpenChange, students, class: className, subject, onUploadComplete }: BulkScoresUploadDialogProps) {
   const [fileName, setFileName] = useState<string | null>(null);
   const [scoreData, setScoreData] = useState<any[]>([]);
   const [isParsing, setIsParsing] = useState(false);
@@ -114,57 +117,57 @@ export function BulkScoresUploadDialog({ students, class: className, subject, on
   }
 
   return (
-    <DialogContent className="max-w-xl">
-      <DialogHeader>
-        <DialogTitle>Bulk Score Upload for {className} - {subject}</DialogTitle>
-        <DialogDescription>
-          Upload an Excel file to update scores for all students in this class.
-        </DialogDescription>
-      </DialogHeader>
-      
-      <div className="space-y-6 py-4">
-        <div className="rounded-md border-2 border-dashed p-8 text-center">
-            <h3 className="font-semibold">Step 1: Download the Template</h3>
-            <p className="text-sm text-muted-foreground mb-4">
-                This template is pre-populated with the students in this class.
-            </p>
-            <Button variant="outline" onClick={handleDownloadTemplate}>
-                <Download className="mr-2 h-4 w-4" />
-                Download Template
-            </Button>
-        </div>
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="max-w-xl">
+        <DialogHeader>
+          <DialogTitle>Bulk Score Upload for {className} - {subject}</DialogTitle>
+          <DialogDescription>
+            Upload an Excel file to update scores for all students in this class.
+          </DialogDescription>
+        </DialogHeader>
         
-        <div className="rounded-md border-2 border-dashed p-8 text-center">
-             <h3 className="font-semibold">Step 2: Upload Your File</h3>
-             <p className="text-sm text-muted-foreground mb-4">
-                Click to select your completed spreadsheet file.
-            </p>
-             <Input 
-                type="file" 
-                ref={fileInputRef} 
-                className="hidden"
-                accept=".xlsx, .xls, .csv"
-                onChange={handleFileSelect}
-                disabled={isParsing || isSubmitting}
-            />
-            <Button variant="outline" onClick={() => fileInputRef.current?.click()} disabled={isParsing || isSubmitting}>
-                {isParsing ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Upload className="mr-2 h-4 w-4" />}
-                {fileName || 'Select File'}
-            </Button>
+        <div className="space-y-6 py-4">
+          <div className="rounded-md border-2 border-dashed p-8 text-center">
+              <h3 className="font-semibold">Step 1: Download the Template</h3>
+              <p className="text-sm text-muted-foreground mb-4">
+                  This template is pre-populated with the students in this class.
+              </p>
+              <Button variant="outline" onClick={handleDownloadTemplate}>
+                  <Download className="mr-2 h-4 w-4" />
+                  Download Template
+              </Button>
+          </div>
+          
+          <div className="rounded-md border-2 border-dashed p-8 text-center">
+              <h3 className="font-semibold">Step 2: Upload Your File</h3>
+              <p className="text-sm text-muted-foreground mb-4">
+                  Click to select your completed spreadsheet file.
+              </p>
+              <Input 
+                  type="file" 
+                  ref={fileInputRef} 
+                  className="hidden"
+                  accept=".xlsx, .xls, .csv"
+                  onChange={handleFileSelect}
+                  disabled={isParsing || isSubmitting}
+              />
+              <Button variant="outline" onClick={() => fileInputRef.current?.click()} disabled={isParsing || isSubmitting}>
+                  {isParsing ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Upload className="mr-2 h-4 w-4" />}
+                  {fileName || 'Select File'}
+              </Button>
+          </div>
         </div>
-      </div>
 
-      <DialogFooter>
-        <DialogClose asChild>
-            <Button variant="secondary">Close</Button>
-        </DialogClose>
-        <Button onClick={handleImport} disabled={isSubmitting || isParsing || scoreData.length === 0}>
-            {isSubmitting ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
-            Import Scores
-        </Button>
-      </DialogFooter>
-    </DialogContent>
+        <DialogFooter>
+          <DialogClose asChild>
+              <Button variant="secondary">Close</Button>
+          </DialogClose>
+          <Button onClick={handleImport} disabled={isSubmitting || isParsing || scoreData.length === 0}>
+              {isSubmitting ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
+              Import Scores
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
   );
 }
-
-    

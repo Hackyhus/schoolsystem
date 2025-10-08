@@ -16,8 +16,8 @@ import type { Student, Score } from '@/lib/schema';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Badge } from '@/components/ui/badge';
 import { ThumbsDown, ThumbsUp, Save, Loader2, Send, Upload } from 'lucide-react';
-import { Dialog, DialogTrigger, DialogContent } from '@/components/ui/dialog';
 import { BulkScoresUploadDialog } from '@/components/dashboard/scores/bulk-scores-upload-dialog';
+import { createScoreNotification } from '@/lib/notifications';
 
 
 export default function ScoresPage() {
@@ -127,8 +127,8 @@ export default function ScoresPage() {
     setScores(prevScores => {
       const studentScore = { ...prevScores[studentId] };
       
-      if (field === 'caScore' && numericValue > 40) return prevScores;
-      if (field === 'examScore' && numericValue > 60) return prevScores;
+      if (field === 'caScore' && (numericValue < 0 || numericValue > 40)) return prevScores;
+      if (field === 'examScore' && (numericValue < 0 || numericValue > 60)) return prevScores;
 
       studentScore[field] = numericValue;
       studentScore.totalScore = (studentScore.caScore || 0) + (studentScore.examScore || 0);
@@ -184,11 +184,21 @@ export default function ScoresPage() {
   
   const handleReview = async (studentId: string, newStatus: 'Approved' | 'Rejected') => {
     const score = scores[studentId];
-    if (!score || !score.id) return;
+    const student = students.find(s => s.studentId === studentId);
+    if (!score || !score.id || !student) return;
     setIsSubmitting(true);
     try {
         const scoreRef = doc(db, 'scores', score.id);
         await updateDoc(scoreRef, { status: newStatus });
+        
+        await createScoreNotification(
+            score.teacherId,
+            score.id,
+            `${student.firstName} ${student.lastName}`,
+            score.subject,
+            newStatus
+        );
+
         setScores(prev => ({ 
             ...prev, 
             [studentId]: { ...prev[studentId], status: newStatus } 
@@ -207,13 +217,23 @@ export default function ScoresPage() {
     const batch = writeBatch(db);
     let updatedCount = 0;
     const updatedScores = { ...scores };
+    const notificationPromises: Promise<void>[] = [];
 
     Object.entries(scores).forEach(([studentId, score]) => {
-      if (score.status === 'Pending' && score.id) {
+      const student = students.find(s => s.studentId === studentId);
+      if (score.status === 'Pending' && score.id && student) {
         const scoreRef = doc(db, 'scores', score.id);
         batch.update(scoreRef, { status: 'Approved' });
         updatedScores[studentId].status = 'Approved';
         updatedCount++;
+        
+        notificationPromises.push(createScoreNotification(
+            score.teacherId,
+            score.id,
+            `${student.firstName} ${student.lastName}`,
+            score.subject,
+            'Approved'
+        ));
       }
     });
 
@@ -225,6 +245,7 @@ export default function ScoresPage() {
 
     try {
         await batch.commit();
+        await Promise.all(notificationPromises);
         setScores(updatedScores);
         toast({ title: 'All Pending Scores Approved', description: `${updatedCount} scores were updated.` });
     } catch (error) {
@@ -252,7 +273,9 @@ export default function ScoresPage() {
   
   const onUploadComplete = () => {
     setIsBulkUploadOpen(false);
-    handleLoadData(selectedClass, selectedSubject); // Refresh the data to show newly uploaded scores
+    if(selectedClass && selectedSubject) {
+        handleLoadData(selectedClass, selectedSubject);
+    }
   }
 
   const renderContent = () => {
@@ -406,19 +429,14 @@ export default function ScoresPage() {
             <div className="ml-auto flex gap-2">
                {role === 'Teacher' && students.length > 0 && (
                 <>
-                  <Dialog open={isBulkUploadOpen} onOpenChange={setIsBulkUploadOpen}>
-                    <DialogTrigger asChild>
-                       <Button variant="outline">
-                         <Upload className="mr-2 h-4 w-4"/> Bulk Upload Scores
-                       </Button>
-                    </DialogTrigger>
-                    <BulkScoresUploadDialog 
-                        students={students} 
-                        class={selectedClass}
-                        subject={selectedSubject}
-                        onUploadComplete={onUploadComplete} 
-                    />
-                  </Dialog>
+                  <BulkScoresUploadDialog 
+                      open={isBulkUploadOpen}
+                      onOpenChange={setIsBulkUploadOpen}
+                      students={students} 
+                      class={selectedClass}
+                      subject={selectedSubject}
+                      onUploadComplete={onUploadComplete} 
+                  />
                   <Button variant="outline" onClick={() => handleSaveScores(true)} disabled={isSubmitting}>
                     {isSubmitting ? <Loader2 className="mr-2 h-4 w-4 animate-spin"/> : <Save className="mr-2 h-4 w-4" />}
                     Save Draft
