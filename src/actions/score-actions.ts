@@ -1,7 +1,7 @@
 
 'use server';
 
-import { dbService } from '@/lib/firebase';
+import { db } from '@/lib/firebase';
 import { collection, query, where, getDocs, writeBatch, doc } from 'firebase/firestore';
 import type { Score } from '@/lib/schema';
 
@@ -19,13 +19,19 @@ export async function bulkUpdateScores(payload: BulkUpdatePayload) {
     }
 
     try {
-        const batch = dbService.createBatch();
+        const batch = writeBatch(db);
         let updatedCount = 0;
 
         // Get existing scores to perform updates instead of overwrites
         const studentIds = scores.map(s => s.studentId).filter(Boolean);
+        
+        // Ensure studentIds is not empty to avoid invalid 'in' query
+        if (studentIds.length === 0) {
+            return { success: true, updatedCount: 0 };
+        }
+
         const scoresQuery = query(
-            collection(dbService.getNativeBatch()._firestore, 'scores'), 
+            collection(db, 'scores'), 
             where('studentId', 'in', studentIds), 
             where('subject', '==', subject),
             where('class', '==', className)
@@ -60,11 +66,11 @@ export async function bulkUpdateScores(payload: BulkUpdatePayload) {
 
             if (existing) {
                 // Update existing score document
-                const docRef = doc(dbService.getNativeBatch()._firestore, 'scores', existing.id);
+                const docRef = doc(db, 'scores', existing.id);
                 batch.update(docRef, scoreData);
             } else {
                 // Create new score document
-                const docRef = doc(collection(dbService.getNativeBatch()._firestore, 'scores'));
+                const docRef = doc(collection(db, 'scores'));
                 const newScoreData = {
                     ...scoreData,
                     studentId: record.studentId,
@@ -89,5 +95,3 @@ export async function bulkUpdateScores(payload: BulkUpdatePayload) {
         return { error: error.message || 'An unexpected server error occurred during bulk import.' };
     }
 }
-
-    
