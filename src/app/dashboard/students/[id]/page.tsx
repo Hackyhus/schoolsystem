@@ -30,11 +30,14 @@ export default function StudentProfilePage() {
   const [isLoading, setIsLoading] = useState(true);
   const { role: currentUserRole } = useRole();
 
-  const studentId = Array.isArray(id) ? id[0] : id;
+  const studentIdParam = Array.isArray(id) ? id[0] : id;
 
   const fetchStudent = useCallback(async () => {
     setIsLoading(true);
-    if (!studentId) return;
+    if (!studentIdParam) return;
+    
+    // Decode the student ID from the URL parameter
+    const studentId = decodeURIComponent(studentIdParam);
 
     const studentsRef = collection(db, 'students');
     const q = query(studentsRef, where('studentId', '==', studentId));
@@ -54,7 +57,7 @@ export default function StudentProfilePage() {
     } finally {
         setIsLoading(false);
     }
-  }, [studentId]);
+  }, [studentIdParam]);
 
   useEffect(() => {
     fetchStudent();
