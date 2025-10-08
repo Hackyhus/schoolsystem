@@ -19,12 +19,23 @@ import {
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { PlusCircle, Trash2, Eye, Upload } from 'lucide-react';
-import { useEffect, useState, useCallback } from 'react';
+import { useEffect, useState, useCallback, useMemo } from 'react';
 import { collection, getDocs, deleteDoc, doc, query, orderBy, where } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import type { Student } from '@/lib/schema';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useToast } from '@/hooks/use-toast';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog"
 import {
   Dialog,
   DialogContent,
@@ -39,6 +50,8 @@ import Link from 'next/link';
 import { BulkStudentUploadDialog } from '@/components/dashboard/students/bulk-student-upload-dialog';
 import { Input } from '@/components/ui/input';
 import { Search } from 'lucide-react';
+import { Checkbox } from '@/components/ui/checkbox';
+import { bulkDeleteStudents } from '@/actions/student-actions';
 
 
 export default function StudentsPage() {
@@ -48,6 +61,7 @@ export default function StudentsPage() {
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [isBulkModalOpen, setIsBulkModalOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
+  const [selectedStudents, setSelectedStudents] = useState<string[]>([]);
   const { toast } = useToast();
   const { role } = useRole();
 
@@ -61,6 +75,7 @@ export default function StudentsPage() {
         .map((doc) => ({ id: doc.id, ...doc.data() } as Student));
       setStudents(studentsList);
       setFilteredStudents(studentsList);
+      setSelectedStudents([]); // Reset selection on fetch
     } catch (error) {
       console.error('Error fetching students:', error);
       toast({
@@ -86,6 +101,40 @@ export default function StudentsPage() {
     });
     setFilteredStudents(filteredData);
   }, [searchTerm, students]);
+  
+  const handleSelectStudent = (studentId: string, isSelected: boolean) => {
+    if (isSelected) {
+      setSelectedStudents(prev => [...prev, studentId]);
+    } else {
+      setSelectedStudents(prev => prev.filter(id => id !== studentId));
+    }
+  };
+  
+  const handleSelectAll = (isSelected: boolean) => {
+    if (isSelected) {
+      setSelectedStudents(filteredStudents.map(s => s.id));
+    } else {
+      setSelectedStudents([]);
+    }
+  };
+
+  const handleBulkDelete = async () => {
+    if (selectedStudents.length === 0) return;
+    try {
+        await bulkDeleteStudents(selectedStudents);
+        toast({
+            title: 'Success',
+            description: `${selectedStudents.length} student(s) have been deleted.`,
+        });
+        fetchStudents(); // This will also clear selection
+    } catch (error: any) {
+        toast({
+            variant: 'destructive',
+            title: 'Error',
+            description: error.message || 'Could not delete the selected students.',
+        });
+    }
+  };
 
 
   const removeStudent = async (student: Student) => {
@@ -117,6 +166,11 @@ export default function StudentsPage() {
     setIsAddModalOpen(false);
     setIsBulkModalOpen(false);
   };
+  
+  const isAllSelected = useMemo(() => {
+    return filteredStudents.length > 0 && selectedStudents.length === filteredStudents.length;
+  }, [selectedStudents, filteredStudents]);
+
 
   return (
     <div className="space-y-8">
@@ -134,7 +188,7 @@ export default function StudentsPage() {
               A list of all students in the system.
             </CardDescription>
           </div>
-          <div className="flex gap-2 w-full sm:w-auto">
+          <div className="flex gap-2 w-full flex-wrap sm:w-auto">
             <div className="relative flex-1 sm:flex-initial">
                  <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
                 <Input
@@ -147,6 +201,27 @@ export default function StudentsPage() {
             </div>
             {role === 'Admin' && (
               <div className="flex gap-2">
+                {selectedStudents.length > 0 && (
+                   <AlertDialog>
+                      <AlertDialogTrigger asChild>
+                         <Button variant="destructive">
+                           <Trash2 className="mr-2 h-4 w-4" /> Delete ({selectedStudents.length})
+                         </Button>
+                      </AlertDialogTrigger>
+                      <AlertDialogContent>
+                        <AlertDialogHeader>
+                          <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
+                          <AlertDialogDescription>
+                            This action cannot be undone. This will permanently delete the selected {selectedStudents.length} student(s) and all their associated data.
+                          </AlertDialogDescription>
+                        </AlertDialogHeader>
+                        <AlertDialogFooter>
+                          <AlertDialogCancel>Cancel</AlertDialogCancel>
+                          <AlertDialogAction onClick={handleBulkDelete}>Continue</AlertDialogAction>
+                        </AlertDialogFooter>
+                      </AlertDialogContent>
+                   </AlertDialog>
+                )}
                 <Dialog open={isBulkModalOpen} onOpenChange={setIsBulkModalOpen}>
                   <DialogTrigger asChild>
                     <Button variant="outline">
@@ -179,6 +254,13 @@ export default function StudentsPage() {
           <Table>
             <TableHeader>
               <TableRow>
+                 {role === 'Admin' && <TableHead className="w-[50px]">
+                  <Checkbox 
+                    checked={isAllSelected}
+                    onCheckedChange={(checked) => handleSelectAll(Boolean(checked))}
+                    aria-label="Select all"
+                  />
+                </TableHead>}
                 <TableHead>Student ID</TableHead>
                 <TableHead>Name</TableHead>
                 <TableHead className="hidden md:table-cell">Primary Guardian</TableHead>
@@ -191,29 +273,25 @@ export default function StudentsPage() {
               {isLoading ? (
                 Array.from({ length: 5 }).map((_, i) => (
                   <TableRow key={i}>
-                    <TableCell>
-                      <Skeleton className="h-5 w-28" />
-                    </TableCell>
-                    <TableCell>
-                      <Skeleton className="h-5 w-24" />
-                    </TableCell>
-                    <TableCell className="hidden md:table-cell">
-                      <Skeleton className="h-5 w-36" />
-                    </TableCell>
-                     <TableCell>
-                      <Skeleton className="h-5 w-24" />
-                    </TableCell>
-                     <TableCell>
-                      <Skeleton className="h-6 w-20" />
-                    </TableCell>
-                    <TableCell className="text-right">
-                      <Skeleton className="ml-auto h-8 w-8" />
-                    </TableCell>
+                    {role === 'Admin' && <TableCell><Skeleton className="h-5 w-5" /></TableCell>}
+                    <TableCell><Skeleton className="h-5 w-28" /></TableCell>
+                    <TableCell><Skeleton className="h-5 w-24" /></TableCell>
+                    <TableCell className="hidden md:table-cell"><Skeleton className="h-5 w-36" /></TableCell>
+                     <TableCell><Skeleton className="h-5 w-24" /></TableCell>
+                     <TableCell><Skeleton className="h-6 w-20" /></TableCell>
+                    <TableCell className="text-right"><Skeleton className="ml-auto h-8 w-8" /></TableCell>
                   </TableRow>
                 ))
               ) : (
                 filteredStudents.map((student) => (
-                  <TableRow key={student.id}>
+                  <TableRow key={student.id} data-state={selectedStudents.includes(student.id) && "selected"}>
+                    {role === 'Admin' && <TableCell>
+                       <Checkbox
+                        checked={selectedStudents.includes(student.id)}
+                        onCheckedChange={(checked) => handleSelectStudent(student.id, Boolean(checked))}
+                        aria-label="Select student"
+                      />
+                    </TableCell>}
                     <TableCell className="font-mono text-xs">{student.studentId || 'N/A'}</TableCell>
                     <TableCell className="font-medium">{`${student.firstName} ${student.lastName}`}</TableCell>
                     <TableCell className="hidden md:table-cell">{student.guardians[0]?.fullName || 'N/A'}</TableCell>
@@ -243,7 +321,7 @@ export default function StudentsPage() {
               {!isLoading && filteredStudents.length === 0 && (
                 <TableRow>
                   <TableCell
-                    colSpan={6}
+                    colSpan={7}
                     className="h-24 text-center text-muted-foreground"
                   >
                     No students found. {searchTerm && "Try adjusting your search."}

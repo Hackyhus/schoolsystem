@@ -198,3 +198,21 @@ export async function bulkCreateStudents(students: any[]) {
         return { error: error.message || 'An unexpected server error occurred during bulk import.' };
     }
 }
+
+export async function bulkDeleteStudents(studentIds: string[]) {
+    if (!studentIds || studentIds.length === 0) {
+        return { error: 'No student IDs provided for deletion.' };
+    }
+
+    try {
+        const batch = dbService.createBatch();
+        studentIds.forEach(id => {
+            batch.delete('students', id);
+        });
+        await batch.commit();
+        return { success: true, deletedCount: studentIds.length };
+    } catch (error: any) {
+        console.error('Error in bulk student deletion:', error);
+        return { error: error.message || 'An unexpected server error occurred during bulk deletion.' };
+    }
+}

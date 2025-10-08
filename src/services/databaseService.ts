@@ -1,3 +1,4 @@
+
 import {
   getFirestore,
   collection,
@@ -37,6 +38,8 @@ export interface IWriteBatch {
     set(docRef: any, data: DocumentData): IWriteBatch;
     update(collectionName: string, id: string, data: Partial<DocumentData>): IWriteBatch;
     update(docRef: any, data: Partial<DocumentData>): IWriteBatch;
+    delete(collectionName: string, id: string): IWriteBatch;
+    delete(docRef: any): IWriteBatch;
     commit(): Promise<void>;
     getNativeBatch(): any;
 }
@@ -143,6 +146,16 @@ class FirebaseWriteBatch implements IWriteBatch {
             this.batch.update(docRef, data!);
         } else {
             this.batch.update(collectionNameOrDocRef, idOrData as Partial<DocumentData>);
+        }
+        return this;
+    }
+    
+    delete(collectionNameOrDocRef: string | DocumentReference, id?: string): IWriteBatch {
+         if (typeof collectionNameOrDocRef === 'string') {
+            const docRef = doc(this.db, collectionNameOrDocRef, id as string);
+            this.batch.delete(docRef);
+        } else {
+            this.batch.delete(collectionNameOrDocRef);
         }
         return this;
     }
