@@ -25,10 +25,10 @@ export default function ViewClassResultsPage() {
     setIsLoading(true);
     setError(null);
     try {
+      // Query only by class to avoid needing a composite index
       const reportsQuery = query(
         collection(db, 'reportCards'),
-        where('class', '==', className),
-        orderBy('classRank', 'asc')
+        where('class', '==', className)
       );
 
       const querySnapshot = await getDocs(reportsQuery);
@@ -40,6 +40,8 @@ export default function ViewClassResultsPage() {
         const reports = querySnapshot.docs.map(
           (doc) => ({ id: doc.id, ...doc.data() } as ReportCard)
         );
+        // Sort the results by classRank on the client side
+        reports.sort((a, b) => a.classRank - b.classRank);
         setReportCards(reports);
       }
     } catch (e: any) {
