@@ -10,18 +10,29 @@ import {
   DialogClose
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
-import { Download, Upload, Loader2 } from 'lucide-react';
+import { Download, Upload, Loader2, AlertCircle, CheckCircle } from 'lucide-react';
 import * as XLSX from 'xlsx';
-import { useState, useRef } from 'react';
+import { useState, useRef, Fragment } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import { Input } from '@/components/ui/input';
 import { bulkCreateStudents } from '@/actions/student-actions';
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { Badge } from '@/components/ui/badge';
+import { ScrollArea } from '@/components/ui/scroll-area';
+
+type ImportResult = {
+    importedCount: number;
+    errorCount: number;
+    invalidRecords: any[];
+} | null;
 
 export function BulkStudentUploadDialog({ onUploadComplete }: { onUploadComplete: () => void }) {
   const [fileName, setFileName] = useState<string | null>(null);
   const [studentData, setStudentData] = useState<any[]>([]);
   const [isParsing, setIsParsing] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [importResult, setImportResult] = useState<ImportResult>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const { toast } = useToast();
   
@@ -49,7 +60,8 @@ export function BulkStudentUploadDialog({ onUploadComplete }: { onUploadComplete
   const handleFileSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (!file) return;
-
+    
+    setImportResult(null);
     setFileName(file.name);
     setIsParsing(true);
     const reader = new FileReader();
@@ -61,8 +73,6 @@ export function BulkStudentUploadDialog({ onUploadComplete }: { onUploadComplete
             const sheetName = workbook.SheetNames[0];
             const worksheet = workbook.Sheets[sheetName];
             const json = XLSX.utils.sheet_to_json(worksheet);
-
-            // Sanitize the data to ensure it's a plain object array
             const plainJson = JSON.parse(JSON.stringify(json));
             
             setStudentData(plainJson);
@@ -92,16 +102,27 @@ export function BulkStudentUploadDialog({ onUploadComplete }: { onUploadComplete
         return;
     }
     setIsSubmitting(true);
+    setImportResult(null);
     try {
         const result = await bulkCreateStudents(studentData);
         if (result.error) {
             throw new Error(result.error);
         }
-        toast({
-            title: 'Import Successful',
-            description: `${result.count} student records have been created successfully.`,
+
+        setImportResult({
+            importedCount: result.importedCount,
+            errorCount: result.errorCount,
+            invalidRecords: result.invalidRecords
         });
-        onUploadComplete();
+
+        toast({
+            title: 'Import Process Completed',
+            description: `${result.importedCount} students imported. ${result.errorCount} records had errors.`,
+        });
+
+        if (result.errorCount === 0) {
+            onUploadComplete();
+        }
     } catch (error: any) {
          toast({
             variant: 'destructive',
@@ -112,9 +133,54 @@ export function BulkStudentUploadDialog({ onUploadComplete }: { onUploadComplete
         setIsSubmitting(false);
     }
   }
+  
+  const renderResult = () => {
+      if (!importResult) return null;
+      
+      return (
+          <div className='mt-6 space-y-4'>
+            {importResult.importedCount > 0 && (
+                <Alert variant="default" className="bg-green-50 border-green-200">
+                    <CheckCircle className="h-4 w-4" />
+                    <AlertTitle>Import Successful</AlertTitle>
+                    <AlertDescription>
+                        {importResult.importedCount} student records were successfully created.
+                    </AlertDescription>
+                </Alert>
+            )}
+             {importResult.errorCount > 0 && (
+                <Alert variant="destructive">
+                    <AlertCircle className="h-4 w-4" />
+                    <AlertTitle>{importResult.errorCount} Records Failed</AlertTitle>
+                    <AlertDescription>
+                       The following records could not be imported. Please correct them in your spreadsheet and re-upload the file.
+                    </AlertDescription>
+                     <ScrollArea className="mt-4 h-48">
+                        <Table>
+                            <TableHeader>
+                                <TableRow>
+                                    <TableHead>Name</TableHead>
+                                    <TableHead>Error</TableHead>
+                                </TableRow>
+                            </TableHeader>
+                            <TableBody>
+                                {importResult.invalidRecords.map((record, index) => (
+                                    <TableRow key={index}>
+                                        <TableCell>{record.firstName || 'N/A'} {record.lastName || ''}</TableCell>
+                                        <TableCell><Badge variant="outline">{record.error}</Badge></TableCell>
+                                    </TableRow>
+                                ))}
+                            </TableBody>
+                        </Table>
+                     </ScrollArea>
+                </Alert>
+            )}
+          </div>
+      )
+  }
 
   return (
-    <DialogContent className="max-w-2xl">
+    <DialogContent className="max-w-3xl">
       <DialogHeader>
         <DialogTitle>Bulk Student Upload</DialogTitle>
         <DialogDescription>
@@ -145,22 +211,24 @@ export function BulkStudentUploadDialog({ onUploadComplete }: { onUploadComplete
                 className="hidden"
                 accept=".xlsx, .xls, .csv"
                 onChange={handleFileSelect}
-                disabled={isParsing}
+                disabled={isParsing || isSubmitting}
             />
-            <Button variant="outline" onClick={() => fileInputRef.current?.click()} disabled={isParsing}>
+            <Button variant="outline" onClick={() => fileInputRef.current?.click()} disabled={isParsing || isSubmitting}>
                 {isParsing ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Upload className="mr-2 h-4 w-4" />}
                 {fileName || 'Select File'}
             </Button>
         </div>
+
+        {renderResult()}
       </div>
 
       <DialogFooter>
         <DialogClose asChild>
-            <Button variant="secondary">Cancel</Button>
+            <Button variant="secondary">Close</Button>
         </DialogClose>
         <Button onClick={handleImport} disabled={isSubmitting || isParsing || studentData.length === 0}>
             {isSubmitting ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
-            Import {studentData.length > 0 ? `${studentData.length} Students` : 'Students'}
+            Import {studentData.length > 0 && !importResult ? `${studentData.length} Students` : 'Students'}
         </Button>
       </DialogFooter>
     </DialogContent>

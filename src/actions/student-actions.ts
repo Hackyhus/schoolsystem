@@ -121,17 +121,33 @@ export async function createStudent(formData: FormData) {
 export async function bulkCreateStudents(students: any[]) {
     try {
         const batch = dbService.createBatch();
-        
+        const validStudents: any[] = [];
+        const invalidRecords: any[] = [];
+
         for (let i = 0; i < students.length; i++) {
             const student = students[i];
-            const studentId = await generateStudentId(i);
-
-            // Basic validation - a more robust validation might happen client-side or here
+            
+            // Basic validation
              if (!student.firstName || !student.lastName || !student.class || !student.guardianName || !student.guardianContact) {
-                console.warn(`Skipping invalid student record:`, student);
+                let error = 'Missing required fields: ';
+                const missing = [];
+                if (!student.firstName) missing.push('firstName');
+                if (!student.lastName) missing.push('lastName');
+                if (!student.class) missing.push('class');
+                if (!student.guardianName) missing.push('guardianName');
+                if (!student.guardianContact) missing.push('guardianContact');
+                error += missing.join(', ');
+                invalidRecords.push({ ...student, error });
                 continue;
             }
 
+            validStudents.push(student);
+        }
+        
+        for (let i = 0; i < validStudents.length; i++) {
+            const student = validStudents[i];
+            const studentId = await generateStudentId(i);
+            
             const newStudent: Omit<Student, 'id' | 'createdAt' | 'status'> & { createdAt: any; status: string } = {
                 studentId: studentId,
                 firstName: student.firstName,
@@ -162,12 +178,19 @@ export async function bulkCreateStudents(students: any[]) {
                 status: 'Active',
             };
             
-            // Add to batch using a new document reference
             batch.set('students', studentId, newStudent);
         }
 
-        await batch.commit();
-        return { success: true, count: students.length };
+        if (validStudents.length > 0) {
+            await batch.commit();
+        }
+
+        return { 
+            success: true, 
+            importedCount: validStudents.length,
+            errorCount: invalidRecords.length,
+            invalidRecords: invalidRecords
+        };
 
     } catch (error: any) {
         console.error('Error in bulk student creation:', error);
