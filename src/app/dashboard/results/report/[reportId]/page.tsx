@@ -80,20 +80,41 @@ export default function IndividualReportPage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between print:hidden">
-        <Button variant="outline" onClick={() => router.back()}>
-            <ArrowLeft className="mr-2 h-4 w-4" />
-            Back
-        </Button>
-        <Button onClick={handlePrint} size="lg">
-          <Printer className="mr-2 h-4 w-4" />
-          Print Report
-        </Button>
-      </div>
+       <style jsx global>{`
+        @media print {
+          body {
+            background-color: #fff;
+          }
+          .main-content > *:not(.printable-area) {
+            display: none;
+          }
+           main {
+             padding: 0 !important;
+           }
+          .printable-area {
+            display: block;
+            margin: 0;
+            padding: 0;
+          }
+        }
+      `}</style>
+      <div className="main-content">
+        <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between print:hidden">
+            <Button variant="outline" onClick={() => router.back()}>
+                <ArrowLeft className="mr-2 h-4 w-4" />
+                Back
+            </Button>
+            <Button onClick={handlePrint} size="lg">
+            <Printer className="mr-2 h-4 w-4" />
+            Print Report
+            </Button>
+        </div>
 
-      <div className="space-y-12">
-        <ReportCardTemplate reportCard={reportCard} />
+        <div className="printable-area space-y-12">
+            <ReportCardTemplate reportCard={reportCard} />
+        </div>
       </div>
     </div>
   );
 }
+
