@@ -140,9 +140,9 @@ export default function HodAnalyticsPage() {
     <div className="space-y-8">
       <div>
         <h1 className="font-headline text-3xl font-bold">Department Analytics</h1>
-        <p className="text-muted-foreground">
+        <div className="text-muted-foreground">
           {isLoading ? <Skeleton className="h-5 w-48 mt-1" /> : `Performance overview for the ${departmentName} Department.`}
-        </p>
+        </div>
       </div>
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
          <Card>
