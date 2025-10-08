@@ -12,7 +12,7 @@ import { useAcademicData } from '@/hooks/use-academic-data';
 import { useRole } from '@/context/role-context';
 import { collection, getDocs, query, where, writeBatch, doc } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
-import type { MockUser, Student, Score } from '@/lib/schema';
+import type { Student, Score } from '@/lib/schema';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Badge } from '@/components/ui/badge';
 import { ThumbsDown, ThumbsUp, Save, Loader2, Send, Upload } from 'lucide-react';
@@ -391,5 +391,3 @@ export default function ScoresPage() {
     </div>
   );
 }
-
-    
