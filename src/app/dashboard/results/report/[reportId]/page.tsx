@@ -1,16 +1,18 @@
 
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { useParams, notFound, useRouter } from 'next/navigation';
 import { doc, getDoc } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import type { ReportCard } from '@/lib/schema';
 import { Button } from '@/components/ui/button';
-import { Printer, Loader2, AlertCircle, ArrowLeft } from 'lucide-react';
+import { Download, Loader2, AlertCircle, ArrowLeft } from 'lucide-react';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { ReportCardTemplate } from '@/components/dashboard/results/report-card-template';
 import { Skeleton } from '@/components/ui/skeleton';
+import jsPDF from 'jspdf';
+import html2canvas from 'html2canvas';
 
 export default function IndividualReportPage() {
   const params = useParams();
@@ -19,7 +21,9 @@ export default function IndividualReportPage() {
 
   const [reportCard, setReportCard] = useState<ReportCard | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [isDownloading, setIsDownloading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const reportRef = useRef<HTMLDivElement>(null);
 
   const fetchReport = useCallback(async () => {
     if (typeof reportId !== 'string') return;
@@ -27,8 +31,8 @@ export default function IndividualReportPage() {
     setIsLoading(true);
     setError(null);
     try {
-      const reportRef = doc(db, 'reportCards', reportId);
-      const docSnap = await getDoc(reportRef);
+      const reportDocRef = doc(db, 'reportCards', reportId);
+      const docSnap = await getDoc(reportDocRef);
 
       if (docSnap.exists()) {
         setReportCard({ id: docSnap.id, ...docSnap.data() } as ReportCard);
@@ -48,9 +52,51 @@ export default function IndividualReportPage() {
     fetchReport();
   }, [fetchReport]);
 
-  const handlePrint = () => {
-    window.print();
-  };
+  const handleDownload = async () => {
+    if (!reportRef.current || !reportCard) return;
+    setIsDownloading(true);
+
+    try {
+        const canvas = await html2canvas(reportRef.current, {
+            scale: 2, // Increase scale for better resolution
+        });
+        const imgData = canvas.toDataURL('image/png');
+
+        // A4 dimensions in mm: 210 x 297
+        const pdf = new jsPDF({
+            orientation: 'portrait',
+            unit: 'mm',
+            format: 'a4',
+        });
+        
+        const pdfWidth = pdf.internal.pageSize.getWidth();
+        const pdfHeight = pdf.internal.pageSize.getHeight();
+        const canvasWidth = canvas.width;
+        const canvasHeight = canvas.height;
+        const ratio = canvasWidth / canvasHeight;
+
+        let imgWidth = pdfWidth - 20; // with some margin
+        let imgHeight = imgWidth / ratio;
+        
+        // If the height is still too large, adjust based on height
+        if (imgHeight > pdfHeight - 20) {
+            imgHeight = pdfHeight - 20;
+            imgWidth = imgHeight * ratio;
+        }
+
+        const x = (pdfWidth - imgWidth) / 2;
+        const y = (pdfHeight - imgHeight) / 2;
+
+        pdf.addImage(imgData, 'PNG', x, y, imgWidth, imgHeight);
+        pdf.save(`Report-Card-${reportCard.studentName.replace(/ /g, '-')}.pdf`);
+
+    } catch (error) {
+        console.error("Failed to generate PDF", error);
+        setError("Could not generate the PDF for download.");
+    } finally {
+        setIsDownloading(false);
+    }
+};
 
   if (isLoading) {
     return (
@@ -80,46 +126,28 @@ export default function IndividualReportPage() {
 
   return (
     <>
-      <style jsx global>{`
-        @media print {
-          body {
-            background-color: #fff;
-          }
-          .printable-area {
-            display: block;
-            position: absolute;
-            left: 0;
-            top: 0;
-            width: 100%;
-            height: 100%;
-            padding: 1rem;
-          }
-          .no-print {
-            display: none !important;
-          }
-          /* Hide sidebar and header during print */
-          header, [data-sidebar="sidebar"] {
-            display: none !important;
-          }
-           main {
-            padding: 0 !important;
-            margin: 0 !important;
-          }
-        }
-      `}</style>
       <div className="space-y-6">
-        <div className="no-print flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+        <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
             <Button variant="outline" onClick={() => router.back()}>
                 <ArrowLeft className="mr-2 h-4 w-4" />
                 Back
             </Button>
-            <Button onClick={handlePrint} size="lg">
-            <Printer className="mr-2 h-4 w-4" />
-            Print Report
+            <Button onClick={handleDownload} size="lg" disabled={isDownloading}>
+                {isDownloading ? (
+                    <>
+                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                        Downloading...
+                    </>
+                ) : (
+                    <>
+                        <Download className="mr-2 h-4 w-4" />
+                        Download PDF
+                    </>
+                )}
             </Button>
         </div>
 
-        <div className="printable-area">
+        <div ref={reportRef}>
           <ReportCardTemplate reportCard={reportCard} />
         </div>
 
