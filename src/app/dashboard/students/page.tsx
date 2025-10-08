@@ -74,7 +74,19 @@ export default function StudentsPage() {
       const studentsList = querySnapshot.docs
         .map((doc) => ({ id: doc.id, ...doc.data() } as Student));
       setStudents(studentsList);
-      setFilteredStudents(studentsList);
+      
+      // Restore and apply search term from localStorage
+      const savedSearchTerm = localStorage.getItem('students-searchTerm') || '';
+      setSearchTerm(savedSearchTerm);
+      
+      const lowercasedFilter = savedSearchTerm.toLowerCase();
+      const filteredData = studentsList.filter(item => {
+        return Object.values(item).some(val =>
+          String(val).toLowerCase().includes(lowercasedFilter)
+        ) || (item.guardians && item.guardians.some(g => String(g.fullName).toLowerCase().includes(lowercasedFilter)));
+      });
+      setFilteredStudents(filteredData);
+      
       setSelectedStudents([]); // Reset selection on fetch
     } catch (error) {
       console.error('Error fetching students:', error);
@@ -93,6 +105,7 @@ export default function StudentsPage() {
   }, [fetchStudents]);
 
   useEffect(() => {
+    // Apply filter and save search term to localStorage
     const lowercasedFilter = searchTerm.toLowerCase();
     const filteredData = students.filter(item => {
       return Object.values(item).some(val =>
@@ -100,6 +113,7 @@ export default function StudentsPage() {
       ) || (item.guardians && item.guardians.some(g => String(g.fullName).toLowerCase().includes(lowercasedFilter)));
     });
     setFilteredStudents(filteredData);
+    localStorage.setItem('students-searchTerm', searchTerm);
   }, [searchTerm, students]);
   
   const handleSelectStudent = (studentId: string, isSelected: boolean) => {
@@ -335,3 +349,4 @@ export default function StudentsPage() {
     </div>
   );
 }
+
