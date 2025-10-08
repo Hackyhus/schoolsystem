@@ -70,9 +70,13 @@ export function TeacherDashboard() {
     setIsLoading(true);
     try {
       // Fetch all notes for stats and charts
-      const allNotesQuery = query(collection(db, 'lessonNotes'), where('teacherId', '==', user.uid), orderBy('submittedOn', 'desc'));
+      const allNotesQuery = query(collection(db, 'lessonNotes'), where('teacherId', '==', user.uid));
       const allNotesSnapshot = await getDocs(allNotesQuery);
       const allNotesList = allNotesSnapshot.docs.map(doc => ({id: doc.id, ...doc.data() as MockLessonNote}));
+      
+      // Sort client-side to avoid needing a composite index
+      allNotesList.sort((a, b) => new Date(b.submissionDate).getTime() - new Date(a.submissionDate).getTime());
+
       setRecentNotes(allNotesList.slice(0, 3));
       
       const monthCounts: Record<string, number> = {};
@@ -314,4 +318,3 @@ export function TeacherDashboard() {
   );
 }
 
-    
