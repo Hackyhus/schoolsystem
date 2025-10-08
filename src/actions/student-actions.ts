@@ -60,7 +60,7 @@ export async function createStudent(formData: FormData) {
     let profilePictureUrl = '';
     if (profilePicture) {
       const { downloadURL } = await storageService.uploadFile(
-        `student-photos/${studentId}/${Date.now()}-${profilePicture.name}`,
+        `student-photos/${studentId.replace(/\//g, '-')}/${Date.now()}-${profilePicture.name}`,
         profilePicture
       );
       profilePictureUrl = downloadURL;
@@ -71,7 +71,7 @@ export async function createStudent(formData: FormData) {
         uploadedDocuments = await Promise.all(
             studentDocs.map(async (doc) => {
                 const { downloadURL, storagePath } = await storageService.uploadFile(
-                    `student-documents/${studentId}/${Date.now()}-${doc.name}`,
+                    `student-documents/${studentId.replace(/\//g, '-')}/${Date.now()}-${doc.name}`,
                     doc
                 );
                 return { documentType: doc.name.split('.').slice(0, -1).join('.'), fileUrl: downloadURL, storagePath };
@@ -178,7 +178,8 @@ export async function bulkCreateStudents(students: any[]) {
                 status: 'Active',
             };
             
-            batch.set('students', studentId, newStudent);
+            // Let Firestore generate the ID, and store our generated studentId as a field.
+            batch.set('students', null, newStudent);
         }
 
         if (validStudents.length > 0) {

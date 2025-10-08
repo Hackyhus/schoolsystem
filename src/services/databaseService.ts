@@ -33,7 +33,7 @@ export interface IDatabaseService {
 }
 
 export interface IWriteBatch {
-    set(collectionName: string, id: string, data: DocumentData): IWriteBatch;
+    set(collectionName: string, id: string | null, data: DocumentData): IWriteBatch;
     set(docRef: any, data: DocumentData): IWriteBatch;
     update(collectionName: string, id: string, data: Partial<DocumentData>): IWriteBatch;
     update(docRef: any, data: Partial<DocumentData>): IWriteBatch;
@@ -126,9 +126,10 @@ class FirebaseWriteBatch implements IWriteBatch {
         return this.batch;
     }
 
-    set(collectionNameOrDocRef: string | DocumentReference, idOrData: string | DocumentData, data?: DocumentData): IWriteBatch {
+    set(collectionNameOrDocRef: string | DocumentReference, idOrData: string | null | DocumentData, data?: DocumentData): IWriteBatch {
         if (typeof collectionNameOrDocRef === 'string') {
-            const docRef = doc(this.db, collectionNameOrDocRef, idOrData as string);
+            const collectionRef = collection(this.db, collectionNameOrDocRef);
+            const docRef = idOrData ? doc(collectionRef, idOrData as string) : doc(collectionRef);
             this.batch.set(docRef, data!);
         } else {
             this.batch.set(collectionNameOrDocRef, idOrData as DocumentData);
