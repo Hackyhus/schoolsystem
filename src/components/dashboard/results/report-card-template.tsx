@@ -21,7 +21,7 @@ export function ReportCardTemplate({ reportCard }: ReportCardTemplateProps) {
   };
 
   return (
-    <Card className="report-card-container w-full mx-auto my-8 p-4 shadow-lg print:shadow-none print:border-0 break-inside-avoid">
+    <Card className="report-card-container w-full mx-auto my-8 p-4 shadow-lg print:shadow-none print:border-0 break-inside-avoid bg-white text-black">
        <CardHeader className="p-4">
         <div className="flex items-center justify-between border-b-4 border-primary pb-4">
           <div className="flex items-center gap-4">
@@ -29,7 +29,7 @@ export function ReportCardTemplate({ reportCard }: ReportCardTemplateProps) {
           </div>
           <div className="text-right">
             <h2 className="text-2xl font-bold text-primary">Great Insight International Academy</h2>
-            <p className="text-sm text-muted-foreground">123 Education Lane, Knowledge City</p>
+            <p className="text-sm text-gray-500">123 Education Lane, Knowledge City</p>
           </div>
         </div>
         <div className="text-center py-2">
@@ -37,20 +37,20 @@ export function ReportCardTemplate({ reportCard }: ReportCardTemplateProps) {
             <p className="font-medium">{reportCard.term} - {reportCard.session} Session</p>
         </div>
         <div className="grid grid-cols-3 gap-4 text-sm pt-4">
-            <div><strong className="text-muted-foreground">Student Name:</strong> {reportCard.studentName}</div>
-            <div><strong className="text-muted-foreground">Student ID:</strong> {reportCard.studentId}</div>
-            <div><strong className="text-muted-foreground">Class:</strong> {reportCard.class}</div>
+            <div><strong className="text-gray-600">Student Name:</strong> {reportCard.studentName}</div>
+            <div><strong className="text-gray-600">Student ID:</strong> {reportCard.studentId}</div>
+            <div><strong className="text-gray-600">Class:</strong> {reportCard.class}</div>
         </div>
       </CardHeader>
       <CardContent className="p-4">
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead className="font-bold">Subject</TableHead>
-              <TableHead className="text-center font-bold">CA (40%)</TableHead>
-              <TableHead className="text-center font-bold">Exam (60%)</TableHead>
-              <TableHead className="text-center font-bold">Total (100%)</TableHead>
-              <TableHead className="text-center font-bold">Grade</TableHead>
+              <TableHead className="font-bold text-black">Subject</TableHead>
+              <TableHead className="text-center font-bold text-black">CA (40%)</TableHead>
+              <TableHead className="text-center font-bold text-black">Exam (60%)</TableHead>
+              <TableHead className="text-center font-bold text-black">Total (100%)</TableHead>
+              <TableHead className="text-center font-bold text-black">Grade</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -71,16 +71,16 @@ export function ReportCardTemplate({ reportCard }: ReportCardTemplateProps) {
         <Separator className="my-6" />
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 text-center">
-            <div className="rounded-lg bg-muted p-4">
-                <p className="text-sm text-muted-foreground">Total Marks</p>
+            <div className="rounded-lg bg-gray-100 p-4">
+                <p className="text-sm text-gray-600">Total Marks</p>
                 <p className="text-2xl font-bold">{reportCard.totalMarks} / {reportCard.subjects.length * 100}</p>
             </div>
-             <div className="rounded-lg bg-muted p-4">
-                <p className="text-sm text-muted-foreground">Overall Average</p>
+             <div className="rounded-lg bg-gray-100 p-4">
+                <p className="text-sm text-gray-600">Overall Average</p>
                 <p className={`text-2xl font-bold ${gradeColor(reportCard.overallGrade)}`}>{reportCard.average.toFixed(1)}%</p>
             </div>
-             <div className="rounded-lg bg-muted p-4">
-                <p className="text-sm text-muted-foreground">Class Rank</p>
+             <div className="rounded-lg bg-gray-100 p-4">
+                <p className="text-sm text-gray-600">Class Rank</p>
                 <p className="text-2xl font-bold text-primary">{reportCard.classRank}</p>
             </div>
         </div>
