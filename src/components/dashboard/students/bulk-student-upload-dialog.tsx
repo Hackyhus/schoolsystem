@@ -11,8 +11,16 @@ import {
 import { Button } from '@/components/ui/button';
 import { Download, Upload } from 'lucide-react';
 import * as XLSX from 'xlsx';
+import { useState, useRef } from 'react';
+import { useToast } from '@/hooks/use-toast';
+import { Input } from '@/components/ui/input';
 
 export function BulkStudentUploadDialog({ onUploadComplete }: { onUploadComplete: () => void }) {
+  const [fileName, setFileName] = useState<string | null>(null);
+  const [studentData, setStudentData] = useState<any[]>([]);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const { toast } = useToast();
+  
   const handleDownloadTemplate = () => {
     // Define the headers for the template. This should match the fields needed for student creation.
     const headers = [
@@ -42,6 +50,40 @@ export function BulkStudentUploadDialog({ onUploadComplete }: { onUploadComplete
     XLSX.writeFile(workbook, "student-upload-template.xlsx");
   };
 
+  const handleFileSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    setFileName(file.name);
+    const reader = new FileReader();
+
+    reader.onload = (e) => {
+        try {
+            const data = e.target?.result;
+            const workbook = XLSX.read(data, { type: 'binary', cellDates: true });
+            const sheetName = workbook.SheetNames[0];
+            const worksheet = workbook.Sheets[sheetName];
+            const json = XLSX.utils.sheet_to_json(worksheet);
+            setStudentData(json);
+            toast({
+                title: 'File Loaded',
+                description: `${json.length} student records found in ${file.name}.`,
+            });
+        } catch (error) {
+            console.error("Error parsing file:", error);
+            toast({
+                variant: 'destructive',
+                title: 'File Read Error',
+                description: 'Could not read or parse the uploaded file.',
+            });
+            setFileName(null);
+            setStudentData([]);
+        }
+    };
+    reader.readAsBinaryString(file);
+  };
+
+
   return (
     <DialogContent className="max-w-2xl">
       <DialogHeader>
@@ -66,11 +108,18 @@ export function BulkStudentUploadDialog({ onUploadComplete }: { onUploadComplete
         <div className="rounded-md border-2 border-dashed p-8 text-center">
              <h3 className="font-semibold">Step 2: Upload Your File</h3>
              <p className="text-sm text-muted-foreground mb-4">
-                Drag & drop your completed file here or click to select it.
+                Click to select your completed spreadsheet file.
             </p>
-            <Button variant="outline" disabled>
+             <Input 
+                type="file" 
+                ref={fileInputRef} 
+                className="hidden"
+                accept=".xlsx, .xls, .csv"
+                onChange={handleFileSelect}
+            />
+            <Button variant="outline" onClick={() => fileInputRef.current?.click()}>
                 <Upload className="mr-2 h-4 w-4" />
-                Select File
+                {fileName || 'Select File'}
             </Button>
         </div>
       </div>
