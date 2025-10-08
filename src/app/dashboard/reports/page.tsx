@@ -17,15 +17,16 @@ export default function ReportsPage() {
           <CardTitle>Comprehensive Reporting Engine</CardTitle>
           <CardDescription>
             This central hub will provide powerful reporting capabilities. Authorized users (like SLT and Accountants) will be able to generate, view, and export a wide range of reports, including:
-            <ul className="mt-2 list-disc pl-5 text-muted-foreground">
+          </CardDescription>
+          <ul className="mt-2 list-disc pl-5 text-sm text-muted-foreground">
               <li>Academic performance analysis by class, subject, and department.</li>
               <li>Financial reports such as income statements, fee collection summaries, and expense breakdowns.</li>
               <li>Student and staff demographic reports.</li>
               <li>Attendance and compliance summaries.</li>
-            </ul>
-            <br />
+          </ul>
+          <p className="pt-2 text-sm text-muted-foreground">
             <strong className="text-primary">This core reporting feature is under development and will become available once the foundational data modules are approved and completed.</strong>
-          </CardDescription>
+          </p>
         </CardHeader>
         <CardContent>
             <div className="flex h-[200px] items-center justify-center rounded-md border border-dashed text-muted-foreground">
