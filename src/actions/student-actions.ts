@@ -24,12 +24,12 @@ const studentSchema = z.object({
   documents: z.array(z.instanceof(File)).optional(),
 });
 
-async function generateStudentId(): Promise<string> {
+async function generateStudentId(offset = 0): Promise<string> {
     const year = new Date().getFullYear().toString().slice(-2);
 
     // Get the count of existing students to determine the next sequential number.
     const studentCount = await dbService.getCountFromServer('students');
-    const nextId = (studentCount + 1).toString().padStart(4, '0');
+    const nextId = (studentCount + offset + 1).toString().padStart(4, '0');
 
     return `GIIA/STU/${year}/${nextId}`;
 }
@@ -116,4 +116,61 @@ export async function createStudent(formData: FormData) {
     console.error('Error creating student:', error);
     return { error: error.message || 'An unexpected server error occurred.' };
   }
+}
+
+export async function bulkCreateStudents(students: any[]) {
+    try {
+        const batch = dbService.createBatch();
+        
+        for (let i = 0; i < students.length; i++) {
+            const student = students[i];
+            const studentId = await generateStudentId(i);
+
+            // Basic validation - a more robust validation might happen client-side or here
+             if (!student.firstName || !student.lastName || !student.class || !student.guardianName || !student.guardianContact) {
+                console.warn(`Skipping invalid student record:`, student);
+                continue;
+            }
+
+            const newStudent: Omit<Student, 'id' | 'createdAt' | 'status'> & { createdAt: any; status: string } = {
+                studentId: studentId,
+                firstName: student.firstName,
+                lastName: student.lastName,
+                middleName: student.middleName || '',
+                gender: student.gender || 'Other',
+                dateOfBirth: student['dateOfBirth(YYYY-MM-DD)'] ? new Date(student['dateOfBirth(YYYY-MM-DD)']) : new Date(),
+                classLevel: student.class,
+                sessionYear: student['session(YYYY/YYYY)'] || '',
+                profilePicture: '',
+                guardians: [{
+                    fullName: student.guardianName,
+                    relationship: 'Parent/Guardian',
+                    phone: student.guardianContact,
+                    email: student.guardianEmail || '',
+                    address: student.address || '',
+                    isPrimary: true,
+                }],
+                contacts: [{
+                    emergencyContactName: student.guardianName,
+                    emergencyContactPhone: student.guardianContact,
+                    relationToStudent: 'Parent/Guardian'
+                }],
+                documents: [],
+                health: { medicalConditions: student.medicalConditions || 'N/A' },
+                admissionDate: student['admissionDate(YYYY-MM-DD)'] ? new Date(student['admissionDate(YYYY-MM-DD)']) : new Date(),
+                createdAt: serverTimestamp(),
+                status: 'Active',
+            };
+            
+            // Add to batch using a new document reference
+            batch.set('students', studentId, newStudent);
+        }
+
+        await batch.commit();
+        return { success: true, count: students.length };
+
+    } catch (error: any) {
+        console.error('Error in bulk student creation:', error);
+        return { error: error.message || 'An unexpected server error occurred during bulk import.' };
+    }
 }
