@@ -20,7 +20,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { PlusCircle, Trash2, Eye, Upload } from 'lucide-react';
 import { useEffect, useState, useCallback } from 'react';
-import { collection, getDocs, deleteDoc, doc, query, orderBy } from 'firebase/firestore';
+import { collection, getDocs, deleteDoc, doc, query, orderBy, where } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import type { Student } from '@/lib/schema';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -37,13 +37,17 @@ import { AddStudentForm } from '@/components/dashboard/students/add-student-form
 import { useRole } from '@/context/role-context';
 import Link from 'next/link';
 import { BulkStudentUploadDialog } from '@/components/dashboard/students/bulk-student-upload-dialog';
+import { Input } from '@/components/ui/input';
+import { Search } from 'lucide-react';
 
 
 export default function StudentsPage() {
   const [students, setStudents] = useState<Student[]>([]);
+  const [filteredStudents, setFilteredStudents] = useState<Student[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [isBulkModalOpen, setIsBulkModalOpen] = useState(false);
+  const [searchTerm, setSearchTerm] = useState('');
   const { toast } = useToast();
   const { role } = useRole();
 
@@ -51,17 +55,18 @@ export default function StudentsPage() {
     setIsLoading(true);
     try {
       const studentsRef = collection(db, 'students');
-      const q = query(studentsRef, orderBy('createdAt', 'desc'));
+      const q = query(studentsRef, orderBy('studentId', 'asc'));
       const querySnapshot = await getDocs(q);
       const studentsList = querySnapshot.docs
         .map((doc) => ({ id: doc.id, ...doc.data() } as Student));
       setStudents(studentsList);
+      setFilteredStudents(studentsList);
     } catch (error) {
       console.error('Error fetching students:', error);
       toast({
         variant: 'destructive',
         title: 'Error',
-        description: 'Could not fetch students.',
+        description: 'Could not fetch students. You may need to create a Firestore index.',
       });
     } finally {
       setIsLoading(false);
@@ -72,16 +77,26 @@ export default function StudentsPage() {
     fetchStudents();
   }, [fetchStudents]);
 
+  useEffect(() => {
+    const lowercasedFilter = searchTerm.toLowerCase();
+    const filteredData = students.filter(item => {
+      return Object.values(item).some(val =>
+        String(val).toLowerCase().includes(lowercasedFilter)
+      ) || (item.guardians && item.guardians.some(g => String(g.fullName).toLowerCase().includes(lowercasedFilter)));
+    });
+    setFilteredStudents(filteredData);
+  }, [searchTerm, students]);
 
-  const removeStudent = async (studentId: string) => {
+
+  const removeStudent = async (student: Student) => {
     if (
       !confirm(
-        'Are you sure you want to delete this student? This action cannot be undone.'
+        `Are you sure you want to delete ${student.firstName} ${student.lastName}? This action cannot be undone.`
       )
     )
       return;
     try {
-      await deleteDoc(doc(db, 'students', studentId));
+      await deleteDoc(doc(db, 'students', student.id));
       toast({
         title: 'Student Removed',
         description: 'The student has been successfully deleted.',
@@ -114,39 +129,51 @@ export default function StudentsPage() {
       <Card>
         <CardHeader className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
           <div>
-            <CardTitle>All Students</CardTitle>
+            <CardTitle>All Students ({filteredStudents.length})</CardTitle>
             <CardDescription>
               A list of all students in the system.
             </CardDescription>
           </div>
-          {role === 'Admin' && (
-            <div className="flex gap-2">
-              <Dialog open={isBulkModalOpen} onOpenChange={setIsBulkModalOpen}>
-                <DialogTrigger asChild>
-                   <Button variant="outline">
-                    <Upload className="mr-2 h-4 w-4" /> Bulk Upload
-                  </Button>
-                </DialogTrigger>
-                <BulkStudentUploadDialog onUploadComplete={handleStudentAdded} />
-              </Dialog>
-              <Dialog open={isAddModalOpen} onOpenChange={setIsAddModalOpen}>
-                <DialogTrigger asChild>
-                  <Button>
-                    <PlusCircle className="mr-2 h-4 w-4" /> Add New Student
-                  </Button>
-                </DialogTrigger>
-                <DialogContent className="max-w-4xl">
-                  <DialogHeader>
-                    <DialogTitle>Enroll New Student</DialogTitle>
-                    <DialogDescription>
-                      Fill in the form below to add a new student to the school database.
-                    </DialogDescription>
-                  </DialogHeader>
-                  <AddStudentForm onStudentAdded={handleStudentAdded} />
-                </DialogContent>
-              </Dialog>
+          <div className="flex gap-2 w-full sm:w-auto">
+            <div className="relative flex-1 sm:flex-initial">
+                 <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+                <Input
+                    type="search"
+                    placeholder="Search students..."
+                    className="pl-8 sm:w-[300px]"
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                />
             </div>
-          )}
+            {role === 'Admin' && (
+              <div className="flex gap-2">
+                <Dialog open={isBulkModalOpen} onOpenChange={setIsBulkModalOpen}>
+                  <DialogTrigger asChild>
+                    <Button variant="outline">
+                      <Upload className="mr-2 h-4 w-4" /> Bulk Upload
+                    </Button>
+                  </DialogTrigger>
+                  <BulkStudentUploadDialog onUploadComplete={handleStudentAdded} />
+                </Dialog>
+                <Dialog open={isAddModalOpen} onOpenChange={setIsAddModalOpen}>
+                  <DialogTrigger asChild>
+                    <Button>
+                      <PlusCircle className="mr-2 h-4 w-4" /> Add Student
+                    </Button>
+                  </DialogTrigger>
+                  <DialogContent className="max-w-4xl">
+                    <DialogHeader>
+                      <DialogTitle>Enroll New Student</DialogTitle>
+                      <DialogDescription>
+                        Fill in the form below to add a new student to the school database.
+                      </DialogDescription>
+                    </DialogHeader>
+                    <AddStudentForm onStudentAdded={handleStudentAdded} />
+                  </DialogContent>
+                </Dialog>
+              </div>
+            )}
+          </div>
         </CardHeader>
         <CardContent>
           <Table>
@@ -185,7 +212,7 @@ export default function StudentsPage() {
                   </TableRow>
                 ))
               ) : (
-                students.map((student) => (
+                filteredStudents.map((student) => (
                   <TableRow key={student.id}>
                     <TableCell className="font-mono text-xs">{student.studentId || 'N/A'}</TableCell>
                     <TableCell className="font-medium">{`${student.firstName} ${student.lastName}`}</TableCell>
@@ -205,7 +232,7 @@ export default function StudentsPage() {
                       {role === 'Admin' && <Button
                           variant="ghost"
                           size="icon"
-                          onClick={() => removeStudent(student.id)}
+                          onClick={() => removeStudent(student)}
                         >
                           <Trash2 className="h-4 w-4" />
                         </Button>}
@@ -213,13 +240,13 @@ export default function StudentsPage() {
                   </TableRow>
                 ))
               )}
-              {!isLoading && students.length === 0 && (
+              {!isLoading && filteredStudents.length === 0 && (
                 <TableRow>
                   <TableCell
-                    colSpan={role === 'Admin' ? 6 : 5}
+                    colSpan={6}
                     className="h-24 text-center text-muted-foreground"
                   >
-                    No students found.
+                    No students found. {searchTerm && "Try adjusting your search."}
                   </TableCell>
                 </TableRow>
               )}
