@@ -123,21 +123,15 @@ export async function bulkCreateStudents(students: any[]) {
         const batch = dbService.createBatch();
         const validStudents: any[] = [];
         const invalidRecords: any[] = [];
+        
+        const requiredFields = ["firstName", "lastName", "class", "guardianName", "guardianContact"];
 
         for (let i = 0; i < students.length; i++) {
             const student = students[i];
+            const missingFields = requiredFields.filter(field => !student[field]);
             
-            // Basic validation
-             if (!student.firstName || !student.lastName || !student.class || !student.guardianName || !student.guardianContact) {
-                let error = 'Missing required fields: ';
-                const missing = [];
-                if (!student.firstName) missing.push('firstName');
-                if (!student.lastName) missing.push('lastName');
-                if (!student.class) missing.push('class');
-                if (!student.guardianName) missing.push('guardianName');
-                if (!student.guardianContact) missing.push('guardianContact');
-                error += missing.join(', ');
-                invalidRecords.push({ ...student, error });
+            if (missingFields.length > 0) {
+                invalidRecords.push({ ...student, error: `Missing required fields: ${missingFields.join(', ')}` });
                 continue;
             }
 

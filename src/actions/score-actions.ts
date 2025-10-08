@@ -1,7 +1,7 @@
 
 'use server';
 
-import { db } from '@/lib/firebase';
+import { db, dbService } from '@/lib/firebase';
 import { collection, query, where, getDocs, writeBatch, doc } from 'firebase/firestore';
 import type { Score } from '@/lib/schema';
 
@@ -27,7 +27,7 @@ export async function bulkUpdateScores(payload: BulkUpdatePayload) {
         
         // Ensure studentIds is not empty to avoid invalid 'in' query
         if (studentIds.length === 0) {
-            return { success: true, updatedCount: 0 };
+            return { error: 'The uploaded file does not contain any valid student IDs.' };
         }
 
         const scoresQuery = query(
@@ -41,6 +41,12 @@ export async function bulkUpdateScores(payload: BulkUpdatePayload) {
         scoresSnapshot.forEach(doc => {
             existingScoresMap.set(doc.data().studentId, { id: doc.id, data: doc.data() as Score });
         });
+        
+        const teacherId = await dbService.getDocs<{teacherId: string}>('scores', [
+            {type: 'where', fieldPath: 'class', opStr: '==', value: className},
+            {type: 'where', fieldPath: 'subject', opStr: '==', value: subject},
+            {type: 'limit', limitCount: 1}
+        ]).then(res => res[0]?.teacherId || 'placeholder-teacher-id');
 
         for (const record of scores) {
             if (!record.studentId) continue;
@@ -57,7 +63,7 @@ export async function bulkUpdateScores(payload: BulkUpdatePayload) {
             const totalScore = caScore + examScore;
             const existing = existingScoresMap.get(record.studentId);
 
-            const scoreData = {
+            const scoreData: Partial<Score> = {
                 caScore,
                 examScore,
                 totalScore,
@@ -67,17 +73,25 @@ export async function bulkUpdateScores(payload: BulkUpdatePayload) {
             if (existing) {
                 // Update existing score document
                 const docRef = doc(db, 'scores', existing.id);
-                batch.update(docRef, scoreData);
+                // Only update, don't change status if it was already approved
+                const updatePayload: Partial<Score> = {
+                    caScore,
+                    examScore,
+                    totalScore,
+                    status: existing.data.status === 'Approved' ? 'Approved' : 'Draft',
+                }
+                batch.update(docRef, updatePayload);
             } else {
                 // Create new score document
                 const docRef = doc(collection(db, 'scores'));
-                const newScoreData = {
+                const newScoreData: Omit<Score, 'id'> = {
                     ...scoreData,
                     studentId: record.studentId,
                     subject,
                     class: className,
                     // In a real app, you'd get the teacherId from the session
-                    teacherId: 'placeholder-teacher-id',
+                    teacherId: teacherId,
+                    term: 'First Term' // Placeholder
                 };
                 batch.set(docRef, newScoreData);
             }
