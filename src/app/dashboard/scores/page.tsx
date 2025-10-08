@@ -61,7 +61,7 @@ export default function ScoresPage() {
         collection(db, 'scores'),
         where('studentId', 'in', studentIds),
         where('subject', '==', subj),
-        // where('term', '==', currentTerm) // Add term logic later
+        where('class', '==', cls)
       );
       const scoresSnapshot = await getDocs(scoresQuery);
       const existingScores: Record<string, Score> = {};
@@ -145,21 +145,25 @@ export default function ScoresPage() {
 
     Object.entries(scores).forEach(([studentId, score]) => {
         const scoreRef = score.id ? doc(db, 'scores', score.id) : doc(collection(db, 'scores'));
-        const scoreData = {
-          studentId,
-          subject: selectedSubject,
-          class: selectedClass,
-          teacherId: user.uid,
-          // term: currentTerm, // Add later
-          caScore: score.caScore,
-          examScore: score.examScore,
-          totalScore: score.totalScore,
-          status: newStatus
+        const scoreData: Partial<Score> = {
+          caScore: score.caScore || 0,
+          examScore: score.examScore || 0,
+          totalScore: (score.caScore || 0) + (score.examScore || 0),
+          status: score.status === 'Approved' ? 'Approved' : newStatus, // Don't change approved scores
         };
+
         if (score.id) {
           batch.update(scoreRef, scoreData);
         } else {
-          batch.set(scoreRef, scoreData);
+          const newScoreData: Omit<Score, 'id'> = {
+            ...scoreData,
+            studentId,
+            subject: selectedSubject,
+            class: selectedClass,
+            teacherId: user.uid,
+            term: "First Term", // Placeholder term
+          };
+          batch.set(scoreRef, newScoreData);
         }
     });
 
@@ -181,17 +185,17 @@ export default function ScoresPage() {
   const handleReview = async (studentId: string, newStatus: 'Approved' | 'Rejected') => {
     const score = scores[studentId];
     if (!score || !score.id) return;
-    setIsLoading(true);
+    setIsSubmitting(true);
     try {
         const scoreRef = doc(db, 'scores', score.id);
-        await writeBatch(db).update(scoreRef, { status: newStatus }).commit();
+        await updateDoc(scoreRef, { status: newStatus });
         setScores(prev => ({ ...prev, [studentId]: { ...prev[studentId], status: newStatus } }));
         toast({ title: `Score ${newStatus}` });
     } catch (error) {
         console.error('Error reviewing score:', error);
         toast({ variant: 'destructive', title: 'Error', description: `Could not update score to ${newStatus}.` });
     } finally {
-        setIsLoading(false);
+        setIsSubmitting(false);
     }
   };
 
@@ -324,7 +328,9 @@ export default function ScoresPage() {
           <TableHeader>
             <TableRow>
               <TableHead>Student Name</TableHead>
-              <TableHead>Score</TableHead>
+              <TableHead className="w-[120px]">CA (40%)</TableHead>
+              <TableHead className="w-[120px]">Exam (60%)</TableHead>
+              <TableHead className="w-[100px]">Total</TableHead>
               <TableHead>Status</TableHead>
               <TableHead className="text-right">Action</TableHead>
             </TableRow>
@@ -333,15 +339,17 @@ export default function ScoresPage() {
             {students.map((student) => (
               <TableRow key={student.id}>
                 <TableCell className="font-medium">{student.firstName} {student.lastName}</TableCell>
+                <TableCell>{scores[student.studentId]?.caScore || 0}</TableCell>
+                 <TableCell>{scores[student.studentId]?.examScore || 0}</TableCell>
                 <TableCell>{scores[student.studentId]?.totalScore || 0}</TableCell>
                 <TableCell>
                   <Badge variant={statusVariant(scores[student.studentId]?.status)}>{scores[student.studentId]?.status}</Badge>
                 </TableCell>
                 <TableCell className="text-right space-x-2">
-                  <Button size="sm" variant="outline" onClick={() => handleReview(student.studentId, 'Approved')} disabled={scores[student.studentId]?.status !== 'Pending'}>
+                  <Button size="sm" variant="outline" onClick={() => handleReview(student.studentId, 'Approved')} disabled={scores[student.studentId]?.status !== 'Pending' || isSubmitting}>
                     <ThumbsUp className="mr-2 h-4 w-4" /> Approve
                   </Button>
-                  <Button size="sm" variant="destructive" onClick={() => handleReview(student.studentId, 'Rejected')} disabled={scores[student.studentId]?.status !== 'Pending'}>
+                  <Button size="sm" variant="destructive" onClick={() => handleReview(student.studentId, 'Rejected')} disabled={scores[student.studentId]?.status !== 'Pending' || isSubmitting}>
                     <ThumbsDown className="mr-2 h-4 w-4" /> Reject
                   </Button>
                 </TableCell>

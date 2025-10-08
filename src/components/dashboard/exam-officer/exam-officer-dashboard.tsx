@@ -43,7 +43,7 @@ type ExamQuestion = {
     teacherName: string;
 }
 
-type QuestionStatusData = {
+type SubmissionStatusData = {
     name: string;
     value: number;
     fill: string;
@@ -53,11 +53,12 @@ export function ExamOfficerDashboard() {
   const { user } = useRole();
   const { toast } = useToast();
   const [questions, setQuestions] = useState<ExamQuestion[]>([]);
-  const [questionStatusData, setQuestionStatusData] = useState<QuestionStatusData[]>([]);
+  const [submissionStatusData, setSubmissionStatusData] = useState<SubmissionStatusData[]>([]);
   const [stats, setStats] = useState({
     subjects: 0,
     teachers: 0,
-    pending: 0,
+    pendingScores: 0,
+    pendingQuestions: 0
   });
   const [isLoading, setIsLoading] = useState(true);
 
@@ -76,11 +77,16 @@ export function ExamOfficerDashboard() {
       
       setQuestions(pendingQuestions.slice(0, 5)); // Show recent 5 pending
 
-      setQuestionStatusData([
+      setSubmissionStatusData([
           { name: 'Pending', value: pendingQuestions.length, fill: 'hsl(var(--chart-4))' },
           { name: 'Approved', value: approvedQuestions.length, fill: 'hsl(var(--chart-2))' },
           { name: 'Rejected', value: rejectedQuestions.length, fill: 'hsl(var(--destructive))' },
       ]);
+
+
+      // Fetch pending scores
+      const scoresQuery = query(collection(db, 'scores'), where('status', '==', 'Pending'));
+      const scoresSnapshot = await getDocs(scoresQuery);
 
 
       // Fetch teacher and subject counts
@@ -95,7 +101,8 @@ export function ExamOfficerDashboard() {
       setStats({
         subjects: subjectsSnapshot.size,
         teachers: teachersSnapshot.size,
-        pending: pendingQuestions.length,
+        pendingScores: scoresSnapshot.size,
+        pendingQuestions: pendingQuestions.length,
       });
 
     } catch (error) {
@@ -141,12 +148,22 @@ export function ExamOfficerDashboard() {
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
         <Card>
           <CardHeader className="flex-row items-center justify-between pb-2 space-y-0">
-            <CardTitle className="text-sm font-medium">Total Subjects</CardTitle>
-            <Book className="h-5 w-5 text-muted-foreground" />
+            <CardTitle className="text-sm font-medium">Pending Scores</CardTitle>
+            <Clock className="h-5 w-5 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{isLoading ? <Skeleton className='w-10 h-8'/> : stats.subjects}</div>
-            <p className="text-xs text-muted-foreground">subjects offered</p>
+            <div className="text-2xl font-bold">{isLoading ? <Skeleton className='w-10 h-8'/> : stats.pendingScores}</div>
+            <p className="text-xs text-muted-foreground">score sheets awaiting review</p>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardHeader className="flex-row items-center justify-between pb-2 space-y-0">
+            <CardTitle className="text-sm font-medium">Pending Questions</CardTitle>
+            <FileQuestion className="h-5 w-5 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{isLoading ? <Skeleton className='w-10 h-8'/> : stats.pendingQuestions}</div>
+             <p className="text-xs text-muted-foreground">exam questions to approve</p>
           </CardContent>
         </Card>
         <Card>
@@ -155,18 +172,8 @@ export function ExamOfficerDashboard() {
             <Users className="h-5 w-5 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{isLoading ? <Skeleton className='w-10 h-8'/> : stats.teachers}</div>
-             <p className="text-xs text-muted-foreground">currently active</p>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader className="flex-row items-center justify-between pb-2 space-y-0">
-            <CardTitle className="text-sm font-medium">Pending Approvals</CardTitle>
-            <Clock className="h-5 w-5 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-             <div className="text-2xl font-bold">{isLoading ? <Skeleton className='w-10 h-8'/> : stats.pending}</div>
-             <p className="text-xs text-muted-foreground">questions & scores</p>
+             <div className="text-2xl font-bold">{isLoading ? <Skeleton className='w-10 h-8'/> : stats.teachers}</div>
+             <p className="text-xs text-muted-foreground">in the system</p>
           </CardContent>
         </Card>
       </div>
@@ -236,7 +243,7 @@ export function ExamOfficerDashboard() {
                          {isLoading ? <Skeleton className="h-[250px] w-full" /> : (
                              <ChartContainer config={chartConfig} className="h-[250px] w-full">
                                 <ResponsiveContainer>
-                                    <BarChart data={questionStatusData} layout="vertical" margin={{ left: 10, right: 10 }}>
+                                    <BarChart data={submissionStatusData} layout="vertical" margin={{ left: 10, right: 10 }}>
                                          <XAxis type="number" hide />
                                         <YAxis dataKey="name" type="category" tickLine={false} axisLine={false} tickMargin={10} width={60} />
                                         <ChartTooltip cursor={false} content={<ChartTooltipContent hideLabel />} />
