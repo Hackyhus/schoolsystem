@@ -87,9 +87,13 @@ export default function LessonNotesPage() {
     return 'outline';
   };
 
-  const getActionText = () => {
-    if (role === 'Teacher') return 'View';
-    if (role === 'HeadOfDepartment' || role === 'Admin' || role === 'Principal' || role === 'Director') return 'Review';
+  const getActionText = (noteStatus: string) => {
+    if (role === 'Teacher' || noteStatus.includes('Approved')) {
+        return 'View';
+    }
+    if (role === 'HeadOfDepartment' || role === 'Admin' || role === 'SLT') {
+        return 'Review';
+    }
     return 'View';
   }
 
@@ -170,7 +174,7 @@ export default function LessonNotesPage() {
                   </TableCell>
                   <TableCell className="text-right">
                     <Button asChild variant="outline" size="sm">
-                      <Link href={`/dashboard/lesson-notes/${note.id}`}>{getActionText()}</Link>
+                      <Link href={`/dashboard/lesson-notes/${note.id}`}>{getActionText(note.status)}</Link>
                     </Button>
                   </TableCell>
                 </TableRow>
