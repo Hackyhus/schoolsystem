@@ -16,13 +16,18 @@ export default function ProfilePage() {
             if (!isLoading) {
                 if (user) {
                     // Fetch user document to get staffId
-                    const userDoc = await dbService.getDoc<{ staffId: string }>('users', user.uid);
-                    if (userDoc?.staffId) {
-                        router.push(`/dashboard/users/${userDoc.staffId}`);
-                    } else {
-                        // Fallback or handle error if staffId is not found
-                        console.error("User profile does not have a staffId.");
-                        router.push('/dashboard');
+                    try {
+                        const userDoc = await dbService.getDoc<{ staffId: string }>('users', user.uid);
+                        if (userDoc?.staffId) {
+                            router.push(`/dashboard/users/${userDoc.staffId}`);
+                        } else {
+                            // Fallback or handle error if staffId is not found
+                            console.error("User profile does not have a staffId.");
+                            router.push('/dashboard');
+                        }
+                    } catch (e) {
+                         console.error("Failed to fetch user document:", e);
+                         router.push('/dashboard');
                     }
                 } else {
                     // If not logged in, go to the login page
@@ -49,3 +54,5 @@ export default function ProfilePage() {
         </div>
     );
 }
+
+    

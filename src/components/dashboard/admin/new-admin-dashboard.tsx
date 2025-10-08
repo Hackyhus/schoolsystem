@@ -142,11 +142,11 @@ export function NewAdminDashboard() {
       const roleColors: {[key: string]: string} = {
         Admin: 'hsl(var(--chart-1))',
         Teacher: 'hsl(var(--chart-2))',
-        HeadOfDepartment: 'hsl(var(--chart-3))',
+        Headofdepartment: 'hsl(var(--chart-3))',
         Parent: 'hsl(var(--chart-4))',
-        ExamOfficer: 'hsl(var(--chart-5))',
+        Examofficer: 'hsl(var(--chart-5))',
         Student: 'hsl(var(--muted))',
-        SLT: 'hsl(var(--chart-1))',
+        Slt: 'hsl(var(--chart-1))',
         Accountant: 'hsl(var(--chart-5))',
       };
 
@@ -221,10 +221,14 @@ export function NewAdminDashboard() {
       monthNames.forEach((m) => (monthCounts[m] = 0));
 
       notes.forEach((note) => {
-        const date = new Date(note.submissionDate);
-        const month = monthNames[date.getMonth()];
-        if (month) {
-          monthCounts[month]++;
+        if (note.submissionDate && typeof note.submissionDate === 'string') {
+            const date = new Date(note.submissionDate);
+            if (!isNaN(date.getTime())) {
+                const month = monthNames[date.getMonth()];
+                if (month) {
+                    monthCounts[month]++;
+                }
+            }
         }
       });
 
@@ -588,3 +592,5 @@ export function NewAdminDashboard() {
     </div>
   );
 }
+
+    
