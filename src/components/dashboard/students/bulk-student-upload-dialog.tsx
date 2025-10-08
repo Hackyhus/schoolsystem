@@ -57,15 +57,18 @@ export function BulkStudentUploadDialog({ onUploadComplete }: { onUploadComplete
     reader.onload = (e) => {
         try {
             const data = e.target?.result;
-            // Set cellDates to false to ensure dates are parsed as strings, not Date objects.
             const workbook = XLSX.read(data, { type: 'binary', cellDates: false });
             const sheetName = workbook.SheetNames[0];
             const worksheet = workbook.Sheets[sheetName];
             const json = XLSX.utils.sheet_to_json(worksheet);
-            setStudentData(json);
+
+            // Sanitize the data to ensure it's a plain object array
+            const plainJson = JSON.parse(JSON.stringify(json));
+            
+            setStudentData(plainJson);
             toast({
                 title: 'File Ready for Import',
-                description: `${json.length} student records found in ${file.name}.`,
+                description: `${plainJson.length} student records found in ${file.name}.`,
             });
         } catch (error) {
             console.error("Error parsing file:", error);
