@@ -39,6 +39,7 @@ import {
   Wallet,
   Briefcase,
   TrendingUp,
+  Award
 } from 'lucide-react';
 import Image from 'next/image';
 
@@ -86,6 +87,7 @@ const iconMap: { [key: string]: React.ElementType } = {
   'wallet': Wallet,
   'briefcase': Briefcase,
   'trending-up': TrendingUp,
+  'award': Award,
 };
 
 
@@ -133,6 +135,7 @@ const navConfig = {
       { "icon": "file-question", "label": "Review Questions", "path": "/dashboard/exam-questions" },
       { "icon": "edit-3", "label": "Review Scores", "path": "/dashboard/scores" },
       { "icon": "check-square", "label": "Generate Results", "path": "/dashboard/results/generate" },
+      { "icon": "award", "label": "View Results", "path": "/dashboard/results/view" },
       { "icon": "calendar", "label": "Timetable", "path": "/dashboard/timetable" },
       { "icon": "ticket", "label": "Exam Registration", "path": "/dashboard/exam-registration" },
       { "icon": "grid", "label": "Seating Plans", "path": "/dashboard/seating-plan" },
@@ -202,7 +205,7 @@ export function DashboardSidebar() {
               return (
                  <SidebarMenuItem key={item.path}>
                     <Link href={item.path}>
-                      <SidebarMenuButton isActive={pathname === item.path} tooltip={item.label}>
+                      <SidebarMenuButton isActive={pathname.startsWith(item.path) && (item.path !== '/dashboard' || pathname === '/dashboard')} tooltip={item.label}>
                         <Icon />
                         <span className="group-data-[collapsible=icon]:hidden">{item.label}</span>
                       </SidebarMenuButton>

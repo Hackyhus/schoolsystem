@@ -1,6 +1,7 @@
 
 
 
+
 export type User = {
   _id: string;
   firstName: string;
@@ -138,6 +139,29 @@ export type Score = {
   examScore: number;
   totalScore: number;
   status: 'Draft' | 'Pending' | 'Approved' | 'Rejected';
+};
+
+export type ReportCard = {
+  id: string;
+  studentId: string;
+  studentName: string;
+  class: string;
+  term: string;
+  session: string;
+  generatedAt: any; // Firestore Timestamp
+  subjects: {
+    name: string;
+    caScore: number;
+    examScore: number;
+    totalScore: number;
+    grade: string;
+  }[];
+  totalMarks: number;
+  average: number;
+  overallGrade: string;
+  classRank: number;
+  principalComment?: string;
+  teacherComment?: string;
 };
 
 
