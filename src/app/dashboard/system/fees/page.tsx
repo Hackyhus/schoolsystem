@@ -51,10 +51,18 @@ export default function FeeStructurePage() {
     const fetchFeeStructures = useCallback(async () => {
         setIsLoading(true);
         try {
-            const structures = await dbService.getDocs<FeeStructure>('feeStructures', [
-                { type: 'orderBy', fieldPath: 'className', direction: 'asc' },
-                { type: 'orderBy', fieldPath: 'createdAt', direction: 'desc' },
-            ]);
+            // Fetch without compound sorting to avoid index requirement
+            const structures = await dbService.getDocs<FeeStructure>('feeStructures');
+
+            // Sort on the client-side
+            structures.sort((a, b) => {
+                if (a.className < b.className) return -1;
+                if (a.className > b.className) return 1;
+                // For createdAt, assuming it's a Firestore Timestamp or similar object
+                const dateA = a.createdAt?.seconds || 0;
+                const dateB = b.createdAt?.seconds || 0;
+                return dateB - dateA; // Descending for date
+            });
             
             const groupedByClass = structures.reduce((acc, structure) => {
                 const { className } = structure;
