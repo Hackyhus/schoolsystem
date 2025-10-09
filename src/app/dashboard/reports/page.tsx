@@ -1,8 +1,46 @@
 
 'use client';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { ArrowRight, BookUser, DollarSign, GraduationCap, Users } from "lucide-react";
+import Link from "next/link";
+import { useRole } from "@/context/role-context";
+
+const reportCards = [
+    {
+        title: 'Academic Performance',
+        description: 'Analyze student performance by class, subject, or department.',
+        icon: GraduationCap,
+        href: '/dashboard/hod/analytics', // Example link
+        roles: ['Admin', 'SLT', 'HeadOfDepartment']
+    },
+    {
+        title: 'Financial Reports',
+        description: 'Generate income statements, fee summaries, and expense breakdowns.',
+        icon: DollarSign,
+        href: '/dashboard/accountant/reports',
+        roles: ['Admin', 'SLT', 'Accountant']
+    },
+    {
+        title: 'Student Demographics',
+        description: 'View reports on student enrollment, gender distribution, and more.',
+        icon: Users,
+        href: '/dashboard/students', // Link to student list for now
+        roles: ['Admin', 'SLT']
+    },
+     {
+        title: 'Staff Directory & Roles',
+        description: 'Export lists of all staff members, their roles, and departments.',
+        icon: BookUser,
+        href: '/dashboard/users',
+        roles: ['Admin', 'SLT']
+    }
+]
 
 export default function ReportsPage() {
+  const { role } = useRole();
+
+  const availableReports = reportCards.filter(card => role && card.roles.includes(role));
+
   return (
     <div className="space-y-8">
       <div>
@@ -12,28 +50,35 @@ export default function ReportsPage() {
         </p>
       </div>
 
-      <Card>
-        <CardHeader>
-          <CardTitle>Comprehensive Reporting Engine</CardTitle>
-          <CardDescription>
-            This central hub will provide powerful reporting capabilities. Authorized users (like SLT and Accountants) will be able to generate, view, and export a wide range of reports, including:
-          </CardDescription>
-          <ul className="mt-2 list-disc pl-5 text-sm text-muted-foreground">
-              <li>Academic performance analysis by class, subject, and department.</li>
-              <li>Financial reports such as income statements, fee collection summaries, and expense breakdowns.</li>
-              <li>Student and staff demographic reports.</li>
-              <li>Attendance and compliance summaries.</li>
-          </ul>
-          <p className="pt-2 text-sm text-muted-foreground">
-            <strong className="text-primary">This core reporting feature is under development and will become available once the foundational data modules are approved and completed.</strong>
-          </p>
-        </CardHeader>
-        <CardContent>
-            <div className="flex h-[200px] items-center justify-center rounded-md border border-dashed text-muted-foreground">
-              Advanced charts and data tables will be displayed here.
-            </div>
-        </CardContent>
-      </Card>
+       <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+        {availableReports.map((card) => (
+            <Card key={card.title} className="flex flex-col justify-between transition-all hover:shadow-md">
+                <CardHeader>
+                    <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-lg bg-primary/10 text-primary">
+                        <card.icon className="h-6 w-6" />
+                    </div>
+                    <CardTitle>{card.title}</CardTitle>
+                    <CardDescription>{card.description}</CardDescription>
+                </CardHeader>
+                 <div className="p-6 pt-0">
+                    <Link href={card.href} className="text-sm font-semibold text-primary hover:underline flex items-center gap-1">
+                        View Report <ArrowRight className="h-4 w-4" />
+                    </Link>
+                </div>
+            </Card>
+        ))}
+      </div>
+
+       {availableReports.length === 0 && (
+         <Card>
+            <CardHeader>
+                <CardTitle>No Reports Available</CardTitle>
+                <CardDescription>
+                    There are no reports configured for your role at this time.
+                </CardDescription>
+            </CardHeader>
+        </Card>
+      )}
     </div>
   );
 }

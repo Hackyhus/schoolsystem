@@ -27,31 +27,31 @@ const DashboardSkeleton = () => (
 
 const AdminDashboard = dynamic(
   () => import('@/components/dashboard/admin/new-admin-dashboard').then(mod => mod.NewAdminDashboard),
-  { loading: () => <DashboardSkeleton /> }
+  { loading: () => <DashboardSkeleton />, ssr: false }
 );
 const HodDashboard = dynamic(
   () => import('@/components/dashboard/hod/hod-dashboard').then(mod => mod.HodDashboard),
-  { loading: () => <DashboardSkeleton /> }
+  { loading: () => <DashboardSkeleton />, ssr: false }
 );
 const SltDashboard = dynamic(
   () => import('@/app/dashboard/slt/page').then(mod => mod.default),
-  { loading: () => <DashboardSkeleton /> }
+  { loading: () => <DashboardSkeleton />, ssr: false }
 );
 const AccountantDashboard = dynamic(
   () => import('@/app/dashboard/accountant/page').then(mod => mod.default),
-  { loading: () => <DashboardSkeleton /> }
+  { loading: () => <DashboardSkeleton />, ssr: false }
 );
 const TeacherDashboard = dynamic(
   () => import('@/components/dashboard/teacher/teacher-dashboard').then(mod => mod.TeacherDashboard),
-  { loading: () => <DashboardSkeleton /> }
+  { loading: () => <DashboardSkeleton />, ssr: false }
 );
 const ParentDashboard = dynamic(
   () => import('@/components/dashboard/parent/parent-dashboard').then(mod => mod.ParentDashboard),
-  { loading: () => <DashboardSkeleton /> }
+  { loading: () => <DashboardSkeleton />, ssr: false }
 );
 const ExamOfficerDashboard = dynamic(
   () => import('@/components/dashboard/exam-officer/exam-officer-dashboard').then(mod => mod.ExamOfficerDashboard),
-  { loading: () => <DashboardSkeleton /> }
+  { loading: () => <DashboardSkeleton />, ssr: false }
 );
 
 export default function DashboardPage() {
@@ -75,7 +75,7 @@ export default function DashboardPage() {
     case 'Teacher':
       return <TeacherDashboard />;
     case 'Parent':
-    case 'Student': // Students use the Parent dashboard
+    case 'Student': // Students use the Parent dashboard for now
       return <ParentDashboard />;
     default:
       return <div>Invalid role or dashboard not yet implemented. Please log out and try again.</div>;

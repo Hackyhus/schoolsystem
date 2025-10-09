@@ -9,39 +9,36 @@ import {
   BarChart2,
   Bell,
   Book,
-  BookCopy,
-  BookOpen,
   Building,
   Calendar,
-  CheckSquare,
-  ClipboardList,
-  CreditCard,
   DollarSign,
-  Edit,
-  Edit3,
-  FileQuestion,
-  FileText,
-  Home,
   LayoutDashboard,
-  Lock,
   LogOut,
   MessageSquare,
-  Receipt,
   Server,
   Settings,
   Shield,
-  Ticket,
   User,
   Users,
   UsersRound,
-  Grid,
+  FileQuestion,
+  BookCopy,
+  Edit3,
+  CheckSquare,
+  Award,
+  BookOpen,
+  TrendingUp,
   Landmark,
   Wallet,
   Briefcase,
-  TrendingUp,
-  Award,
-  GraduationCap,
-  BookMarked
+  FileText,
+  CreditCard,
+  Receipt,
+  Ticket,
+  Grid,
+  BookMarked,
+  Wrench,
+  GraduationCap
 } from 'lucide-react';
 import Image from 'next/image';
 
@@ -58,131 +55,112 @@ import {
 import { useRole } from '@/context/role-context';
 
 const iconMap: { [key: string]: React.ElementType } = {
-  home: LayoutDashboard,
-  user: User,
-  lock: Lock,
-  shield: Shield,
-  users: Users,
-  'users-round': UsersRound,
-  building: Building,
-  server: Server,
-  activity: Activity,
-  book: Book,
-  'clipboard-list': ClipboardList,
-  'file-text': FileText,
-  'bar-chart': BarChart2,
-  'book-open': BookOpen,
-  edit: Edit,
-  'check-square': CheckSquare,
-  'edit-3': Edit3,
-  'dollar-sign': DollarSign,
-  'credit-card': CreditCard,
-  'file-invoice': Receipt,
-  calendar: Calendar,
-  bell: Bell,
-  MessageSquare: MessageSquare,
-  'file-question': FileQuestion,
-  'book-copy': BookCopy,
-  'ticket': Ticket,
-  'grid': Grid,
-  'landmark': Landmark,
-  'wallet': Wallet,
-  'briefcase': Briefcase,
-  'trending-up': TrendingUp,
-  'award': Award,
-  'graduation-cap': GraduationCap,
-  'book-marked': BookMarked,
+  LayoutDashboard, User, Users, UsersRound, Building, Server, Activity, Book,
+  FileText, BarChart2, BookOpen, Edit3, DollarSign, Calendar, Bell, MessageSquare,
+  FileQuestion, BookCopy, CheckSquare, Award, Shield, Settings, LogOut,
+  TrendingUp, Landmark, Wallet, Briefcase, Receipt, CreditCard, Ticket, Grid,
+  BookMarked, Wrench, GraduationCap
 };
 
+const allNavLinks = {
+  // Main
+  dashboard: { icon: 'LayoutDashboard', label: 'Dashboard', path: '/dashboard' },
+  profile: { icon: 'User', label: 'Profile', path: '/profile' },
+  notifications: { icon: 'Bell', label: 'Notifications', path: '/dashboard/notifications' },
+  messaging: { icon: 'MessageSquare', label: 'Messaging', path: '/dashboard/messaging' },
+  
+  // Admin & SLT
+  reports: { icon: 'TrendingUp', label: 'Reports & Analytics', path: '/dashboard/reports' },
+  system: { icon: 'Shield', label: 'System Config', path: '/dashboard/system',
+    subLinks: [
+      { label: 'School Info', path: '/dashboard/system/school-info' },
+      { label: 'Grading', path: '/dashboard/system/grading' },
+      { label: 'Academic Year', path: '/dashboard/system/academic-year' },
+      { label: 'Fees', path: '/dashboard/system/fees' },
+      { label: 'Roles', path: '/dashboard/system/roles' },
+      { label: 'Classes & Subjects', path: '/dashboard/system/classes-subjects' },
+      { label: 'Maintenance', path: '/dashboard/system/maintenance' },
+    ]
+  },
+  manageStaff: { icon: 'Users', label: 'Manage Staff', path: '/dashboard/users' },
+  manageStudents: { icon: 'UsersRound', label: 'Manage Students', path: '/dashboard/students' },
+  departments: { icon: 'Building', label: 'Departments', path: '/dashboard/departments' },
+  database: { icon: 'Server', label: 'Database', path: '/dashboard/db' },
+  logs: { icon: 'Activity', label: 'Logs & Security', path: '/dashboard/logs' },
 
-const navConfig = {
-  Admin: { 
-    sidebar_extra: [
-      { "icon": "trending-up", "label": "Reports & Analytics", "path": "/dashboard/reports" },
-      { "icon": "shield", "label": "System Config", "path": "/dashboard/system" },
-      { "icon": "users", "label": "Manage Staff", "path": "/dashboard/users" },
-      { "icon": "users-round", "label": "Manage Students", "path": "/dashboard/students" },
-      { "icon": "building", "label": "Departments", "path": "/dashboard/departments" },
-      { "icon": "server", "label": "Database", "path": "/dashboard/db" },
-      { "icon": "activity", "label": "Logs & Security", "path": "/dashboard/logs" }
-    ],
-  },
-  SLT: {
-    sidebar_extra: [
-      { "icon": "trending-up", "label": "Analytics", "path": "/dashboard/reports" },
-      { "icon": "users", "label": "Staff Overview", "path": "/dashboard/users" },
-      { "icon": "users-round", "label": "Student Overview", "path": "/dashboard/students" },
-      { "icon": "book", "label": "Lesson Approvals", "path": "/dashboard/lesson-notes" },
-      { "icon": "dollar-sign", "label": "Financials", "path": "/dashboard/accountant/reports" }, // Points to accountant reports
-      { "icon": "graduation-cap", "label": "Grading System", "path": "/dashboard/system/grading" },
-      { "icon": "book-marked", "label": "Classes & Subjects", "path": "/dashboard/system/classes-subjects" }
-    ],
-  },
-  HeadOfDepartment: {
-     sidebar_extra: [
-      { "icon": "book", "label": "Lesson Approvals", "path": "/dashboard/lesson-notes" },
-      { "icon": "bar-chart", "label": "Dept. Analytics", "path": "/dashboard/hod/analytics" },
-      { "icon": "users", "label": "My Teachers", "path": "/dashboard/users" },
-      { "icon": "book-marked", "label": "Classes & Subjects", "path": "/dashboard/system/classes-subjects" }
-    ],
-  },
-  Accountant: {
-    sidebar_extra: [
-      { "icon": "dollar-sign", "label": "System Fee Structure", "path": "/dashboard/system/fees" },
-      { "icon": "file-invoice", "label": "Invoices", "path": "/dashboard/accountant/invoices" },
-      { "icon": "credit-card", "label": "Payments", "path": "/dashboard/accountant/payments" },
-      { "icon": "wallet", "label": "Expenses", "path": "/dashboard/accountant/expenses" },
-      { "icon": "briefcase", "label": "Payroll", "path": "/dashboard/accountant/payroll" },
-      { "icon": "landmark", "label": "Reconciliation", "path": "/dashboard/accountant/reconciliation" },
-      { "icon": "bar-chart", "label": "Financial Reports", "path": "/dashboard/accountant/reports" },
-    ],
-  },
-  ExamOfficer: {
-    sidebar_extra: [
-      { "icon": "file-question", "label": "Review Questions", "path": "/dashboard/exam-questions" },
-      { "icon": "edit-3", "label": "Review Scores", "path": "/dashboard/scores" },
-      { "icon": "check-square", "label": "Generate Results", "path": "/dashboard/results/generate" },
-      { "icon": "award", "label": "View Results", "path": "/dashboard/results/view" },
-      { "icon": "calendar", "label": "Timetable", "path": "/dashboard/timetable" },
-      { "icon": "ticket", "label": "Exam Registration", "path": "/dashboard/exam-registration" },
-      { "icon": "grid", "label": "Seating Plans", "path": "/dashboard/seating-plan" },
-    ],
-  },
-  Teacher: {
-    sidebar_extra: [
-      { "icon": "book-copy", "label": "Lesson Plans", "path": "/dashboard/lesson-notes" },
-      { "icon": "file-question", "label": "Exam Questions", "path": "/dashboard/exam-questions" },
-      { "icon": "edit-3", "label": "Enter Scores", "path": "/dashboard/scores" },
-      { "icon": "users-round", "label": "My Students", "path": "/dashboard/performance" }
-    ],
-  },
-  Parent: {
-    sidebar_extra: [
-      { "icon": "book-open", "label": "Results", "path": "/dashboard/performance" },
-      { "icon": "calendar", "label": "Timetable", "path": "/dashboard/timetable" },
-      { "icon": "dollar-sign", "label": "Payments", "path": "/dashboard/pay" },
-      { "icon": "bell", "label": "Announcements", "path": "/dashboard/announcements" },
-      { "icon": "MessageSquare", "label": "Messaging", "path": "/dashboard/messaging" },
-    ],
-  },
-  Student: {
-    sidebar_extra: [
-      { "icon": "book", "label": "Subjects", "path": "/dashboard/subjects" },
-      { "icon": "file-text", "label": "Results", "path": "/dashboard/results" },
-      { "icon": "calendar", "label": "Timetable", "path": "/dashboard/timetable" },
-      { "icon": "bell", "label": "Notices", "path": "/dashboard/notices" }
-    ],
-  }
+  // HOD
+  lessonApprovals: { icon: 'Book', label: 'Lesson Approvals', path: '/dashboard/lesson-notes' },
+  hodAnalytics: { icon: 'BarChart2', label: 'Dept. Analytics', path: '/dashboard/hod/analytics' },
+
+  // Teacher
+  lessonPlans: { icon: 'BookCopy', label: 'Lesson Plans', path: '/dashboard/lesson-notes' },
+  examQuestions: { icon: 'FileQuestion', label: 'Exam Questions', path: '/dashboard/exam-questions' },
+  enterScores: { icon: 'Edit3', label: 'Enter Scores', path: '/dashboard/scores' },
+  myStudents: { icon: 'UsersRound', label: 'My Students', path: '/dashboard/performance' },
+
+  // Exam Officer
+  reviewQuestions: { icon: 'FileQuestion', label: 'Review Questions', path: '/dashboard/exam-questions' },
+  generateResults: { icon: 'CheckSquare', label: 'Generate Results', path: '/dashboard/results/generate' },
+  viewResults: { icon: 'Award', label: 'View Results', path: '/dashboard/results/view' },
+  timetable: { icon: 'Calendar', label: 'Timetable', path: '/dashboard/timetable' },
+  examRegistration: { icon: 'Ticket', label: 'Exam Registration', path: '/dashboard/exam-registration' },
+  seatingPlans: { icon: 'Grid', label: 'Seating Plans', path: '/dashboard/seating-plan' },
+
+  // Accountant
+  feeSystem: { icon: 'DollarSign', label: 'System Fee Structure', path: '/dashboard/system/fees' },
+  invoices: { icon: 'FileText', label: 'Invoices', path: '/dashboard/accountant/invoices' },
+  payments: { icon: 'CreditCard', label: 'Payments', path: '/dashboard/accountant/payments' },
+  expenses: { icon: 'Wallet', label: 'Expenses', path: '/dashboard/accountant/expenses' },
+  payroll: { icon: 'Briefcase', label: 'Payroll', path: '/dashboard/accountant/payroll' },
+  reconciliation: { icon: 'Landmark', label: 'Reconciliation', path: '/dashboard/accountant/reconciliation' },
+  financialReports: { icon: 'BarChart2', label: 'Financial Reports', path: '/dashboard/accountant/reports' },
+
+  // Parent
+  parentResults: { icon: 'BookOpen', label: 'Results', path: '/dashboard/performance' },
+  parentPayments: { icon: 'DollarSign', label: 'Payments', path: '/dashboard/pay' },
+  parentAnnouncements: { icon: 'Bell', label: 'Announcements', path: '/dashboard/announcements' },
+
+  // Common Academic
+  classesAndSubjects: { icon: 'BookMarked', label: 'Classes & Subjects', path: '/dashboard/system/classes-subjects' },
+  gradingSystem: { icon: 'GraduationCap', label: 'Grading System', path: '/dashboard/system/grading' },
 };
 
-
-const baseNav = [
-  { "group": "Main", "links": [{ "icon": "home", "label": "Dashboard", "path": "/dashboard" }] },
-  { "group": "User", "links": [
-      { "icon": "user", "label": "Profile", "path": "/profile" },
-      { "icon": "bell", "label": "Notifications", "path": "/dashboard/notifications" }
-  ]}
-];
+const navConfig: Record<string, { group: string; links: (keyof typeof allNavLinks)[] }[]> = {
+  Admin: [
+    { group: 'Main', links: ['dashboard', 'profile', 'notifications'] },
+    { group: 'Management', links: ['reports', 'system', 'manageStaff', 'manageStudents', 'departments'] },
+    { group: 'Finance', links: ['feeSystem', 'invoices', 'payments', 'expenses', 'payroll', 'reconciliation', 'financialReports'] },
+    { group: 'Academics', links: ['lessonApprovals', 'reviewQuestions', 'enterScores', 'generateResults', 'viewResults'] },
+    { group: 'Infrastructure', links: ['database', 'logs'] }
+  ],
+  SLT: [
+    { group: 'Main', links: ['dashboard', 'profile', 'notifications'] },
+    { group: 'Oversight', links: ['reports', 'manageStaff', 'manageStudents'] },
+    { group: 'Academics', links: ['lessonApprovals', 'gradingSystem', 'classesAndSubjects'] },
+    { group: 'Finance', links: ['financialReports'] },
+  ],
+  HeadOfDepartment: [
+    { group: 'Main', links: ['dashboard', 'profile', 'notifications'] },
+    { group: 'Department', links: ['lessonApprovals', 'hodAnalytics', 'manageStaff'] },
+    { group: 'Academics', links: ['classesAndSubjects'] },
+  ],
+  Accountant: [
+    { group: 'Main', links: ['dashboard', 'profile', 'notifications'] },
+    { group: 'Finance', links: ['feeSystem', 'invoices', 'payments', 'expenses', 'payroll', 'reconciliation', 'financialReports'] },
+  ],
+  ExamOfficer: [
+    { group: 'Main', links: ['dashboard', 'profile', 'notifications'] },
+    { group: 'Examinations', links: ['reviewQuestions', 'enterScores', 'generateResults', 'viewResults', 'timetable', 'examRegistration', 'seatingPlans'] },
+  ],
+  Teacher: [
+    { group: 'Main', links: ['dashboard', 'profile', 'notifications'] },
+    { group: 'My Work', links: ['lessonPlans', 'examQuestions', 'enterScores', 'myStudents'] },
+  ],
+  Parent: [
+    { group: 'Main', links: ['dashboard', 'profile', 'notifications'] },
+    { group: 'My Child', links: ['parentResults', 'parentPayments', 'parentAnnouncements', 'timetable', 'messaging'] },
+  ],
+};
 
 
 export function DashboardSidebar() {
@@ -195,19 +173,16 @@ export function DashboardSidebar() {
   }, [pathname, setOpenMobile]);
   
   const renderNav = () => {
-    const roleSpecificNav = role ? (navConfig as any)[role]?.sidebar_extra || [] : [];
+    const roleNav = role ? (navConfig[role] || []) : [];
     
-    // Combine base navigation with role-specific navigation
-    const navSections = [...baseNav];
-    if (roleSpecificNav.length > 0) {
-      navSections.splice(1, 0, { group: "Tools", links: roleSpecificNav });
-    }
-
-    return navSections.map((section, index) => (
+    return roleNav.map((section, index) => (
        <React.Fragment key={`${section.group}-${index}`}>
           <p className="px-4 pt-4 text-xs font-semibold text-sidebar-foreground/50 group-data-[collapsible=icon]:hidden">{section.group}</p>
           <SidebarMenu>
-            {section.links.map((item: any) => {
+            {section.links.map((key) => {
+              const item = allNavLinks[key];
+              if (!item) return null;
+
               const Icon = iconMap[item.icon] || Home;
               return (
                  <SidebarMenuItem key={item.path}>
@@ -223,7 +198,6 @@ export function DashboardSidebar() {
           </SidebarMenu>
        </React.Fragment>
     ))
-
   }
 
   return (
