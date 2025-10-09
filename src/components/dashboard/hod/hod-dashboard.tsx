@@ -89,21 +89,21 @@ export function HodDashboard() {
 
       if (teacherIds.length === 0) {
         setStats({ pending: 0, approved: 0, rejected: 0, staffCount: 0 });
+        setNotes([]);
         setIsLoading(false);
         return;
       }
 
-      const notesQuery = query(collection(db, 'lessonNotes'), where('teacherId', 'in', teacherIds), orderBy('submittedOn', 'desc'));
+      const notesQuery = query(collection(db, 'lessonNotes'), where('teacherId', 'in', teacherIds));
       const notesSnapshot = await getDocs(notesQuery);
       
       const notesList = notesSnapshot.docs.map(doc => {
         const data = doc.data() as MockLessonNote;
         let formattedDate = 'Invalid Date';
         try {
-          if (data.submittedOn?.seconds) {
-              formattedDate = format(new Date(data.submittedOn.seconds * 1000), 'PPP');
-          } else if (typeof data.submissionDate === 'string' && !isNaN(new Date(data.submissionDate).getTime())) {
-               formattedDate = format(new Date(data.submissionDate), 'PPP');
+          const dateSource = data.submittedOn?.seconds ? new Date(data.submittedOn.seconds * 1000) : (typeof data.submissionDate === 'string' ? new Date(data.submissionDate) : null);
+          if (dateSource && !isNaN(dateSource.getTime())) {
+              formattedDate = format(dateSource, 'PPP');
           }
         } catch(e) {
             console.warn(`Could not parse date for note ${doc.id}:`, data.submittedOn || data.submissionDate);
@@ -115,6 +115,14 @@ export function HodDashboard() {
             formattedDate: formattedDate
         } as LessonNoteWithDate;
       });
+
+      // Sort client-side
+      notesList.sort((a, b) => {
+          const dateA = a.submittedOn?.seconds ? new Date(a.submittedOn.seconds * 1000) : new Date(a.submissionDate);
+          const dateB = b.submittedOn?.seconds ? new Date(b.submittedOn.seconds * 1000) : new Date(b.submissionDate);
+          return dateB.getTime() - dateA.getTime();
+      });
+
       setNotes(notesList.slice(0, 5)); // Show recent 5
 
       const approved = notesList.filter(n => n.status === 'Approved').length;
@@ -301,5 +309,3 @@ export function HodDashboard() {
     </div>
   );
 }
-
-    
