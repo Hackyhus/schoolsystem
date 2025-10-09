@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState, useCallback, useEffect } from 'react';
@@ -8,7 +9,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { PlusCircle, Trash2, Edit, X, Save } from 'lucide-react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { useToast } from '@/hooks/use-toast';
-import { useAcademicData, ClassData, SubjectData } from '@/hooks/use-academic-data';
+import { useAcademicData, ClassData, SubjectData, DepartmentData } from '@/hooks/use-academic-data';
 import { addDoc, collection, deleteDoc, doc, getDocs, query, updateDoc, where } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -23,15 +24,20 @@ type ClassDetail = ClassData & {
     subjects?: { id: string; name: string; teacherId?: string; teacherName?: string }[];
 };
 
+type SubjectWithDepartment = SubjectData & { departmentId: string };
+
 export default function ClassesSubjectsPage() {
-    const { classes, subjects, refetch: refetchAcademicData } = useAcademicData();
+    const { classes, subjects, departments, refetch: refetchAcademicData } = useAcademicData();
     const [newItemName, setNewItemName] = useState('');
+    const [selectedDepartmentForNewSubject, setSelectedDepartmentForNewSubject] = useState('');
     const [isClassModalOpen, setIsClassModalOpen] = useState(false);
     const [isSubjectModalOpen, setIsSubjectModalOpen] = useState(false);
     const [isLoading, setIsLoading] = useState(true);
     const [teachers, setTeachers] = useState<MockUser[]>([]);
     const [classDetails, setClassDetails] = useState<ClassDetail[]>([]);
     const [editingClass, setEditingClass] = useState<ClassDetail | null>(null);
+    const [subjectsByDept, setSubjectsByDept] = useState<Record<string, SubjectWithDepartment[]>>({});
+
 
     const { toast } = useToast();
 
@@ -48,9 +54,16 @@ export default function ClassesSubjectsPage() {
             const classesSnapshot = await getDocs(collection(db, 'classes'));
             const classList = classesSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as ClassData));
             
-            // Fetch all subjects
+            // Fetch all subjects and group by department
             const subjectsSnapshot = await getDocs(collection(db, 'subjects'));
-            const subjectList = subjectsSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as SubjectData));
+            const subjectList = subjectsSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as SubjectWithDepartment));
+            
+            const groupedSubjects: Record<string, SubjectWithDepartment[]> = {};
+            departments.forEach(dept => {
+                groupedSubjects[dept.id] = subjectList.filter(s => s.departmentId === dept.id);
+            });
+            setSubjectsByDept(groupedSubjects);
+
 
             // Populate class details
             const details: ClassDetail[] = classList.map(cls => {
@@ -78,31 +91,52 @@ export default function ClassesSubjectsPage() {
         } finally {
             setIsLoading(false);
         }
-    }, [toast]);
+    }, [toast, departments]);
     
     useEffect(() => {
-        fetchAllData();
-    }, [fetchAllData]);
+        // We depend on departments from the hook, so we run this effect when they are loaded.
+        if (departments.length > 0) {
+            fetchAllData();
+        }
+    }, [fetchAllData, departments]);
 
-    const handleAddItem = async (type: 'class' | 'subject') => {
+    const handleAddClass = async () => {
         if (newItemName.trim() === '') {
-            toast({ variant: 'destructive', title: 'Error', description: 'Name cannot be empty.' });
+            toast({ variant: 'destructive', title: 'Error', description: 'Class name cannot be empty.' });
             return;
         }
-        const collectionName = type === 'class' ? 'classes' : 'subjects';
         try {
-            await addDoc(collection(db, collectionName), { name: newItemName });
-            toast({ title: 'Success', description: `${type.charAt(0).toUpperCase() + type.slice(1)} "${newItemName}" has been added.` });
+            await addDoc(collection(db, 'classes'), { name: newItemName });
+            toast({ title: 'Success', description: `Class "${newItemName}" has been added.` });
             setNewItemName('');
             refetchAcademicData();
             fetchAllData();
-            if (type === 'class') setIsClassModalOpen(false);
-            else setIsSubjectModalOpen(false);
+            setIsClassModalOpen(false);
         } catch (error) {
-            console.error(`Error adding ${type}:`, error);
-            toast({ variant: 'destructive', title: 'Error', description: `Could not add ${type}.` });
+            console.error(`Error adding class:`, error);
+            toast({ variant: 'destructive', title: 'Error', description: `Could not add class.` });
         }
     };
+    
+    const handleAddSubject = async () => {
+        if (newItemName.trim() === '' || !selectedDepartmentForNewSubject) {
+            toast({ variant: 'destructive', title: 'Error', description: 'Subject name and department are required.' });
+            return;
+        }
+        try {
+            await addDoc(collection(db, 'subjects'), { name: newItemName, departmentId: selectedDepartmentForNewSubject });
+            toast({ title: 'Success', description: `Subject "${newItemName}" has been added.` });
+            setNewItemName('');
+            setSelectedDepartmentForNewSubject('');
+            refetchAcademicData();
+            fetchAllData();
+            setIsSubjectModalOpen(false);
+        } catch (error) {
+            console.error(`Error adding subject:`, error);
+            toast({ variant: 'destructive', title: 'Error', description: `Could not add subject.` });
+        }
+    };
+
 
     const handleRemoveItem = async (type: 'class' | 'subject', item: {id: string, name: string}) => {
         if (!confirm(`Are you sure you want to remove "${item.name}"? This could affect existing records.`)) {
@@ -261,25 +295,39 @@ export default function ClassesSubjectsPage() {
             
              <Card>
                 <CardHeader>
-                    <CardTitle>Global Subjects</CardTitle>
-                    <CardDescription>Add or remove subjects available to all classes.</CardDescription>
+                    <CardTitle>Subjects by Department</CardTitle>
+                    <CardDescription>Add or remove subjects within each academic department.</CardDescription>
                 </CardHeader>
-                <CardContent className="flex flex-wrap gap-2">
-                    {subjects.map(s => (
-                        <Badge key={s.id} variant="secondary" className="flex gap-2 items-center">
-                            <span>{s.name}</span>
-                            <button onClick={() => handleRemoveItem('subject', s)}><X className="h-3 w-3" /></button>
-                        </Badge>
+                <CardContent className="space-y-6">
+                    {departments.map(dept => (
+                        <div key={dept.id}>
+                            <h3 className="font-semibold mb-2">{dept.name}</h3>
+                            <div className="flex flex-wrap gap-2 items-center">
+                                {subjectsByDept[dept.id]?.map(s => (
+                                    <Badge key={s.id} variant="secondary" className="flex gap-2 items-center">
+                                        <span>{s.name}</span>
+                                        <button onClick={() => handleRemoveItem('subject', s)}><X className="h-3 w-3" /></button>
+                                    </Badge>
+                                )) || <p className="text-xs text-muted-foreground">No subjects added yet.</p>}
+                            </div>
+                        </div>
                     ))}
+                    <Separator />
                      <Dialog open={isSubjectModalOpen} onOpenChange={setIsSubjectModalOpen}>
                         <DialogTrigger asChild>
                             <Button size="sm" variant="outline"><PlusCircle className="mr-2 h-4 w-4" /> Add Subject</Button>
                         </DialogTrigger>
                         <DialogContent>
-                            <DialogHeader><DialogTitle>Add New Global Subject</DialogTitle></DialogHeader>
+                            <DialogHeader><DialogTitle>Add New Subject</DialogTitle></DialogHeader>
                             <div className="space-y-4 py-4">
                                 <Input placeholder="e.g., Further Mathematics" value={newItemName} onChange={(e) => setNewItemName(e.target.value)} />
-                                <Button onClick={() => handleAddItem('subject')} className="w-full">Add Subject</Button>
+                                <Select onValueChange={setSelectedDepartmentForNewSubject} value={selectedDepartmentForNewSubject}>
+                                    <SelectTrigger><SelectValue placeholder="Select a department" /></SelectTrigger>
+                                    <SelectContent>
+                                        {departments.map(d => <SelectItem key={d.id} value={d.id}>{d.name}</SelectItem>)}
+                                    </SelectContent>
+                                </Select>
+                                <Button onClick={handleAddSubject} className="w-full">Add Subject</Button>
                             </div>
                         </DialogContent>
                     </Dialog>
@@ -300,7 +348,7 @@ export default function ClassesSubjectsPage() {
                             <DialogHeader><DialogTitle>Add New Class</DialogTitle></DialogHeader>
                             <div className="space-y-4 py-4">
                                 <Input placeholder="e.g., SS 3" value={newItemName} onChange={(e) => setNewItemName(e.target.value)} />
-                                <Button onClick={() => handleAddItem('class')} className="w-full">Add Class</Button>
+                                <Button onClick={handleAddClass} className="w-full">Add Class</Button>
                             </div>
                         </DialogContent>
                     </Dialog>
