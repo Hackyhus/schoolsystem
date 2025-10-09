@@ -148,7 +148,7 @@ export default function UsersPage() {
                 <TableHead>Staff ID</TableHead>
                 <TableHead>Name</TableHead>
                 <TableHead className="hidden md:table-cell">Email</TableHead>
-                <TableHead>Role</TableHead>
+                <TableHead className="hidden sm:table-cell">Role</TableHead>
                 <TableHead className="text-right">Actions</TableHead>
               </TableRow>
             </TableHeader>
@@ -165,7 +165,7 @@ export default function UsersPage() {
                     <TableCell className="hidden md:table-cell">
                       <Skeleton className="h-5 w-36" />
                     </TableCell>
-                    <TableCell>
+                    <TableCell className="hidden sm:table-cell">
                       <Skeleton className="h-6 w-24" />
                     </TableCell>
                     <TableCell className="text-right">
@@ -179,7 +179,7 @@ export default function UsersPage() {
                     <TableCell className="font-mono text-xs">{user.staffId || 'N/A'}</TableCell>
                     <TableCell className="font-medium">{user.name}</TableCell>
                     <TableCell className="hidden md:table-cell">{user.email}</TableCell>
-                    <TableCell>
+                    <TableCell className="hidden sm:table-cell">
                        <Badge variant="outline">{user.role}</Badge>
                     </TableCell>
                     <TableCell className="text-right space-x-2">

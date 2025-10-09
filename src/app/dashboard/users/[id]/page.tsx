@@ -119,8 +119,8 @@ export default function UserProfilePage() {
             </Avatar>
             <div className="flex-1">
                 <CardTitle className="text-3xl">{user.name}</CardTitle>
-                <div className={cn("text-sm text-muted-foreground", "flex items-center justify-center gap-2 md:justify-start")}>
-                  {user.email} <Badge variant="outline">{user.role}</Badge>
+                <div className={cn("text-sm text-muted-foreground", "flex items-center justify-center gap-2 md:justify-start md:flex-row flex-col")}>
+                  <span>{user.email}</span> <Badge variant="outline">{user.role}</Badge>
                 </div>
             </div>
              {canEdit && (
