@@ -38,6 +38,7 @@ import {
 import { AddDepartmentForm } from '@/components/dashboard/departments/add-department-form';
 import { dbService } from '@/lib/firebase';
 import type { QueryConstraint } from '@/services/types';
+import usePersistentState from '@/hooks/use-persistent-state';
 
 type Department = {
   id: string;
@@ -51,7 +52,7 @@ type Department = {
 export default function DepartmentsPage() {
   const [departments, setDepartments] = useState<Department[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isModalOpen, setIsModalOpen] = usePersistentState('departments-modal-open', false);
   const { toast } = useToast();
 
   const fetchDepartments = useCallback(async () => {

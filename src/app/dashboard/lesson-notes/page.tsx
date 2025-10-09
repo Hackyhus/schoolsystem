@@ -29,6 +29,7 @@ import {
   DialogTrigger,
 } from '@/components/ui/dialog';
 import { AddLessonNoteForm } from '@/components/dashboard/lesson-notes/add-lesson-note-form';
+import usePersistentState from '@/hooks/use-persistent-state';
 
 
 export default function LessonNotesPage() {
@@ -36,7 +37,7 @@ export default function LessonNotesPage() {
   const [notes, setNotes] = useState<MockLessonNote[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const { toast } = useToast();
-  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isModalOpen, setIsModalOpen] = usePersistentState('lesson-notes-modal-open', false);
 
   const fetchNotes = useCallback(async () => {
     if (!user) {

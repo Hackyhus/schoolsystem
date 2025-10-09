@@ -30,6 +30,7 @@ import { format } from 'date-fns';
 import { db, dbService } from '@/lib/firebase';
 import type { QueryConstraint } from '@/services/types';
 import { collection, addDoc, serverTimestamp } from 'firebase/firestore';
+import usePersistentState from '@/hooks/use-persistent-state';
 
 
 type ExamQuestion = {
@@ -69,7 +70,7 @@ async function createExamQuestionNotification(teacherId: string, questionId: str
 export default function ExamQuestionsPage() {
   const { role, user } = useRole();
   const { toast } = useToast();
-  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isModalOpen, setIsModalOpen] = usePersistentState('exam-questions-modal-open', false);
   const [questions, setQuestions] = useState<ExamQuestion[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 

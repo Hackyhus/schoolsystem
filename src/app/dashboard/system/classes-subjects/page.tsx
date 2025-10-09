@@ -18,6 +18,7 @@ import { MockUser } from '@/lib/schema';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 import { Label } from '@/components/ui/label';
+import usePersistentState from '@/hooks/use-persistent-state';
 
 type ClassDetail = ClassData & {
     teacherName?: string;
@@ -30,8 +31,8 @@ export default function ClassesSubjectsPage() {
     const { classes, subjects, departments, refetch: refetchAcademicData } = useAcademicData();
     const [newItemName, setNewItemName] = useState('');
     const [selectedDepartmentForNewSubject, setSelectedDepartmentForNewSubject] = useState('');
-    const [isClassModalOpen, setIsClassModalOpen] = useState(false);
-    const [isSubjectModalOpen, setIsSubjectModalOpen] = useState(false);
+    const [isClassModalOpen, setIsClassModalOpen] = usePersistentState('classes-modal-open', false);
+    const [isSubjectModalOpen, setIsSubjectModalOpen] = usePersistentState('subjects-modal-open', false);
     const [isLoading, setIsLoading] = useState(true);
     const [teachers, setTeachers] = useState<MockUser[]>([]);
     const [classDetails, setClassDetails] = useState<ClassDetail[]>([]);

@@ -39,11 +39,12 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog"
+import usePersistentState from '@/hooks/use-persistent-state';
 
 export default function FeeStructurePage() {
     const [feeStructures, setFeeStructures] = useState<Record<string, FeeStructure[]>>({});
     const [isLoading, setIsLoading] = useState(true);
-    const [isFormOpen, setIsFormOpen] = useState(false);
+    const [isFormOpen, setIsFormOpen] = usePersistentState('fees-form-open', false);
     const [editingStructure, setEditingStructure] = useState<FeeStructure | undefined>(undefined);
     const { classes } = useAcademicData();
     const { toast } = useToast();

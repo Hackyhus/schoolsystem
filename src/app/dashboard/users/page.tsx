@@ -37,12 +37,13 @@ import Link from 'next/link';
 import { Badge } from '@/components/ui/badge';
 import Image from 'next/image';
 import { BulkStaffUploadDialog } from '@/components/dashboard/users/bulk-staff-upload-dialog';
+import usePersistentState from '@/hooks/use-persistent-state';
 
 export default function UsersPage() {
   const [users, setUsers] = useState<MockUser[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  const [isAddModalOpen, setIsAddModalOpen] = useState(false);
-  const [isBulkModalOpen, setIsBulkModalOpen] = useState(false);
+  const [isAddModalOpen, setIsAddModalOpen] = usePersistentState('users-add-modal-open', false);
+  const [isBulkModalOpen, setIsBulkModalOpen] = usePersistentState('users-bulk-modal-open', false);
   const { toast } = useToast();
 
   const fetchUsers = useCallback(async () => {

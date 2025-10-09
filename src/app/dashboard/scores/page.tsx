@@ -18,6 +18,7 @@ import { Badge } from '@/components/ui/badge';
 import { ThumbsDown, ThumbsUp, Save, Loader2, Send, Upload } from 'lucide-react';
 import { BulkScoresUploadDialog } from '@/components/dashboard/scores/bulk-scores-upload-dialog';
 import { createScoreNotification } from '@/lib/notifications';
+import usePersistentState from '@/hooks/use-persistent-state';
 
 
 export default function ScoresPage() {
@@ -28,7 +29,7 @@ export default function ScoresPage() {
   const [scores, setScores] = useState<Record<string, Score>>({});
   const [isLoading, setIsLoading] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [isBulkUploadOpen, setIsBulkUploadOpen] = useState(false);
+  const [isBulkUploadOpen, setIsBulkUploadOpen] = usePersistentState('scores-bulk-upload-open', false);
   const { toast } = useToast();
   const { classes, subjects, isLoading: isAcademicDataLoading } = useAcademicData();
 

@@ -1,3 +1,4 @@
+
 'use client';
 
 import {
@@ -51,14 +52,15 @@ import { Input } from '@/components/ui/input';
 import { Search } from 'lucide-react';
 import { Checkbox } from '@/components/ui/checkbox';
 import { bulkDeleteStudents } from '@/actions/student-actions';
+import usePersistentState from '@/hooks/use-persistent-state';
 
 
 export default function StudentsPage() {
   const [students, setStudents] = useState<Student[]>([]);
   const [filteredStudents, setFilteredStudents] = useState<Student[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  const [isAddModalOpen, setIsAddModalOpen] = useState(false);
-  const [isBulkModalOpen, setIsBulkModalOpen] = useState(false);
+  const [isAddModalOpen, setIsAddModalOpen] = usePersistentState('students-add-modal-open', false);
+  const [isBulkModalOpen, setIsBulkModalOpen] = usePersistentState('students-bulk-modal-open', false);
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedStudents, setSelectedStudents] = useState<string[]>([]);
   const { toast } = useToast();
