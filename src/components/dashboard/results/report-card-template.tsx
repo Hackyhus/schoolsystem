@@ -108,6 +108,12 @@ export function ReportCardTemplate({ reportCard }: ReportCardTemplateProps) {
                 <p>Principal's Signature</p>
             </div>
         </div>
+        
+        <div className="mt-12 text-center text-xs text-gray-500 dark:text-gray-500 border-t pt-4">
+          <p className="font-bold">Great Insight International Academy</p>
+          <p>123 Education Lane, Knowledge City</p>
+          <p>Phone: (123) 456-7890 | Email: info@giia.com.ng</p>
+        </div>
 
       </CardContent>
        <style jsx global>{`
