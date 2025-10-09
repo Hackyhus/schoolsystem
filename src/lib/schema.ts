@@ -1,6 +1,7 @@
 
 
 
+
 export type User = {
   _id: string;
   firstName: string;
@@ -252,3 +253,11 @@ export type MockLessonNote = {
     admin_review: string | null;
     submittedOn?: any;
 };
+
+export type SchoolInfo = {
+    name: string;
+    address: string;
+    phone: string;
+    email: string;
+    logoUrl?: string;
+}

@@ -16,6 +16,7 @@ import { Badge } from '@/components/ui/badge';
 import { format } from 'date-fns';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
+import Link from 'next/link';
 
 const SESSIONS = ["2023/2024", "2024/2025", "2025/2026"];
 const TERMS = ["First Term", "Second Term", "Third Term"];
@@ -207,11 +208,13 @@ export default function InvoicesPage() {
                                         </TableCell>
                                         <TableCell>{invoice.class}</TableCell>
                                         <TableCell>NGN {invoice.totalAmount.toLocaleString()}</TableCell>
-                                        <TableCell>{format(new Date(invoice.dueDate.seconds * 1000), 'PPP')}</TableCell>
+                                        <TableCell>{invoice.dueDate?.seconds ? format(new Date(invoice.dueDate.seconds * 1000), 'PPP') : 'N/A'}</TableCell>
                                         <TableCell><Badge variant={getStatusVariant(invoice.status)}>{invoice.status}</Badge></TableCell>
                                         <TableCell className="text-right">
-                                            <Button variant="outline" size="sm" disabled>
-                                                <Eye className="mr-2 h-4 w-4" /> View
+                                            <Button asChild variant="outline" size="sm">
+                                                <Link href={`/dashboard/accountant/invoices/${invoice.id}`}>
+                                                   <Eye className="mr-2 h-4 w-4" /> View
+                                                </Link>
                                             </Button>
                                         </TableCell>
                                     </TableRow>
