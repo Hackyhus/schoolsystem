@@ -1,7 +1,7 @@
 'use client';
 
 import { Card, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { ArrowRight, Calendar, DollarSign, GraduationCap, School, ShieldCheck, BookMarked } from "lucide-react";
+import { ArrowRight, Calendar, DollarSign, GraduationCap, School, ShieldCheck, BookMarked, Wrench } from "lucide-react";
 import Link from "next/link";
 
 
@@ -41,6 +41,12 @@ const settingsCards = [
         description: 'Manage school classes and the subjects offered.',
         icon: BookMarked,
         href: '/dashboard/system/classes-subjects'
+    },
+    {
+        title: 'Maintenance Mode',
+        description: 'Temporarily restrict access to certain features during maintenance.',
+        icon: Wrench,
+        href: '/dashboard/system/maintenance'
     }
 ]
 

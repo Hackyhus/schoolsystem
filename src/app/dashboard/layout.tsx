@@ -9,6 +9,7 @@ import { DashboardSidebar } from '@/components/dashboard/sidebar';
 import { SidebarProvider, SidebarInset } from '@/components/ui/sidebar';
 import { useRole } from '@/context/role-context';
 import { Loader2 } from 'lucide-react';
+import { MaintenanceBanner } from '@/components/maintenance-banner';
 
 export default function DashboardLayout({
   children,
@@ -41,6 +42,7 @@ export default function DashboardLayout({
       <SidebarProvider>
         <DashboardSidebar />
         <SidebarInset>
+          <MaintenanceBanner />
           <DashboardHeader />
           <main className="min-h-[calc(100vh-4rem)] p-4 md:p-6 lg:p-8">
             {children}
