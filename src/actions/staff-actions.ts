@@ -38,7 +38,7 @@ const ROLE_CODES: { [key: string]: string } = {
     ExamOfficer: 'EXO',
 };
 
-async function generateStaffId(role: string): Promise<string> {
+async function generateStaffId(role: string, offset = 0): Promise<string> {
     const roleCode = ROLE_CODES[role] || 'GEN';
     const year = new Date().getFullYear().toString().slice(-2);
 
@@ -46,7 +46,7 @@ async function generateStaffId(role: string): Promise<string> {
     const staffCountForRole = await dbService.getCountFromServer('users', [
         { type: 'where', fieldPath: 'role', opStr: '==', value: role }
     ]);
-    const nextId = (staffCountForRole + 1).toString().padStart(4, '0');
+    const nextId = (staffCountForRole + offset + 1).toString().padStart(4, '0');
 
     return `GIIA${year}${roleCode}${nextId}`;
 }
@@ -128,4 +128,81 @@ export async function createStaff(formData: FormData) {
     }
     return { error: error.message || 'An unexpected server error occurred.' };
   }
+}
+
+export async function bulkCreateStaff(staffList: any[]) {
+    try {
+        const batch = dbService.createBatch();
+        const validStaff: any[] = [];
+        const invalidRecords: any[] = [];
+        
+        const requiredFields = ["firstName", "lastName", "email", "role", "phone", "stateOfOrigin"];
+
+        for (let i = 0; i < staffList.length; i++) {
+            const staff = staffList[i];
+            const missingFields = requiredFields.filter(field => !staff[field]);
+            
+            if (missingFields.length > 0) {
+                invalidRecords.push({ ...staff, error: `Missing required fields: ${missingFields.join(', ')}` });
+                continue;
+            }
+             if (!z.string().email().safeParse(staff.email).success) {
+                invalidRecords.push({ ...staff, error: 'Invalid email format.' });
+                continue;
+            }
+
+            validStaff.push(staff);
+        }
+        
+        for (let i = 0; i < validStaff.length; i++) {
+            const staff = validStaff[i];
+            const staffId = await generateStaffId(staff.role, i);
+            
+            const authUser = await authService.createUser({
+                email: staff.email,
+                password: staff.stateOfOrigin,
+            });
+
+            const newStaffData = {
+                uid: authUser.uid,
+                staffId,
+                name: `${staff.firstName} ${staff.lastName}`,
+                email: staff.email,
+                phone: staff.phone,
+                role: staff.role,
+                department: staff.department || 'N/A',
+                stateOfOrigin: staff.stateOfOrigin,
+                generatedPassword: staff.stateOfOrigin,
+                status: 'active',
+                createdAt: serverTimestamp(),
+                employmentDate: staff['employmentDate(YYYY-MM-DD)'] ? new Date(staff['employmentDate(YYYY-MM-DD)']) : new Date(),
+                personalInfo: {
+                    address: staff.address || '',
+                    gender: staff.gender || 'Other',
+                    dob: staff['dateOfBirth(YYYY-MM-DD)'] ? new Date(staff['dateOfBirth(YYYY-MM-DD)']) : new Date(),
+                    profilePicture: '',
+                }
+            };
+            
+            batch.set('users', authUser.uid, newStaffData);
+        }
+
+        if (validStaff.length > 0) {
+            await batch.commit();
+        }
+
+        return { 
+            success: true, 
+            importedCount: validStaff.length,
+            errorCount: invalidRecords.length,
+            invalidRecords: invalidRecords
+        };
+
+    } catch (error: any) {
+        console.error('Error in bulk staff creation:', error);
+         if (error.code === 'auth/email-already-in-use') {
+          return { error: 'One or more email addresses are already in use.' };
+        }
+        return { error: error.message || 'An unexpected server error occurred during bulk import.' };
+    }
 }

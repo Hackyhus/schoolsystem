@@ -18,7 +18,7 @@ import {
 } from '@/components/ui/table';
 import { AddUserForm } from '@/components/dashboard/users/add-user-form';
 import { Button } from '@/components/ui/button';
-import { PlusCircle, Trash2, Edit } from 'lucide-react';
+import { PlusCircle, Trash2, Edit, Upload } from 'lucide-react';
 import { useEffect, useState, useCallback } from 'react';
 import { collection, getDocs, deleteDoc, doc, query, where, updateDoc } from 'firebase/firestore';
 import { auth, db } from '@/lib/firebase';
@@ -36,11 +36,13 @@ import {
 import Link from 'next/link';
 import { Badge } from '@/components/ui/badge';
 import Image from 'next/image';
+import { BulkStaffUploadDialog } from '@/components/dashboard/users/bulk-staff-upload-dialog';
 
 export default function UsersPage() {
   const [users, setUsers] = useState<MockUser[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isAddModalOpen, setIsAddModalOpen] = useState(false);
+  const [isBulkModalOpen, setIsBulkModalOpen] = useState(false);
   const { toast } = useToast();
 
   const fetchUsers = useCallback(async () => {
@@ -97,7 +99,8 @@ export default function UsersPage() {
 
   const handleUserAdded = () => {
     fetchUsers();
-    setIsModalOpen(false); // Close the modal
+    setIsAddModalOpen(false);
+    setIsBulkModalOpen(false);
   };
 
   return (
@@ -116,7 +119,16 @@ export default function UsersPage() {
               A list of all staff members in the system.
             </CardDescription>
           </div>
-           <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
+          <div className="flex flex-wrap gap-2">
+            <Dialog open={isBulkModalOpen} onOpenChange={setIsBulkModalOpen}>
+              <DialogTrigger asChild>
+                <Button variant="outline">
+                  <Upload className="mr-2 h-4 w-4" /> Bulk Upload
+                </Button>
+              </DialogTrigger>
+              <BulkStaffUploadDialog onUploadComplete={handleUserAdded} />
+            </Dialog>
+           <Dialog open={isAddModalOpen} onOpenChange={setIsAddModalOpen}>
             <DialogTrigger asChild>
                 <Button>
                     <PlusCircle className="mr-2 h-4 w-4" /> Add New Staff
@@ -140,6 +152,7 @@ export default function UsersPage() {
                 <AddUserForm onUserAdded={handleUserAdded} />
             </DialogContent>
           </Dialog>
+          </div>
         </CardHeader>
         <CardContent>
           <Table>
