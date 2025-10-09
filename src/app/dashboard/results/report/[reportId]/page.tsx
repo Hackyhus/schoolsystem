@@ -81,13 +81,14 @@ export default function IndividualReportPage() {
         const availableWidth = pdfWidth - (margin * 2);
         const availableHeight = pdfHeight - (margin * 2);
 
-        let imgFinalWidth = availableWidth;
-        let imgFinalHeight = availableWidth / canvasAspectRatio;
+        // Calculate width and height based on fitting the page height
+        let imgFinalHeight = availableHeight;
+        let imgFinalWidth = imgFinalHeight * canvasAspectRatio;
 
-        // If height is too big, scale down by height instead
-        if (imgFinalHeight > availableHeight) {
-            imgFinalHeight = availableHeight;
-            imgFinalWidth = availableHeight * canvasAspectRatio;
+        // If calculated width is too wide, scale down to fit width instead
+        if (imgFinalWidth > availableWidth) {
+            imgFinalWidth = availableWidth;
+            imgFinalHeight = imgFinalWidth / canvasAspectRatio;
         }
         
         const x = (pdfWidth - imgFinalWidth) / 2; // Center horizontally
