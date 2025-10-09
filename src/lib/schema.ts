@@ -1,5 +1,6 @@
 
 
+
 export type User = {
   _id: string;
   firstName: string;
@@ -173,6 +174,28 @@ export type FeeStructure = {
     totalAmount: number;
     items: FeeItem[];
     createdAt: any; // Firestore timestamp
+};
+
+export type InvoiceItem = {
+    name: string;
+    amount: number;
+};
+
+export type Invoice = {
+    id: string;
+    invoiceId: string; // e.g., INV-2024-0001
+    studentId: string;
+    studentName: string;
+    class: string;
+    session: string;
+    term: string;
+    items: InvoiceItem[];
+    totalAmount: number;
+    amountPaid: number;
+    balance: number;
+    status: 'Paid' | 'Unpaid' | 'Overdue';
+    createdAt: any; // Firestore timestamp
+    dueDate: any; // Firestore timestamp
 };
 
 

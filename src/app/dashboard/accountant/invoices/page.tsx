@@ -1,11 +1,99 @@
 
 'use client';
 
+import { useState, useEffect, useCallback } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { FileText } from "lucide-react";
+import { FileText, Loader2, AlertCircle, Eye, RefreshCw } from "lucide-react";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { useToast } from "@/hooks/use-toast";
+import { useAcademicData } from '@/hooks/use-academic-data';
+import { generateInvoicesForClass } from '@/actions/invoice-actions';
+import type { Invoice } from '@/lib/schema';
+import { dbService } from '@/lib/firebase';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { Badge } from '@/components/ui/badge';
+import { format } from 'date-fns';
+import { Skeleton } from '@/components/ui/skeleton';
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
+
+const SESSIONS = ["2023/2024", "2024/2025", "2025/2026"];
+const TERMS = ["First Term", "Second Term", "Third Term"];
 
 export default function InvoicesPage() {
+    const { classes, isLoading: isAcademicDataLoading } = useAcademicData();
+    const { toast } = useToast();
+
+    const [isGenerating, setIsGenerating] = useState(false);
+    const [selectedClass, setSelectedClass] = useState('');
+    const [selectedSession, setSelectedSession] = useState(SESSIONS[0]);
+    const [selectedTerm, setSelectedTerm] = useState(TERMS[0]);
+
+    const [invoices, setInvoices] = useState<Invoice[]>([]);
+    const [isLoadingInvoices, setIsLoadingInvoices] = useState(true);
+
+    const fetchInvoices = useCallback(async () => {
+        setIsLoadingInvoices(true);
+        try {
+            const fetchedInvoices = await dbService.getDocs<Invoice>('invoices', [{ type: 'orderBy', fieldPath: 'createdAt', direction: 'desc' }]);
+            setInvoices(fetchedInvoices);
+        } catch (error) {
+            console.error(error);
+            toast({
+                variant: 'destructive',
+                title: 'Error',
+                description: 'Could not fetch invoices.'
+            });
+        } finally {
+            setIsLoadingInvoices(false);
+        }
+    }, [toast]);
+
+    useEffect(() => {
+        fetchInvoices();
+    }, [fetchInvoices]);
+
+
+    const handleGenerate = async () => {
+        if (!selectedClass) {
+            toast({ variant: 'destructive', title: 'Error', description: 'Please select a class.' });
+            return;
+        }
+        setIsGenerating(true);
+        try {
+            const result = await generateInvoicesForClass(selectedClass, selectedSession, selectedTerm);
+
+            if (result.error) throw new Error(result.error);
+            
+            toast({
+                title: 'Invoice Generation Complete',
+                description: `${result.generatedCount} new invoices were created for ${selectedClass}. ${result.skippedCount} students already had invoices and were skipped.`,
+                duration: 7000
+            });
+
+            fetchInvoices(); // Refresh the list
+
+        } catch (error: any) {
+            toast({
+                variant: 'destructive',
+                title: 'Generation Failed',
+                description: error.message || 'An unexpected error occurred.',
+                duration: 9000,
+            });
+        } finally {
+            setIsGenerating(false);
+        }
+    };
+    
+    const getStatusVariant = (status: Invoice['status']) => {
+        switch (status) {
+            case 'Paid': return 'default';
+            case 'Unpaid': return 'secondary';
+            case 'Overdue': return 'destructive';
+            default: return 'outline';
+        }
+    };
+
     return (
         <div className="space-y-8">
             <div>
@@ -14,20 +102,130 @@ export default function InvoicesPage() {
                     Generate, send, and track student invoices.
                 </p>
             </div>
+            
             <Card>
                 <CardHeader>
-                    <CardTitle>Invoice Management</CardTitle>
+                    <CardTitle>Generate Invoices</CardTitle>
                     <CardDescription>
-                        This module will allow for the bulk generation of invoices for all students based on the defined fee structures. Accountants can view the status of all invoices (paid, pending, overdue), send reminders to parents, and track the overall revenue collection for the term. A secure payment gateway will be integrated to facilitate online payments.
-                        <br /><br />
-                        <strong className="text-primary">This feature is currently in development and will be available once the project is approved.</strong>
+                        Select a class, session, and term to generate invoices for all students based on the active fee structure.
                     </CardDescription>
                 </CardHeader>
-                <CardContent>
-                    <Button disabled>
-                        <FileText className="mr-2 h-4 w-4" /> Generate Invoices
+                <CardContent className="space-y-6">
+                    <Alert variant="destructive">
+                        <AlertCircle className="h-4 w-4" />
+                        <AlertTitle>Important Note</AlertTitle>
+                        <AlertDescription>
+                           The system will automatically skip any student who already has an invoice for the selected term and session to prevent duplicates.
+                        </AlertDescription>
+                    </Alert>
+
+                     <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                         <Select onValueChange={setSelectedClass} value={selectedClass} disabled={isAcademicDataLoading || isGenerating}>
+                            <SelectTrigger>
+                            <SelectValue placeholder={isAcademicDataLoading ? "Loading Classes..." : "Select Class"} />
+                            </SelectTrigger>
+                            <SelectContent>
+                            {classes.map(c => <SelectItem key={c.id} value={c.name}>{c.name}</SelectItem>)}
+                            </SelectContent>
+                        </Select>
+                         <Select onValueChange={setSelectedSession} value={selectedSession} disabled={isGenerating}>
+                            <SelectTrigger>
+                                <SelectValue placeholder="Select Session" />
+                            </SelectTrigger>
+                            <SelectContent>
+                                {SESSIONS.map(s => <SelectItem key={s} value={s}>{s}</SelectItem>)}
+                            </SelectContent>
+                        </Select>
+                         <Select onValueChange={setSelectedTerm} value={selectedTerm} disabled={isGenerating}>
+                             <SelectTrigger>
+                                <SelectValue placeholder="Select Term" />
+                            </SelectTrigger>
+                            <SelectContent>
+                                {TERMS.map(t => <SelectItem key={t} value={t}>{t}</SelectItem>)}
+                            </SelectContent>
+                        </Select>
+                    </div>
+
+                    <Button onClick={handleGenerate} disabled={isGenerating || !selectedClass} size="lg" className="w-full md:w-auto">
+                        {isGenerating ? (
+                            <>
+                                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                                Generating for {selectedClass}...
+                            </>
+                        ) : (
+                           <>
+                             <FileText className="mr-2 h-4 w-4" />
+                             Generate Invoices
+                           </>
+                        )}
                     </Button>
                 </CardContent>
+            </Card>
+
+            <Card>
+                 <CardHeader className="flex flex-row items-center justify-between">
+                    <div>
+                        <CardTitle>Recent Invoices</CardTitle>
+                        <CardDescription>
+                           A list of the most recently generated invoices.
+                        </CardDescription>
+                    </div>
+                    <Button variant="outline" size="icon" onClick={fetchInvoices} disabled={isLoadingInvoices}>
+                        <RefreshCw className="h-4 w-4" />
+                    </Button>
+                 </CardHeader>
+                 <CardContent>
+                    <Table>
+                        <TableHeader>
+                            <TableRow>
+                                <TableHead>Student</TableHead>
+                                <TableHead>Class</TableHead>
+                                <TableHead>Amount</TableHead>
+                                <TableHead>Due Date</TableHead>
+                                <TableHead>Status</TableHead>
+                                <TableHead className="text-right">Action</TableHead>
+                            </TableRow>
+                        </TableHeader>
+                         <TableBody>
+                            {isLoadingInvoices ? (
+                                Array.from({length: 5}).map((_, i) => (
+                                    <TableRow key={i}>
+                                        <TableCell><Skeleton className="h-5 w-32" /></TableCell>
+                                        <TableCell><Skeleton className="h-5 w-20" /></TableCell>
+                                        <TableCell><Skeleton className="h-5 w-24" /></TableCell>
+                                        <TableCell><Skeleton className="h-5 w-24" /></TableCell>
+                                        <TableCell><Skeleton className="h-6 w-20" /></TableCell>
+                                        <TableCell className="text-right"><Skeleton className="h-8 w-16 ml-auto" /></TableCell>
+                                    </TableRow>
+                                ))
+                            ) : invoices.length > 0 ? (
+                                invoices.map(invoice => (
+                                    <TableRow key={invoice.id}>
+                                        <TableCell>
+                                            <div className="font-medium">{invoice.studentName}</div>
+                                            <div className="text-xs text-muted-foreground">{invoice.invoiceId}</div>
+                                        </TableCell>
+                                        <TableCell>{invoice.class}</TableCell>
+                                        <TableCell>NGN {invoice.totalAmount.toLocaleString()}</TableCell>
+                                        <TableCell>{format(new Date(invoice.dueDate.seconds * 1000), 'PPP')}</TableCell>
+                                        <TableCell><Badge variant={getStatusVariant(invoice.status)}>{invoice.status}</Badge></TableCell>
+                                        <TableCell className="text-right">
+                                            <Button variant="outline" size="sm" disabled>
+                                                <Eye className="mr-2 h-4 w-4" /> View
+                                            </Button>
+                                        </TableCell>
+                                    </TableRow>
+                                ))
+                            ) : (
+                                <TableRow>
+                                    <TableCell colSpan={6} className="h-32 text-center text-muted-foreground">
+                                        No invoices found. Generate invoices to see them here.
+                                    </TableCell>
+                                </TableRow>
+                            )}
+                         </TableBody>
+                    </Table>
+                 </CardContent>
             </Card>
         </div>
     );
