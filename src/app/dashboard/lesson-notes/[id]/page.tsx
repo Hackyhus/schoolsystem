@@ -25,22 +25,19 @@ import { Dialog, DialogTrigger, DialogContent, DialogHeader, DialogTitle, Dialog
 import { AddLessonNoteForm } from '@/components/dashboard/lesson-notes/add-lesson-note-form';
 
 
-async function createNotification(teacherId: string, noteId: string, noteTitle: string, action: 'Approved' | 'Rejected' | 'Needs Revision', comment?: string) {
+async function createLessonNoteNotification(teacherId: string, noteId: string, noteTitle: string, action: 'Approved' | 'Needs Revision', comment?: string) {
   try {
-    let type: 'APPROVAL' | 'REJECTION' | 'INFO' = 'INFO';
-    let body = `Your lesson note "${noteTitle}" has been marked as ${action.toLowerCase()}.`;
-    if (action === 'Approved') type = 'APPROVAL';
-    if (action === 'Rejected' || action === 'Needs Revision') {
-      type = 'REJECTION';
-      if (comment) {
-        body += ` Feedback: ${comment}`;
-      }
+    let type: 'APPROVAL' | 'REJECTION' = action === 'Approved' ? 'APPROVAL' : 'REJECTION';
+    let body = `Your lesson note "${noteTitle}" has been ${action === 'Approved' ? 'approved' : 'marked for revision'}.`;
+    
+    if (action === 'Needs Revision' && comment) {
+      body += ` Feedback: ${comment}`;
     }
     
     await addDoc(collection(db, "notifications"), {
       toUserId: teacherId,
       type: type,
-      title: `Lesson Note Update: ${action}`,
+      title: `Lesson Note: ${action}`,
       body: body,
       ref: {
         collection: 'lessonNotes',
@@ -49,16 +46,6 @@ async function createNotification(teacherId: string, noteId: string, noteTitle: 
       read: false,
       createdAt: serverTimestamp(),
     });
-
-     await addDoc(collection(db, "auditLog"), {
-        actorId: 'System', // In a real app, get current user ID
-        action: `notification_sent_to_${teacherId}`,
-        entity: 'lessonNote',
-        entityId: noteId,
-        timestamp: serverTimestamp(),
-        details: `Note ${action}: ${noteTitle}`
-    });
-
 
   } catch (error) {
     console.error("Error creating notification:", error);
@@ -114,7 +101,7 @@ export default function LessonNoteDetailPage() {
 
     if (role === 'HeadOfDepartment') {
       reviewData = { status: newStatus, hod_review: reviewComment, admin_review: null }; 
-    } else if (role === 'Admin' || role === 'Principal' || role === 'Director') {
+    } else if (role === 'Admin' || role === 'SLT') {
        reviewData = { status: newStatus, admin_review: reviewComment, hod_review: note.hod_review };
     } else {
       toast({ variant: "destructive", title: "Unauthorized", description: "You do not have permission to review this."});
@@ -126,7 +113,7 @@ export default function LessonNoteDetailPage() {
         const docRef = doc(db, 'lessonNotes', id);
         await updateDoc(docRef, reviewData);
         
-        await createNotification(note.teacherId, note.id, note.title, newStatus, comment);
+        await createLessonNoteNotification(note.teacherId, note.id, note.title, newStatus, comment);
 
         toast({
             title: `Lesson Note ${newStatus}`,
@@ -152,7 +139,7 @@ export default function LessonNoteDetailPage() {
 
      if (role === 'HeadOfDepartment') {
       reviewData = { status: 'Approved', hod_review: reviewComment, admin_review: null };
-    } else if (role === 'Admin' || role === 'Principal' || role === 'Director') {
+    } else if (role === 'Admin' || role === 'SLT') {
        reviewData = { status: 'Approved', admin_review: reviewComment, hod_review: note.hod_review };
     } else {
       toast({ variant: "destructive", title: "Unauthorized", description: "You do not have permission to approve this."});
@@ -163,7 +150,7 @@ export default function LessonNoteDetailPage() {
         const docRef = doc(db, 'lessonNotes', id);
         await updateDoc(docRef, reviewData);
         
-        await createNotification(note.teacherId, note.id, note.title, 'Approved');
+        await createLessonNoteNotification(note.teacherId, note.id, note.title, 'Approved');
 
         toast({
             title: `Lesson Note Approved`,
@@ -233,7 +220,7 @@ export default function LessonNoteDetailPage() {
   
   const reviewerFeedback = getReviewerFeedback();
   const canTeacherResubmit = role === 'Teacher' && note.status === 'Needs Revision';
-  const canReview = (role === 'Admin' || role === 'HeadOfDepartment' || role === 'Principal' || role === 'Director') && !note.status.includes('Approved');
+  const canReview = (role === 'Admin' || role === 'HeadOfDepartment' || role === 'SLT') && !note.status.includes('Approved');
 
   return (
     <div className="space-y-8">

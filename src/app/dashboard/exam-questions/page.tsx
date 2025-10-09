@@ -27,8 +27,10 @@ import { useToast } from '@/hooks/use-toast';
 import { Skeleton } from '@/components/ui/skeleton';
 import { AddLessonNoteForm } from '@/components/dashboard/lesson-notes/add-lesson-note-form'; // Re-using the unified form
 import { format } from 'date-fns';
-import { dbService } from '@/lib/firebase';
+import { db, dbService } from '@/lib/firebase';
 import type { QueryConstraint } from '@/services/types';
+import { collection, addDoc, serverTimestamp } from 'firebase/firestore';
+
 
 type ExamQuestion = {
     id: string;
@@ -39,6 +41,29 @@ type ExamQuestion = {
     teacherName: string;
     teacherId: string;
     title: string;
+}
+
+async function createExamQuestionNotification(teacherId: string, questionId: string, questionTitle: string, action: 'Approved' | 'Rejected') {
+  try {
+    const type = action === 'Approved' ? 'APPROVAL' : 'REJECTION';
+    const body = `Your exam question submission "${questionTitle}" has been ${action.toLowerCase()}.`;
+    
+    await addDoc(collection(db, "notifications"), {
+      toUserId: teacherId,
+      type: type,
+      title: `Exam Question ${action}`,
+      body: body,
+      ref: {
+        collection: 'examQuestions',
+        id: questionId,
+      },
+      read: false,
+      createdAt: serverTimestamp(),
+    });
+
+  } catch (error) {
+    console.error("Error creating exam question notification:", error);
+  }
 }
 
 export default function ExamQuestionsPage() {
@@ -85,12 +110,11 @@ export default function ExamQuestionsPage() {
     try {
         await dbService.updateDoc('examQuestions', question.id, { status: newStatus });
         
-        // You would typically create a notification here for the teacher
-        // await createNotification(question.teacherId, question.id, question.title, newStatus);
+        await createExamQuestionNotification(question.teacherId, question.id, question.title, newStatus);
         
         toast({
             title: `Question ${newStatus}`,
-            description: "The submission has been updated.",
+            description: "The submission has been updated and the teacher notified.",
         });
         fetchQuestions(); // Refresh list
     } catch (error) {
@@ -120,10 +144,10 @@ export default function ExamQuestionsPage() {
      }
      return (
         <div className="flex gap-2">
-            <Button size="sm" variant="outline" onClick={() => handleReview(q, 'Approved')}>
+            <Button size="sm" variant="outline" onClick={() => handleReview(q, 'Approved')} disabled={q.status !== 'Pending Review'}>
                 <ThumbsUp className="mr-2 h-4 w-4" /> Approve
             </Button>
-            <Button size="sm" variant="destructive" onClick={() => handleReview(q, 'Rejected')}>
+            <Button size="sm" variant="destructive" onClick={() => handleReview(q, 'Rejected')} disabled={q.status !== 'Pending Review'}>
                 <ThumbsDown className="mr-2 h-4 w-4" /> Reject
             </Button>
         </div>
