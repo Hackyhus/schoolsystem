@@ -160,6 +160,21 @@ export type ReportCard = {
   teacherComment?: string;
 };
 
+export type FeeItem = {
+    name: string;
+    amount: number;
+};
+
+export type FeeStructure = {
+    id: string;
+    className: string;
+    session: string;
+    term: string;
+    totalAmount: number;
+    items: FeeItem[];
+    createdAt: any; // Firestore timestamp
+};
+
 
 export type MockUser = {
   id: string;
