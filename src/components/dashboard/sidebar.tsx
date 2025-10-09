@@ -98,6 +98,7 @@ const iconMap: { [key: string]: React.ElementType } = {
 const navConfig = {
   Admin: { 
     sidebar_extra: [
+      { "icon": "trending-up", "label": "Reports & Analytics", "path": "/dashboard/reports" },
       { "icon": "shield", "label": "System Config", "path": "/dashboard/system" },
       { "icon": "users", "label": "Manage Staff", "path": "/dashboard/users" },
       { "icon": "users-round", "label": "Manage Students", "path": "/dashboard/students" },
