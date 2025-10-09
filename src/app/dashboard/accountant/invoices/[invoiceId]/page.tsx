@@ -62,10 +62,10 @@ export default function IndividualInvoicePage() {
         });
         const imgData = canvas.toDataURL('image/png');
         
-        // A4 paper size in mm: 210 x 297
+        // A4 paper size in inches: 8.27 x 11.69
         const pdf = new jsPDF({
             orientation: 'portrait',
-            unit: 'mm',
+            unit: 'in',
             format: 'a4',
         });
         
@@ -76,15 +76,15 @@ export default function IndividualInvoicePage() {
         const canvasHeight = canvas.height;
         const canvasAspectRatio = canvasWidth / canvasHeight;
 
-        const margin = 10; // 10mm margin on each side
+        const margin = 0.5; // 0.5 inch margin on each side
         const availableWidth = pdfWidth - (margin * 2);
         const availableHeight = pdfHeight - (margin * 2);
         
-        // Calculate width and height based on fitting the page height
+        // Calculate width based on fitting the page height first
         let imgFinalHeight = availableHeight;
         let imgFinalWidth = imgFinalHeight * canvasAspectRatio;
 
-        // If calculated width is too wide, scale down to fit width
+        // If calculated width is too wide, scale down to fit width instead
         if (imgFinalWidth > availableWidth) {
             imgFinalWidth = availableWidth;
             imgFinalHeight = imgFinalWidth / canvasAspectRatio;
