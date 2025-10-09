@@ -1,7 +1,5 @@
 
 
-
-
 export type User = {
   _id: string;
   firstName: string;
@@ -23,19 +21,17 @@ export type Department = {
 };
 
 export type Class = {
-  _id: string;
+  id: string;
   name: string;
-  teacherId: string; // ObjectId -> users._id (class teacher)
-  departmentId: string; // ObjectId -> departments._id
-  createdAt: Date;
+  teacherId?: string; // Class teacher
+  subjectIds?: string[];
+  subjectTeachers?: { [subjectId: string]: string }; // Map subjectId to teacherId
 };
 
+
 export type Subject = {
-  _id: string;
+  id: string;
   name: string;
-  classId: string; // ObjectId -> classes._id
-  teacherId: string; // ObjectId -> users._id
-  createdAt: Date;
 };
 
 export type LessonNote = {
@@ -218,5 +214,3 @@ export type MockLessonNote = {
     admin_review: string | null;
     submittedOn?: any;
 };
-
-    
