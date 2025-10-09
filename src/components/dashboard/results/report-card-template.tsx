@@ -11,6 +11,14 @@ interface ReportCardTemplateProps {
   reportCard: ReportCard;
 }
 
+export const ReportCardFooter = () => (
+    <div id="pdf-footer" className="mt-12 text-center text-xs text-gray-500 dark:text-gray-500 border-t pt-4">
+        <p className="font-bold">Great Insight International Academy</p>
+        <p>123 Education Lane, Knowledge City</p>
+        <p>Phone: (123) 456-7890 | Email: info@giia.com.ng</p>
+    </div>
+);
+
 export function ReportCardTemplate({ reportCard }: ReportCardTemplateProps) {
   const gradeColor = (grade: string) => {
     if (['A'].includes(grade)) return 'text-green-600 dark:text-green-500';
@@ -22,7 +30,7 @@ export function ReportCardTemplate({ reportCard }: ReportCardTemplateProps) {
 
   return (
     <div style={{ width: '8.27in' }}>
-        <Card className="report-card-container w-full mx-auto my-8 p-4 shadow-lg print:shadow-none print:border-0 break-inside-avoid bg-white text-black dark:bg-white">
+        <Card id="pdf-content" className="report-card-container w-full mx-auto my-8 p-4 shadow-lg print:shadow-none print:border-0 break-inside-avoid bg-white text-black dark:bg-white">
         <CardHeader className="p-4">
             <div className="flex flex-col md:flex-row items-center justify-between border-b-4 border-black pb-4 text-center md:text-left">
             <div className="flex items-center gap-4">
@@ -110,13 +118,11 @@ export function ReportCardTemplate({ reportCard }: ReportCardTemplateProps) {
                 </div>
             </div>
             
-            <div className="mt-12 text-center text-xs text-gray-500 dark:text-gray-500 border-t pt-4">
-            <p className="font-bold">Great Insight International Academy</p>
-            <p>123 Education Lane, Knowledge City</p>
-            <p>Phone: (123) 456-7890 | Email: info@giia.com.ng</p>
-            </div>
-
         </CardContent>
+        </Card>
+         <div id="pdf-footer-container" className="hidden">
+           <ReportCardFooter />
+        </div>
         <style jsx global>{`
             @media print {
             body {
@@ -135,12 +141,8 @@ export function ReportCardTemplate({ reportCard }: ReportCardTemplateProps) {
             .break-inside-avoid {
                 break-inside: avoid;
             }
-            .report-card-container {
-                page-break-after: always;
-            }
             }
         `}</style>
-        </Card>
     </div>
   );
 }

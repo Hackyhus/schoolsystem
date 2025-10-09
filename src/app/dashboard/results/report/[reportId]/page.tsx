@@ -23,7 +23,6 @@ export default function IndividualReportPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [isDownloading, setIsDownloading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const reportRef = useRef<HTMLDivElement>(null);
 
   const fetchReport = useCallback(async () => {
     if (typeof reportId !== 'string') return;
@@ -53,48 +52,60 @@ export default function IndividualReportPage() {
   }, [fetchReport]);
 
   const handleDownload = async () => {
-    if (!reportRef.current || !reportCard) return;
+    const contentElement = document.getElementById('pdf-content');
+    const footerElement = document.getElementById('pdf-footer-container');
+
+    if (!contentElement || !footerElement || !reportCard) return;
     setIsDownloading(true);
 
     try {
-        const canvas = await html2canvas(reportRef.current, {
-            scale: 2, // Increase scale for better resolution
-        });
-        const imgData = canvas.toDataURL('image/png');
-
-        // A4 dimensions in inches: 8.27 x 11.69
         const pdf = new jsPDF({
             orientation: 'portrait',
             unit: 'in',
             format: 'a4',
         });
+
+        const pageHeight = pdf.internal.pageSize.getHeight();
+        const pageWidth = pdf.internal.pageSize.getWidth();
+        const margin = 0.5;
+        const contentWidth = pageWidth - (margin * 2);
         
-        const pdfWidth = pdf.internal.pageSize.getWidth();
-        const pdfHeight = pdf.internal.pageSize.getHeight();
-        
-        const canvasWidth = canvas.width;
-        const canvasHeight = canvas.height;
-        const canvasAspectRatio = canvasWidth / canvasHeight;
+        const canvas = await html2canvas(contentElement, {
+            scale: 2,
+            width: contentElement.offsetWidth,
+        });
 
-        // Calculate dimensions to fit A4 page with margins
-        const margin = 0.5; // 0.5 inch margin on each side
-        const availableWidth = pdfWidth - (margin * 2);
-        const availableHeight = pdfHeight - (margin * 2);
+        const imgData = canvas.toDataURL('image/png');
+        const imgHeight = (canvas.height * contentWidth) / canvas.width;
+        let heightLeft = imgHeight;
+        let position = margin;
 
-        // Calculate width based on fitting the page height first
-        let imgFinalHeight = availableHeight;
-        let imgFinalWidth = imgFinalHeight * canvasAspectRatio;
+        // Add first page
+        pdf.addImage(imgData, 'PNG', margin, position, contentWidth, imgHeight);
+        heightLeft -= (pageHeight - margin * 2);
 
-        // If calculated width is too wide, scale down to fit width instead
-        if (imgFinalWidth > availableWidth) {
-            imgFinalWidth = availableWidth;
-            imgFinalHeight = imgFinalWidth / canvasAspectRatio;
+        // Add footer to first page
+        await pdf.html(footerElement, {
+            x: margin,
+            y: pageHeight - margin - 0.5,
+            width: contentWidth,
+        });
+
+        // Add new pages if content overflows
+        while (heightLeft > 0) {
+            position = -heightLeft + margin;
+            pdf.addPage();
+            pdf.addImage(imgData, 'PNG', margin, position, contentWidth, imgHeight);
+            
+            // Add footer to new page
+            await pdf.html(footerElement, {
+                 x: margin,
+                 y: pageHeight - margin - 0.5,
+                 width: contentWidth
+            });
+            heightLeft -= (pageHeight - margin * 2);
         }
-        
-        const x = (pdfWidth - imgFinalWidth) / 2; // Center horizontally
-        const y = margin; // Start from top margin
 
-        pdf.addImage(imgData, 'PNG', x, y, imgFinalWidth, imgFinalHeight);
         pdf.save(`Report-Card-${reportCard.studentName.replace(/ /g, '-')}.pdf`);
 
     } catch (error) {
@@ -103,7 +114,8 @@ export default function IndividualReportPage() {
     } finally {
         setIsDownloading(false);
     }
-};
+  };
+
 
   if (isLoading) {
     return (
@@ -154,9 +166,7 @@ export default function IndividualReportPage() {
             </Button>
         </div>
 
-        <div ref={reportRef}>
-          <ReportCardTemplate reportCard={reportCard} />
-        </div>
+        <ReportCardTemplate reportCard={reportCard} />
 
       </div>
     </>

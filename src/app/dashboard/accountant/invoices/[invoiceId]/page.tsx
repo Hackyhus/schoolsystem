@@ -23,7 +23,6 @@ export default function IndividualInvoicePage() {
   const [isLoading, setIsLoading] = useState(true);
   const [isDownloading, setIsDownloading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const invoiceRef = useRef<HTMLDivElement>(null);
 
   const fetchInvoice = useCallback(async () => {
     if (typeof invoiceId !== 'string') return;
@@ -53,47 +52,61 @@ export default function IndividualInvoicePage() {
   }, [fetchInvoice]);
 
   const handleDownload = async () => {
-    if (!invoiceRef.current || !invoice) return;
+    const contentElement = document.getElementById('pdf-content');
+    const footerElement = document.getElementById('pdf-footer-container');
+
+    if (!contentElement || !footerElement || !invoice) return;
     setIsDownloading(true);
 
     try {
-        const canvas = await html2canvas(invoiceRef.current, {
-            scale: 2, // Use a higher scale for better resolution
-        });
-        const imgData = canvas.toDataURL('image/png');
-        
-        // A4 paper size in inches: 8.27 x 11.69
         const pdf = new jsPDF({
             orientation: 'portrait',
             unit: 'in',
             format: 'a4',
         });
-        
-        const pdfWidth = pdf.internal.pageSize.getWidth();
-        const pdfHeight = pdf.internal.pageSize.getHeight();
-        
-        const canvasWidth = canvas.width;
-        const canvasHeight = canvas.height;
-        const canvasAspectRatio = canvasWidth / canvasHeight;
 
-        const margin = 0.5; // 0.5 inch margin on each side
-        const availableWidth = pdfWidth - (margin * 2);
-        const availableHeight = pdfHeight - (margin * 2);
+        const pageHeight = pdf.internal.pageSize.getHeight();
+        const pageWidth = pdf.internal.pageSize.getWidth();
+        const margin = 0.5;
+        const contentWidth = pageWidth - (margin * 2);
         
-        // Calculate width based on fitting the page height first
-        let imgFinalHeight = availableHeight;
-        let imgFinalWidth = imgFinalHeight * canvasAspectRatio;
+        const canvas = await html2canvas(contentElement, {
+            scale: 2,
+            width: contentElement.offsetWidth,
+        });
+        const imgData = canvas.toDataURL('image/png');
+        const imgHeight = (canvas.height * contentWidth) / canvas.width;
+        let heightLeft = imgHeight;
+        let position = margin;
+        let pageCount = 1;
 
-        // If calculated width is too wide, scale down to fit width instead
-        if (imgFinalWidth > availableWidth) {
-            imgFinalWidth = availableWidth;
-            imgFinalHeight = imgFinalWidth / canvasAspectRatio;
+        // Add first page
+        pdf.addImage(imgData, 'PNG', margin, position, contentWidth, imgHeight);
+        heightLeft -= (pageHeight - margin * 2);
+
+        // Add footer to first page
+        await pdf.html(footerElement, {
+            x: margin,
+            y: pageHeight - margin - 0.5, // Adjust based on footer height
+            width: contentWidth
+        });
+
+        // Add new pages if content overflows
+        while (heightLeft > 0) {
+            position = -heightLeft + margin;
+            pdf.addPage();
+            pageCount++;
+            pdf.addImage(imgData, 'PNG', margin, position, contentWidth, imgHeight);
+            
+            // Add footer to new page
+            await pdf.html(footerElement, {
+                 x: margin,
+                 y: pageHeight - margin - 0.5,
+                 width: contentWidth
+            });
+            heightLeft -= (pageHeight - margin * 2);
         }
 
-        const x = (pdfWidth - imgFinalWidth) / 2; // Center horizontally
-        const y = margin; // Start from top margin
-
-        pdf.addImage(imgData, 'PNG', x, y, imgFinalWidth, imgFinalHeight);
         pdf.save(`Invoice-${invoice.invoiceId}.pdf`);
 
     } catch (error) {
@@ -102,7 +115,8 @@ export default function IndividualInvoicePage() {
     } finally {
         setIsDownloading(false);
     }
-};
+  };
+
 
   if (isLoading) {
     return (
@@ -151,10 +165,9 @@ export default function IndividualInvoicePage() {
               )}
           </Button>
       </div>
-
-      <div ref={invoiceRef}>
-        <InvoiceTemplate invoice={invoice} />
-      </div>
+      
+      {/* The visible template on the page */}
+      <InvoiceTemplate invoice={invoice} />
     </div>
   );
 }
