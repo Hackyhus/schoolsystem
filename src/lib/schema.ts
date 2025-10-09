@@ -3,6 +3,7 @@
 
 
 
+
 export type User = {
   _id: string;
   firstName: string;
@@ -95,6 +96,7 @@ export type Student = {
     health: HealthInfo;
     status: 'Active' | 'Inactive' | 'Graduated';
     createdAt: any; // Firestore Timestamp
+    admissionDate: any;
 }
 
 export type Guardian = {
@@ -214,6 +216,18 @@ export type Payment = {
     createdAt: any; // Firestore timestamp
 }
 
+export type Expense = {
+    id: string;
+    category: 'Utilities' | 'Salaries' | 'Maintenance' | 'Supplies' | 'Marketing' | 'Capital Expenditure' | 'Miscellaneous';
+    description: string;
+    amount: number;
+    date: any; // Firestore Timestamp
+    recordedBy: string; // UID of accountant
+    recordedByName: string;
+    department?: string; // Optional
+    createdAt: any; // Firestore Timestamp
+}
+
 
 export type MockUser = {
   id: string;
@@ -250,6 +264,7 @@ export type MockUser = {
   };
   status: string;
   createdAt: any; // Can be a Firestore Timestamp
+  generatedPassword?: string;
 };
 
 
