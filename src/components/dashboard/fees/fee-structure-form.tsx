@@ -30,6 +30,7 @@ import { Separator } from '@/components/ui/separator';
 
 const SESSIONS = ["2023/2024", "2024/2025", "2025/2026"];
 const TERMS = ["First Term", "Second Term", "Third Term"];
+export const CLASS_GROUPS = ["Pre-Nursery & Nursery", "Primary", "JSS", "SSS"];
 
 const feeItemSchema = z.object({
   name: z.string().min(1, 'Item name is required.'),
@@ -38,7 +39,7 @@ const feeItemSchema = z.object({
 
 const formSchema = z.object({
   id: z.string().optional(),
-  className: z.string().min(1, 'Class is required.'),
+  className: z.string().min(1, 'Class group is required.'),
   session: z.string().min(1, 'Session is required.'),
   term: z.string().min(1, 'Term is required.'),
   items: z.array(feeItemSchema).min(1, 'At least one fee item is required.'),
@@ -47,12 +48,11 @@ const formSchema = z.object({
 type FeeStructureFormValues = z.infer<typeof formSchema>;
 
 interface FeeStructureFormProps {
-  classes: { id: string; name: string }[];
   initialData?: FeeStructure;
   onFormSubmit: (success: boolean) => void;
 }
 
-export function FeeStructureForm({ classes, initialData, onFormSubmit }: FeeStructureFormProps) {
+export function FeeStructureForm({ initialData, onFormSubmit }: FeeStructureFormProps) {
   const { toast } = useToast();
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -75,8 +75,6 @@ export function FeeStructureForm({ classes, initialData, onFormSubmit }: FeeStru
     try {
       const result = await saveFeeStructure(values);
       if (result.error) {
-          // This assumes the action returns Zod-like errors.
-          // You might need to adjust this based on your actual error structure.
           Object.entries(result.error).forEach(([key, messages]) => {
               if (Array.isArray(messages)) {
                 form.setError(key as keyof FeeStructureFormValues, { message: messages.join(', ') });
@@ -106,13 +104,13 @@ export function FeeStructureForm({ classes, initialData, onFormSubmit }: FeeStru
                 name="className"
                 render={({ field }) => (
                 <FormItem>
-                    <FormLabel>Class</FormLabel>
+                    <FormLabel>Class Group</FormLabel>
                     <Select onValueChange={field.onChange} defaultValue={field.value} disabled={!!initialData}>
                     <FormControl>
-                        <SelectTrigger><SelectValue placeholder="Select a class" /></SelectTrigger>
+                        <SelectTrigger><SelectValue placeholder="Select a class group" /></SelectTrigger>
                     </FormControl>
                     <SelectContent>
-                        {classes.map(c => <SelectItem key={c.id} value={c.name}>{c.name}</SelectItem>)}
+                        {CLASS_GROUPS.map(c => <SelectItem key={c} value={c}>{c}</SelectItem>)}
                     </SelectContent>
                     </Select>
                     <FormMessage />

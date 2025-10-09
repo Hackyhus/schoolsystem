@@ -5,7 +5,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from '@/components/ui/button';
 import { dbService } from '@/lib/firebase';
-import type { FeeStructure, ClassData } from '@/lib/schema';
+import type { FeeStructure } from '@/lib/schema';
 import { PlusCircle, Edit, Trash2 } from 'lucide-react';
 import { Skeleton } from '@/components/ui/skeleton';
 import {
@@ -15,8 +15,7 @@ import {
   DialogTitle,
   DialogTrigger,
 } from '@/components/ui/dialog';
-import { FeeStructureForm } from '@/components/dashboard/fees/fee-structure-form';
-import { useAcademicData } from '@/hooks/use-academic-data';
+import { FeeStructureForm, CLASS_GROUPS } from '@/components/dashboard/fees/fee-structure-form';
 import {
   Table,
   TableBody,
@@ -46,22 +45,17 @@ export default function FeeStructurePage() {
     const [isLoading, setIsLoading] = useState(true);
     const [isFormOpen, setIsFormOpen] = usePersistentState('fees-form-open', false);
     const [editingStructure, setEditingStructure] = useState<FeeStructure | undefined>(undefined);
-    const { classes } = useAcademicData();
     const { toast } = useToast();
 
     const fetchFeeStructures = useCallback(async () => {
         setIsLoading(true);
         try {
-            // Fetch without ANY sorting to avoid index requirement
             const structures = await dbService.getDocs<FeeStructure>('feeStructures');
 
-            // Sort on the client-side
             structures.sort((a, b) => {
-                if (a.className < b.className) return -1;
-                if (a.className > b.className) return 1;
                 const dateA = a.createdAt?.seconds || 0;
                 const dateB = b.createdAt?.seconds || 0;
-                return dateB - dateA; // Descending for date
+                return dateB - dateA;
             });
             
             const groupedByClass = structures.reduce((acc, structure) => {
@@ -119,7 +113,7 @@ export default function FeeStructurePage() {
             <div>
                 <h1 className="font-headline text-3xl font-bold">System Fee Structure</h1>
                 <p className="text-muted-foreground">
-                    Define tuition fees, payment deadlines, and other charges for different classes.
+                    Define tuition fees, payment deadlines, and other charges for different class groups.
                 </p>
             </div>
             
@@ -131,7 +125,7 @@ export default function FeeStructurePage() {
                     <CardHeader className="flex flex-row items-center justify-between">
                         <div>
                             <CardTitle>Manage Fee Structures</CardTitle>
-                            <CardDescription>View, create, and manage fee structures for all classes.</CardDescription>
+                            <CardDescription>View, create, and manage fee structures for all class groups.</CardDescription>
                         </div>
                         <DialogTrigger asChild>
                             <Button>
@@ -148,9 +142,9 @@ export default function FeeStructurePage() {
                             </div>
                         ) : (
                              <div className="space-y-6">
-                                {classes.filter(c => feeStructures[c.name]).map((c) => (
-                                    <div key={c.id}>
-                                        <h3 className="text-lg font-semibold mb-2">{c.name}</h3>
+                                {CLASS_GROUPS.filter(group => feeStructures[group]).map((group) => (
+                                    <div key={group}>
+                                        <h3 className="text-lg font-semibold mb-2">{group} Section</h3>
                                         <div className="border rounded-md">
                                             <Table>
                                                 <TableHeader>
@@ -162,7 +156,7 @@ export default function FeeStructurePage() {
                                                     </TableRow>
                                                 </TableHeader>
                                                 <TableBody>
-                                                    {feeStructures[c.name]?.map((structure) => (
+                                                    {feeStructures[group]?.map((structure) => (
                                                         <TableRow key={structure.id}>
                                                             <TableCell><Badge variant="secondary">{structure.session}</Badge></TableCell>
                                                             <TableCell>{structure.term}</TableCell>
@@ -210,7 +204,6 @@ export default function FeeStructurePage() {
                         <DialogTitle>{editingStructure ? 'Edit' : 'Create'} Fee Structure</DialogTitle>
                     </DialogHeader>
                     <FeeStructureForm
-                        classes={classes}
                         initialData={editingStructure}
                         onFormSubmit={handleFormClose}
                     />
