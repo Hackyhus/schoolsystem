@@ -58,9 +58,11 @@ export default function IndividualInvoicePage() {
 
     try {
         const canvas = await html2canvas(invoiceRef.current, {
-            scale: 2,
+            scale: 2, // Use a higher scale for better resolution
         });
         const imgData = canvas.toDataURL('image/png');
+        
+        // A4 paper size in mm: 210 x 297
         const pdf = new jsPDF({
             orientation: 'portrait',
             unit: 'mm',
@@ -69,22 +71,29 @@ export default function IndividualInvoicePage() {
         
         const pdfWidth = pdf.internal.pageSize.getWidth();
         const pdfHeight = pdf.internal.pageSize.getHeight();
-        const imgWidth = canvas.width;
-        const imgHeight = canvas.height;
-        const ratio = imgWidth / imgHeight;
-
-        let finalImgWidth = pdfWidth - 20; // Margin
-        let finalImgHeight = finalImgWidth / ratio;
         
-        if (finalImgHeight > pdfHeight - 20) {
-            finalImgHeight = pdfHeight - 20;
-            finalImgWidth = finalImgHeight * ratio;
+        const canvasWidth = canvas.width;
+        const canvasHeight = canvas.height;
+        const canvasAspectRatio = canvasWidth / canvasHeight;
+
+        // Calculate dimensions to fit A4 page with margins
+        const margin = 10; // 10mm margin on each side
+        const availableWidth = pdfWidth - (margin * 2);
+        const availableHeight = pdfHeight - (margin * 2);
+        
+        let imgFinalWidth = availableWidth;
+        let imgFinalHeight = availableWidth / canvasAspectRatio;
+
+        // If height is too big, scale down by height instead
+        if (imgFinalHeight > availableHeight) {
+            imgFinalHeight = availableHeight;
+            imgFinalWidth = availableHeight * canvasAspectRatio;
         }
 
-        const x = (pdfWidth - finalImgWidth) / 2;
-        const y = 10; // Top margin
+        const x = (pdfWidth - imgFinalWidth) / 2; // Center horizontally
+        const y = margin; // Start from top margin
 
-        pdf.addImage(imgData, 'PNG', x, y, finalImgWidth, finalImgHeight);
+        pdf.addImage(imgData, 'PNG', x, y, imgFinalWidth, imgFinalHeight);
         pdf.save(`Invoice-${invoice.invoiceId}.pdf`);
 
     } catch (error) {

@@ -71,23 +71,29 @@ export default function IndividualReportPage() {
         
         const pdfWidth = pdf.internal.pageSize.getWidth();
         const pdfHeight = pdf.internal.pageSize.getHeight();
+        
         const canvasWidth = canvas.width;
         const canvasHeight = canvas.height;
-        const ratio = canvasWidth / canvasHeight;
+        const canvasAspectRatio = canvasWidth / canvasHeight;
 
-        let imgWidth = pdfWidth - 20; // with some margin
-        let imgHeight = imgWidth / ratio;
-        
-        // If the height is still too large, adjust based on height
-        if (imgHeight > pdfHeight - 20) {
-            imgHeight = pdfHeight - 20;
-            imgWidth = imgHeight * ratio;
+        // Calculate dimensions to fit A4 page with margins
+        const margin = 10; // 10mm margin on each side
+        const availableWidth = pdfWidth - (margin * 2);
+        const availableHeight = pdfHeight - (margin * 2);
+
+        let imgFinalWidth = availableWidth;
+        let imgFinalHeight = availableWidth / canvasAspectRatio;
+
+        // If height is too big, scale down by height instead
+        if (imgFinalHeight > availableHeight) {
+            imgFinalHeight = availableHeight;
+            imgFinalWidth = availableHeight * canvasAspectRatio;
         }
+        
+        const x = (pdfWidth - imgFinalWidth) / 2; // Center horizontally
+        const y = margin; // Start from top margin
 
-        const x = (pdfWidth - imgWidth) / 2;
-        const y = (pdfHeight - imgHeight) / 2;
-
-        pdf.addImage(imgData, 'PNG', x, y, imgWidth, imgHeight);
+        pdf.addImage(imgData, 'PNG', x, y, imgFinalWidth, imgFinalHeight);
         pdf.save(`Report-Card-${reportCard.studentName.replace(/ /g, '-')}.pdf`);
 
     } catch (error) {
