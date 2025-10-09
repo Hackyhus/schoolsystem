@@ -2,6 +2,7 @@
 
 
 
+
 export type User = {
   _id: string;
   firstName: string;
@@ -194,10 +195,24 @@ export type Invoice = {
     totalAmount: number;
     amountPaid: number;
     balance: number;
-    status: 'Paid' | 'Unpaid' | 'Overdue';
+    status: 'Paid' | 'Unpaid' | 'Overdue' | 'Partially Paid';
     createdAt: any; // Firestore timestamp
     dueDate: any; // Firestore timestamp
 };
+
+export type Payment = {
+    id: string;
+    invoiceId: string;
+    studentId: string;
+    studentName: string;
+    amountPaid: number;
+    paymentDate: any; // Firestore timestamp
+    paymentMethod: 'Bank Transfer' | 'POS' | 'Cash';
+    recordedBy: string; // UID of accountant
+    recordedByName: string;
+    notes?: string;
+    createdAt: any; // Firestore timestamp
+}
 
 
 export type MockUser = {
