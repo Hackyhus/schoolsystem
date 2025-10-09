@@ -39,7 +39,9 @@ import {
   Wallet,
   Briefcase,
   TrendingUp,
-  Award
+  Award,
+  GraduationCap,
+  BookMarked
 } from 'lucide-react';
 import Image from 'next/image';
 
@@ -88,6 +90,8 @@ const iconMap: { [key: string]: React.ElementType } = {
   'briefcase': Briefcase,
   'trending-up': TrendingUp,
   'award': Award,
+  'graduation-cap': GraduationCap,
+  'book-marked': BookMarked,
 };
 
 
@@ -109,6 +113,8 @@ const navConfig = {
       { "icon": "users-round", "label": "Student Overview", "path": "/dashboard/students" },
       { "icon": "book", "label": "Lesson Approvals", "path": "/dashboard/lesson-notes" },
       { "icon": "dollar-sign", "label": "Financials", "path": "/dashboard/accountant/reports" }, // Points to accountant reports
+      { "icon": "graduation-cap", "label": "Grading System", "path": "/dashboard/system/grading" },
+      { "icon": "book-marked", "label": "Classes & Subjects", "path": "/dashboard/system/classes-subjects" }
     ],
   },
   HeadOfDepartment: {
@@ -116,11 +122,12 @@ const navConfig = {
       { "icon": "book", "label": "Lesson Approvals", "path": "/dashboard/lesson-notes" },
       { "icon": "bar-chart", "label": "Dept. Analytics", "path": "/dashboard/hod/analytics" },
       { "icon": "users", "label": "My Teachers", "path": "/dashboard/users" },
+      { "icon": "book-marked", "label": "Classes & Subjects", "path": "/dashboard/system/classes-subjects" }
     ],
   },
   Accountant: {
     sidebar_extra: [
-      { "icon": "dollar-sign", "label": "Fee Structures", "path": "/dashboard/accountant/fees" },
+      { "icon": "dollar-sign", "label": "System Fee Structure", "path": "/dashboard/system/fees" },
       { "icon": "file-invoice", "label": "Invoices", "path": "/dashboard/accountant/invoices" },
       { "icon": "credit-card", "label": "Payments", "path": "/dashboard/accountant/payments" },
       { "icon": "wallet", "label": "Expenses", "path": "/dashboard/accountant/expenses" },
