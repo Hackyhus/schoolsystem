@@ -20,6 +20,14 @@ async function generateInvoiceId(): Promise<string> {
     return `INV-${year}-${nextId}`;
 }
 
+const getClassGroup = (className: string): string => {
+    if (className.includes('Primary')) return 'Primary';
+    if (className.includes('JSS')) return 'JSS';
+    if (className.includes('SSS')) return 'SSS';
+    if (className.includes('Nursery')) return 'Pre-Nursery & Nursery';
+    return className; // Fallback to the class name itself if no group matches
+}
+
 export async function generateInvoicesForClass(className: string, session: string, term: string) {
     try {
         const parsed = invoiceSchema.safeParse({ className, session, term });
@@ -27,9 +35,10 @@ export async function generateInvoicesForClass(className: string, session: strin
             return { error: 'Invalid input provided.' };
         }
 
-        // 1. Find the Fee Structure for the class, session, and term
+        // 1. Determine the class group and find the Fee Structure for that group
+        const classGroup = getClassGroup(className);
         const feeStructures = await dbService.getDocs<FeeStructure>('feeStructures', [
-            { type: 'where', fieldPath: 'className', opStr: '==', value: className },
+            { type: 'where', fieldPath: 'className', opStr: '==', value: classGroup },
             { type: 'where', fieldPath: 'session', opStr: '==', value: session },
             { type: 'where', fieldPath: 'term', opStr: '==', value: term },
             { type: 'limit', limitCount: 1 }
@@ -37,10 +46,10 @@ export async function generateInvoicesForClass(className: string, session: strin
         
         const feeStructure = feeStructures[0];
         if (!feeStructure) {
-            return { error: `No fee structure found for ${className} for the ${term}, ${session} session. Please create one first.` };
+            return { error: `No fee structure found for the ${classGroup} group for the ${term}, ${session} session. Please create one first.` };
         }
 
-        // 2. Get all students in that class
+        // 2. Get all students in the selected class
         const students = await dbService.getDocs<Student>('students', [
             { type: 'where', fieldPath: 'classLevel', opStr: '==', value: className },
             { type: 'where', fieldPath: 'status', opStr: '==', value: 'Active' },
