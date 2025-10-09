@@ -104,14 +104,14 @@ export default function GenerateResultsPage() {
                         </Select>
                     </div>
 
-                    <Button onClick={handleGenerate} disabled={isGenerating || !selectedClass} size="lg">
+                    <Button onClick={handleGenerate} disabled={isGenerating || !selectedClass} size="lg" className="w-full md:w-auto">
                         {isGenerating ? (
                             <>
                                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                                 Generating for {selectedClass}...
                             </>
                         ) : (
-                            `Generate Results for ${selectedClass}`
+                            `Generate Results for ${selectedClass || '...'}`
                         )}
                     </Button>
                 </CardContent>
