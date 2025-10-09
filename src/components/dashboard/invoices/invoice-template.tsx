@@ -13,7 +13,7 @@ interface InvoiceTemplateProps {
   invoice: Invoice;
 }
 
-export const InvoiceHeader = ({ invoice }: InvoiceTemplateProps) => {
+export function InvoiceTemplate({ invoice }: InvoiceTemplateProps) {
     const getStatusVariant = (status: Invoice['status']) => {
         switch (status) {
             case 'Paid': return 'default';
@@ -25,48 +25,31 @@ export const InvoiceHeader = ({ invoice }: InvoiceTemplateProps) => {
     const dueDate = invoice.dueDate?.seconds ? format(new Date(invoice.dueDate.seconds * 1000), 'PPP') : 'N/A';
 
   return (
-    <>
-      <div className="flex flex-col md:flex-row items-center justify-between border-b-4 border-black pb-4 text-center md:text-left">
-        <div className="flex items-center gap-4">
-          <Image src="/school-logo.png" alt="School Logo" width={250} height={60} className="h-16 w-auto" />
-        </div>
-        <div className="mt-4 md:mt-0 md:text-right">
-          <h2 className="text-4xl font-bold text-black">INVOICE</h2>
-          <p className="text-gray-500 dark:text-gray-500">{invoice.invoiceId}</p>
-        </div>
-      </div>
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-6 text-sm">
-        <div>
-          <h3 className="font-bold text-gray-700 dark:text-gray-700">Bill To:</h3>
-          <p className="font-semibold text-lg">{invoice.studentName}</p>
-          <p>{invoice.class}</p>
-          <p>Student ID: {invoice.studentId}</p>
-        </div>
-        <div className="md:text-right">
-          <p><strong className="text-gray-600 dark:text-gray-600">Issue Date:</strong> {format(new Date(invoice.createdAt.seconds * 1000), 'PPP')}</p>
-          <p><strong className="text-gray-600 dark:text-gray-600">Due Date:</strong> {dueDate}</p>
-          <Badge variant={getStatusVariant(invoice.status)} className="mt-2 text-lg px-4 py-1">{invoice.status}</Badge>
-        </div>
-      </div>
-    </>
-  );
-};
-
-export const InvoiceFooter = () => (
-    <div id="pdf-footer" className="mt-12 text-center text-xs text-gray-500 dark:text-gray-500 border-t pt-4">
-        <p className="font-bold">Great Insight International Academy</p>
-        <p>123 Education Lane, Knowledge City</p>
-        <p>Phone: (123) 456-7890 | Email: info@giia.com.ng</p>
-    </div>
-);
-
-
-export function InvoiceTemplate({ invoice }: InvoiceTemplateProps) {
-  return (
     <div style={{ width: '8.27in' }}>
-        <Card id="pdf-content" className="report-card-container w-full mx-auto my-8 p-4 shadow-lg print:shadow-none print:border-0 break-inside-avoid bg-white text-black dark:bg-white">
+        <Card id="pdf-content" className="report-card-container w-full mx-auto my-8 p-4 shadow-lg print:shadow-none print:border-0 break-inside-avoid bg-white text-black dark:bg-white rounded-none border-0">
             <CardHeader className="p-4">
-                <InvoiceHeader invoice={invoice} />
+                 <div className="flex flex-col md:flex-row items-center justify-between border-b-4 border-black pb-4 text-center md:text-left">
+                    <div className="flex items-center gap-4">
+                    <Image src="/school-logo.png" alt="School Logo" width={250} height={60} className="h-16 w-auto" />
+                    </div>
+                    <div className="mt-4 md:mt-0 md:text-right">
+                    <h2 className="text-4xl font-bold text-black">INVOICE</h2>
+                    <p className="text-gray-500 dark:text-gray-500">{invoice.invoiceId}</p>
+                    </div>
+                </div>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-6 text-sm">
+                    <div>
+                    <h3 className="font-bold text-gray-700 dark:text-gray-700">Bill To:</h3>
+                    <p className="font-semibold text-lg">{invoice.studentName}</p>
+                    <p>{invoice.class}</p>
+                    <p>Student ID: {invoice.studentId}</p>
+                    </div>
+                    <div className="md:text-right">
+                    <p><strong className="text-gray-600 dark:text-gray-600">Issue Date:</strong> {format(new Date(invoice.createdAt.seconds * 1000), 'PPP')}</p>
+                    <p><strong className="text-gray-600 dark:text-gray-600">Due Date:</strong> {dueDate}</p>
+                    <Badge variant={getStatusVariant(invoice.status)} className="mt-2 text-lg px-4 py-1">{invoice.status}</Badge>
+                    </div>
+                </div>
             </CardHeader>
             <CardContent className="p-4">
                 <div className="overflow-x-auto">
@@ -104,11 +87,13 @@ export function InvoiceTemplate({ invoice }: InvoiceTemplateProps) {
                     <p><strong>Account Number:</strong> 2012345678</p>
                     <p>Use the Invoice ID as the payment reference.</p>
                 </div>
+                 <div id="pdf-footer" className="mt-12 text-center text-xs text-gray-500 dark:text-gray-500 border-t pt-4">
+                    <p className="font-bold">Great Insight International Academy</p>
+                    <p>123 Education Lane, Knowledge City</p>
+                    <p>Phone: (123) 456-7890 | Email: info@giia.com.ng</p>
+                </div>
             </CardContent>
         </Card>
-        <div id="pdf-footer-container" className="hidden">
-           <InvoiceFooter />
-        </div>
         <style jsx global>{`
             @media print {
             body {
