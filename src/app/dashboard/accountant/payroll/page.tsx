@@ -59,7 +59,7 @@ export default function PayrollPage() {
             const allUsers = await dbService.getDocs<MockUser>('users');
             
             const eligibleStaff = allUsers.filter(
-              (user) => user.salary && user.salary.amount > 0 && user.status === 'active'
+              (user) => user.salary && user.status === 'active'
             );
             
             const runsData = await dbService.getDocs<PayrollRun>('payrollRuns', [
@@ -197,10 +197,12 @@ export default function PayrollPage() {
                                 )) : (
                                     <TableRow><TableCell colSpan={2} className="h-24 text-center text-muted-foreground">No staff with active salaries found.</TableCell></TableRow>
                                 )}
-                                <TableRow className="font-bold bg-secondary/50">
-                                    <TableCell>Total</TableCell>
-                                    <TableCell className="text-right">{totalSalary.toLocaleString()}</TableCell>
-                                </TableRow>
+                                {!isLoading && staff.length > 0 && (
+                                    <TableRow className="font-bold bg-secondary/50">
+                                        <TableCell>Total</TableCell>
+                                        <TableCell className="text-right">{totalSalary.toLocaleString()}</TableCell>
+                                    </TableRow>
+                                )}
                             </TableBody>
                         </Table>
                     </CardContent>
@@ -243,3 +245,5 @@ export default function PayrollPage() {
         </div>
     );
 }
+
+    

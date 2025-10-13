@@ -9,7 +9,7 @@ import { revalidatePath } from 'next/cache';
 export async function runPayroll(month: string, year: number) {
     try {
         // 1. Authenticate the user (must be an accountant or admin)
-        const currentUser = await auth.currentUser;
+        const currentUser = auth.currentUser;
         if (!currentUser) {
             throw new Error("Authentication failed. You must be logged in.");
         }
@@ -93,3 +93,5 @@ export async function runPayroll(month: string, year: number) {
         return { error: error.message || 'An unexpected error occurred.' };
     }
 }
+
+    
