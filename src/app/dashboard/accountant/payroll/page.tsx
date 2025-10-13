@@ -56,16 +56,17 @@ export default function PayrollPage() {
     const fetchData = useCallback(async () => {
         setIsLoading(true);
         try {
-            const allUsers = await dbService.getDocs<MockUser>('users', [
-                { type: 'where', fieldPath: 'status', opStr: '==', value: 'active' },
-                { type: 'where', fieldPath: 'salary.amount', opStr: '>', value: 0 }
-            ]);
+            const allUsers = await dbService.getDocs<MockUser>('users');
+            
+            const eligibleStaff = allUsers.filter(
+              (user) => user.salary && user.salary.amount > 0 && user.status === 'active'
+            );
             
             const runsData = await dbService.getDocs<PayrollRun>('payrollRuns', [
                 { type: 'orderBy', fieldPath: 'executedAt', direction: 'desc' }
             ]);
             
-            setStaff(allUsers);
+            setStaff(eligibleStaff);
             setPayrollRuns(runsData);
         } catch (error) {
             console.error('Error fetching payroll data:', error);
