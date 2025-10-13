@@ -4,6 +4,7 @@
 
 
 
+
 export type User = {
   _id: string;
   firstName: string;
@@ -25,7 +26,7 @@ export type Department = {
 };
 
 export type Class = {
-  id: string;
+  id:string;
   name: string;
   teacherId?: string; // Class teacher
   subjectIds?: string[];
@@ -65,7 +66,7 @@ export type AppNotification = {
     id: string;
   };
   read: boolean;
-  createdAt: { seconds: number; nanoseconds: number };
+  createdAt: { seconds: number; nanoseconds: number; };
 };
 
 
@@ -226,6 +227,30 @@ export type Expense = {
     recordedByName: string;
     department?: string; // Optional
     createdAt: any; // Firestore Timestamp
+}
+
+export type PayrollRun = {
+  id: string;
+  month: string;
+  year: number;
+  executedBy: string; // UID of accountant
+  executedByName: string;
+  totalAmount: number;
+  employeeCount: number;
+  executedAt: any; // Firestore Timestamp
+}
+
+export type Payslip = {
+  id: string;
+  payrollRunId: string;
+  staffId: string; // GIIA Staff ID
+  employeeName: string;
+  payPeriod: string; // e.g., "October 2025"
+  amount: number;
+  bankName: string;
+  accountNumber: string;
+  status: 'Generated' | 'Paid';
+  generatedAt: any; // Firestore Timestamp
 }
 
 
