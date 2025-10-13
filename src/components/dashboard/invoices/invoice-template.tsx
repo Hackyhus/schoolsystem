@@ -27,24 +27,24 @@ export function InvoiceTemplate({ invoice }: InvoiceTemplateProps) {
   return (
     <div className="print-container bg-white">
         <div id="pdf-content" className="w-full mx-auto p-8 bg-white text-black">
-             <header className="flex flex-col md:flex-row items-center justify-between border-b-4 border-black pb-4 text-center md:text-left">
+             <header className="flex flex-row items-start justify-between border-b-4 border-black pb-4">
                 <div className="flex items-center gap-4">
                 <Image src="/school-logo.png" alt="School Logo" width={250} height={60} className="h-16 w-auto" />
                 </div>
-                <div className="mt-4 md:mt-0 md:text-right">
+                <div className="text-right">
                 <h2 className="text-4xl font-bold text-black">INVOICE</h2>
                 <p className="text-gray-500">{invoice.invoiceId}</p>
                 </div>
             </header>
             <main>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-6 text-sm">
+                <div className="grid grid-cols-2 gap-4 pt-6 text-sm">
                     <div>
                     <h3 className="font-bold text-gray-700">Bill To:</h3>
                     <p className="font-semibold text-lg">{invoice.studentName}</p>
                     <p>{invoice.class}</p>
                     <p>Student ID: {invoice.studentId}</p>
                     </div>
-                    <div className="md:text-right">
+                    <div className="text-right">
                     <p><strong>Issue Date:</strong> {format(new Date(invoice.createdAt.seconds * 1000), 'PPP')}</p>
                     <p><strong>Due Date:</strong> {dueDate}</p>
                     <Badge variant={getStatusVariant(invoice.status)} className="mt-2 text-lg px-4 py-1">{invoice.status}</Badge>

@@ -26,11 +26,11 @@ export function ReportCardTemplate({ reportCard }: ReportCardTemplateProps) {
     <div className="print-container bg-white">
         <div id="pdf-content" className="w-full mx-auto p-8 bg-white text-black">
             <header>
-                 <div className="flex flex-col md:flex-row items-center justify-between border-b-4 border-black pb-4 text-center md:text-left">
+                 <div className="flex flex-row items-start justify-between border-b-4 border-black pb-4">
                     <div className="flex items-center gap-4">
                         <Image src="/school-logo.png" alt="School Logo" width={200} height={50} className="h-12 w-auto" />
                     </div>
-                    <div className="mt-4 md:mt-0 md:text-right">
+                    <div className="text-right">
                         <h2 className="text-2xl font-bold text-black">Great Insight International Academy</h2>
                         <p className="text-sm text-gray-500">123 Education Lane, Knowledge City</p>
                     </div>
@@ -39,7 +39,7 @@ export function ReportCardTemplate({ reportCard }: ReportCardTemplateProps) {
                     <h3 className="text-xl font-bold uppercase tracking-wider text-black">Student Report Card</h3>
                     <p className="font-medium text-gray-800">{reportCard.term} - {reportCard.session} Session</p>
                 </div>
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm pt-4">
+                <div className="grid grid-cols-3 gap-4 text-sm pt-4">
                     <div><strong className="text-gray-600">Student Name:</strong> {reportCard.studentName}</div>
                     <div><strong className="text-gray-600">Student ID:</strong> {reportCard.studentId}</div>
                     <div><strong className="text-gray-600">Class:</strong> {reportCard.class}</div>
@@ -75,7 +75,7 @@ export function ReportCardTemplate({ reportCard }: ReportCardTemplateProps) {
 
                 <Separator className="my-6 bg-gray-200" />
 
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-6 text-center">
+                <div className="grid grid-cols-3 gap-6 text-center">
                     <div className="rounded-lg bg-gray-100 p-4">
                         <p className="text-sm text-gray-600">Total Marks</p>
                         <p className="text-2xl font-bold text-black">{reportCard.totalMarks} / {reportCard.subjects.length * 100}</p>
