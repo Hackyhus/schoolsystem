@@ -93,5 +93,3 @@ export async function runPayroll(month: string, year: number) {
         return { error: error.message || 'An unexpected error occurred.' };
     }
 }
-
-    
