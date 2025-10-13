@@ -1,7 +1,7 @@
 
 'use client';
 
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { FinancialReportGenerator } from "@/components/dashboard/reports/financial-report-generator";
 
 export default function FinancialReportsPage() {
     return (
@@ -12,14 +12,7 @@ export default function FinancialReportsPage() {
                     Generate and view all financial reports.
                 </p>
             </div>
-            <Card>
-                <CardHeader>
-                    <CardTitle>Coming Soon</CardTitle>
-                    <CardDescription>
-                        This section is under construction. You will be able to view detailed financial reports here.
-                    </CardDescription>
-                </CardHeader>
-            </Card>
+            <FinancialReportGenerator />
         </div>
     );
 }
