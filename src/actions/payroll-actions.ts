@@ -1,8 +1,8 @@
 
 'use server';
 
-import { dbService, auth } from '@/lib/firebase';
-import { serverTimestamp, Timestamp } from 'firebase/firestore';
+import { dbService, auth, db } from '@/lib/firebase';
+import { serverTimestamp, Timestamp, doc } from 'firebase/firestore';
 import type { MockUser, PayrollRun, Payslip } from '@/lib/schema';
 import { revalidatePath } from 'next/cache';
 
@@ -43,7 +43,7 @@ export async function runPayroll(month: string, year: number) {
         const payPeriod = `${month} ${year}`;
         
         // 5. Create the main PayrollRun document
-        const payrollRunRef = batch.set('payrollRuns', null, {}); // Let Firestore generate ID
+        const payrollRunRef = doc(db, 'payrollRuns');
         
         // 6. Loop through staff and create a payslip for each
         for (const employee of staff) {
@@ -51,7 +51,7 @@ export async function runPayroll(month: string, year: number) {
                 totalPayrollAmount += employee.salary.amount;
 
                 const newPayslip: Omit<Payslip, 'id'> = {
-                    payrollRunId: 'PENDING', // Will be updated after we get the ID
+                    payrollRunId: payrollRunRef.id,
                     staffId: employee.staffId,
                     employeeName: employee.name,
                     payPeriod,
@@ -61,17 +61,11 @@ export async function runPayroll(month: string, year: number) {
                     status: 'Generated',
                     generatedAt: serverTimestamp(),
                 };
-                batch.set('payslips', null, newPayslip);
+                const payslipRef = doc(db, 'payslips');
+                batch.set(payslipRef, newPayslip);
             }
         }
         
-        // This is a placeholder commit to get the ID of the payroll run
-        const tempBatchResult = await batch.commit();
-        const payrollRunId = (tempBatchResult as any) ? (tempBatchResult as any).id : new Date().getTime().toString();
-        
-        // Now create a new batch to update payslips with the correct payrollRunId
-        const finalBatch = dbService.createBatch();
-
         // 7. Update the PayrollRun document with final details
          const payrollRunData: Omit<PayrollRun, 'id'> = {
             month,
@@ -82,30 +76,9 @@ export async function runPayroll(month: string, year: number) {
             employeeCount: staff.length,
             executedAt: serverTimestamp(),
         };
-        // This is not an ideal way to get the ID, but it's a workaround for this service abstraction
-        // A better approach would be for `batch.set` to return the reference.
-        const newRunRef = doc(dbService.getNativeDb(), 'payrollRuns');
-        finalBatch.set(newRunRef, payrollRunData);
-
-        // Re-create payslips in the final batch with the correct payrollRunId
-         for (const employee of staff) {
-            if (employee.salary && employee.salary.amount > 0 && employee.salary.bankName && employee.salary.accountNumber) {
-                const newPayslip: Omit<Payslip, 'id'> = {
-                    payrollRunId: newRunRef.id,
-                    staffId: employee.staffId,
-                    employeeName: employee.name,
-                    payPeriod,
-                    amount: employee.salary.amount,
-                    bankName: employee.salary.bankName,
-                    accountNumber: employee.salary.accountNumber,
-                    status: 'Generated',
-                    generatedAt: serverTimestamp(),
-                };
-                finalBatch.set('payslips', null, newPayslip);
-            }
-        }
+        batch.set(payrollRunRef, payrollRunData);
         
-        await finalBatch.commit();
+        await batch.commit();
         
         revalidatePath('/dashboard/accountant/payroll');
 

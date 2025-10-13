@@ -56,15 +56,18 @@ export default function PayrollPage() {
     const fetchData = useCallback(async () => {
         setIsLoading(true);
         try {
-            const [staffData, runsData] = await Promise.all([
-                dbService.getDocs<MockUser>('users', [
-                    { type: 'where', fieldPath: 'salary.amount', opStr: '>', value: 0 },
-                    { type: 'where', fieldPath: 'status', opStr: '==', value: 'active' }
-                ]),
-                dbService.getDocs<PayrollRun>('payrollRuns', [
-                    { type: 'orderBy', fieldPath: 'executedAt', direction: 'desc' }
-                ])
+            // Fetch all users and filter for active staff with salaries on the client-side
+            const allUsers = await dbService.getDocs<MockUser>('users');
+            const staffData = allUsers.filter(user => 
+                user.status === 'active' && 
+                user.salary && 
+                user.salary.amount > 0
+            );
+
+            const runsData = await dbService.getDocs<PayrollRun>('payrollRuns', [
+                { type: 'orderBy', fieldPath: 'executedAt', direction: 'desc' }
             ]);
+            
             setStaff(staffData);
             setPayrollRuns(runsData);
         } catch (error) {

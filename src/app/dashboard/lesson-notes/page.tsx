@@ -49,11 +49,9 @@ export default function LessonNotesPage() {
     try {
       let notesQuery;
       if (role === 'Teacher') {
-        // Query only by teacherId to avoid needing a composite index. Sorting is handled client-side.
         notesQuery = query(collection(db, 'lessonNotes'), where("teacherId", "==", user.uid));
       } else {
-        // Admin, HOD, Principal etc. see all. This can be ordered because it's a simple query.
-        notesQuery = query(collection(db, 'lessonNotes'), orderBy("submissionDate", "desc"));
+        notesQuery = query(collection(db, 'lessonNotes'));
       }
       
       const querySnapshot = await getDocs(notesQuery);
@@ -61,8 +59,12 @@ export default function LessonNotesPage() {
         (doc) => ({ id: doc.id, ...doc.data() } as MockLessonNote)
       );
 
-      // Sort on the client-side to ensure consistent ordering.
-      notesList.sort((a, b) => new Date(b.submissionDate).getTime() - new Date(a.submissionDate).getTime());
+      // Sort on the client-side to ensure consistent ordering and avoid complex indexes
+      notesList.sort((a, b) => {
+          const dateA = a.submittedOn?.seconds ? a.submittedOn.seconds : new Date(a.submissionDate).getTime() / 1000;
+          const dateB = b.submittedOn?.seconds ? b.submittedOn.seconds : new Date(b.submissionDate).getTime() / 1000;
+          return dateB - dateA;
+      });
 
       setNotes(notesList);
     } catch (error) {

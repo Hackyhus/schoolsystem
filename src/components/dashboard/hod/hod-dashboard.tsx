@@ -90,10 +90,12 @@ export function HodDashboard() {
       if (teacherIds.length === 0) {
         setStats({ pending: 0, approved: 0, rejected: 0, staffCount: 0 });
         setNotes([]);
+        setSubmissionStatusData([]);
         setIsLoading(false);
         return;
       }
 
+      // Firestore 'in' query has a limit of 30 values. If there are more teachers, we'd need multiple queries.
       const notesQuery = query(collection(db, 'lessonNotes'), where('teacherId', 'in', teacherIds));
       const notesSnapshot = await getDocs(notesQuery);
       
@@ -116,7 +118,7 @@ export function HodDashboard() {
         } as LessonNoteWithDate;
       });
 
-      // Sort client-side
+      // Sort client-side to avoid complex indexes
       notesList.sort((a, b) => {
           const dateA = a.submittedOn?.seconds ? new Date(a.submittedOn.seconds * 1000) : new Date(a.submissionDate);
           const dateB = b.submittedOn?.seconds ? new Date(b.submittedOn.seconds * 1000) : new Date(b.submissionDate);
