@@ -25,7 +25,7 @@ export function InvoiceTemplate({ invoice }: InvoiceTemplateProps) {
     const dueDate = invoice.dueDate?.seconds ? format(new Date(invoice.dueDate.seconds * 1000), 'PPP') : 'N/A';
 
   return (
-    <div style={{ width: '8.27in' }} className="bg-white">
+    <div className="print-container bg-white">
         <div id="pdf-content" className="w-full mx-auto p-8 bg-white text-black">
              <header className="flex flex-col md:flex-row items-center justify-between border-b-4 border-black pb-4 text-center md:text-left">
                 <div className="flex items-center gap-4">
@@ -106,13 +106,22 @@ export function InvoiceTemplate({ invoice }: InvoiceTemplateProps) {
         
         <style jsx global>{`
             @media print {
+              body * {
+                visibility: hidden;
+              }
+              .print-container, .print-container * {
+                visibility: visible;
+              }
+              .print-container {
+                position: absolute;
+                left: 0;
+                top: 0;
+                width: 100%;
+              }
               body {
                 -webkit-print-color-adjust: exact;
                 print-color-adjust: exact;
               }
-              .print\\:hidden { display: none; }
-              .print\\:shadow-none { box-shadow: none; }
-              .print\\:border-0 { border: 0; }
             }
         `}</style>
     </div>

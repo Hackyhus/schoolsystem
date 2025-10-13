@@ -7,7 +7,7 @@ import { doc, getDoc } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import type { Invoice } from '@/lib/schema';
 import { Button } from '@/components/ui/button';
-import { Download, Loader2, AlertCircle, ArrowLeft } from 'lucide-react';
+import { Download, Loader2, AlertCircle, ArrowLeft, Printer } from 'lucide-react';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { InvoiceTemplate } from '@/components/dashboard/invoices/invoice-template';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -60,6 +60,10 @@ export default function IndividualInvoicePage() {
   useEffect(() => {
     fetchInvoice();
   }, [fetchInvoice]);
+  
+  const handlePrint = () => {
+    window.print();
+  };
 
   const handleDownload = async () => {
     const contentElement = document.getElementById('pdf-content');
@@ -145,19 +149,25 @@ export default function IndividualInvoicePage() {
               <ArrowLeft className="mr-2 h-4 w-4" />
               Back to Invoices
           </Button>
-          <Button onClick={handleDownload} size="lg" disabled={isDownloading}>
-              {isDownloading ? (
-                  <>
-                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                      Downloading...
-                  </>
-              ) : (
-                  <>
-                      <Download className="mr-2 h-4 w-4" />
-                      Download PDF
-                  </>
-              )}
-          </Button>
+          <div className="flex gap-2">
+            <Button onClick={handlePrint} variant="outline">
+                <Printer className="mr-2 h-4 w-4" />
+                Print
+            </Button>
+            <Button onClick={handleDownload} size="lg" disabled={isDownloading}>
+                {isDownloading ? (
+                    <>
+                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                        Downloading...
+                    </>
+                ) : (
+                    <>
+                        <Download className="mr-2 h-4 w-4" />
+                        Download PDF
+                    </>
+                )}
+            </Button>
+          </div>
       </div>
       
       {/* The visible template on the page */}
