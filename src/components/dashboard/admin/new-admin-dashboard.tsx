@@ -14,7 +14,9 @@ import {
   AreaChart as AreaChartIcon,
   BarChart2,
   DollarSign,
-  CalendarCheck
+  CalendarCheck,
+  ArrowUp,
+  ArrowDown
 } from 'lucide-react';
 import {
   Card,
@@ -36,7 +38,7 @@ import Link from 'next/link';
 import { useEffect, useState, useCallback } from 'react';
 import { collection, getDocs, query, where, orderBy, limit, doc } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
-import type { MockUser, MockLessonNote, Student } from '@/lib/schema';
+import type { MockUser, MockLessonNote, Student, Payment, Expense } from '@/lib/schema';
 import { useToast } from '@/hooks/use-toast';
 import { Calendar } from '@/components/ui/calendar';
 import {
@@ -75,16 +77,6 @@ type MonthlySubmissionsData = {
   submissions: number;
 };
 
-type UserRoleData = {
-  name: string;
-  value: number;
-  fill: string;
-}
-
-type EnrollmentData = {
-  name: string;
-  total: number;
-}
 
 const financeData = [
     { name: 'Paid', value: 0, fill: 'hsl(var(--chart-2))' },
@@ -109,14 +101,14 @@ export function NewAdminDashboard() {
     pending: 0,
     approved: 0,
     rejected: 0,
+    revenue: 0,
+    expenses: 0,
   });
   const [recentStaff, setRecentStaff] = useState<MockUser[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [submissionStatusData, setSubmissionStatusData] = useState<
     SubmissionStatusData[]
   >([]);
-    const [userRoleData, setUserRoleData] = useState<UserRoleData[]>([]);
-  const [enrollmentData, setEnrollmentData] = useState<EnrollmentData[]>([]);
   const [monthlySubmissions, setMonthlySubmissions] = useState<
     MonthlySubmissionsData[]
   >([]);
@@ -124,88 +116,34 @@ export function NewAdminDashboard() {
   const fetchData = useCallback(async () => {
     setIsLoading(true);
     try {
-      // User counts and roles
       const usersQuery = query(collection(db, 'users'), orderBy('createdAt', 'desc'));
       const usersSnapshot = await getDocs(usersQuery);
       const allUsers = usersSnapshot.docs.map(doc => ({id: doc.id, ...doc.data()} as MockUser));
       
       const staffList = allUsers.filter(u => u.role !== 'Student' && u.role !== 'Parent' && u.staffId);
-
-      const rolesCount: Record<string, number> = {};
-      allUsers.forEach(user => {
-        if (!user.role) return;
-        // Standardize role names for accurate counting
-        const roleName = user.role.charAt(0).toUpperCase() + user.role.slice(1).toLowerCase();
-        rolesCount[roleName] = (rolesCount[roleName] || 0) + 1;
-      });
       
-      const roleColors: {[key: string]: string} = {
-        Admin: 'hsl(var(--chart-1))',
-        Teacher: 'hsl(var(--chart-2))',
-        Headofdepartment: 'hsl(var(--chart-3))',
-        Parent: 'hsl(var(--chart-4))',
-        Examofficer: 'hsl(var(--chart-5))',
-        Student: 'hsl(var(--muted))',
-        Slt: 'hsl(var(--chart-1))',
-        Accountant: 'hsl(var(--chart-5))',
-      };
-
-      setUserRoleData(Object.entries(rolesCount).map(([name, value], i) => ({
-        name,
-        value,
-        fill: roleColors[name] || `hsl(var(--chart-${(i % 5) + 1}))`,
-      })));
-
-
-      // Student enrollment
       const studentsCollection = collection(db, 'students');
       const studentsDocs = await getDocs(studentsCollection);
       const studentData = studentsDocs.docs.map(d => d.data() as Student);
-      
-      const enrollmentCounts: Record<string, number> = {};
-       studentData.forEach(student => {
-        enrollmentCounts[student.classLevel] = (enrollmentCounts[student.classLevel] || 0) + 1;
-      });
 
-      const classOrder = ['Pre-Nursery', 'Nursery 1', 'Nursery 2', 'Nursery 3', 'Primary 1', 'Primary 2', 'Primary 3', 'Primary 4', 'Primary 5', 'Primary 6', 'JSS 1', 'JSS 2', 'JSS 3', 'SS 1', 'SS 2', 'SS 3'];
-      const getSortValue = (className: string) => {
-          const index = classOrder.indexOf(className);
-          if (index !== -1) return index;
-
-          const match = className.match(/(\D+)(\d+)/);
-          if(match) {
-              const prefix = match[1].trim().toUpperCase();
-              const num = parseInt(match[2], 10);
-              let base = 100; // Default for others
-              if(prefix === 'PRIMARY') base = 10;
-              if(prefix === 'JSS') base = 20;
-              if(prefix === 'SS') base = 30;
-              return base + num;
-          }
-          return 1000; // Put unknown classes at the end
-      }
-      
-      const sortedEnrollmentData = Object.entries(enrollmentCounts)
-          .map(([name, total]) => ({ name, total }))
-          .sort((a, b) => getSortValue(a.name) - getSortValue(b.name));
-
-      setEnrollmentData(sortedEnrollmentData);
-
-
-      // Lesson note stats and charts
       const lessonNotesQuery = query(collection(db, 'lessonNotes'));
       const lessonNotesSnapshot = await getDocs(lessonNotesQuery);
-      const notes = lessonNotesSnapshot.docs.map(
-        (doc) => doc.data() as MockLessonNote
-      );
+      const notes = lessonNotesSnapshot.docs.map(doc => doc.data() as MockLessonNote);
 
-      const approved = notes.filter((n) =>
-        n.status.includes('Approved')
-      ).length;
-      const pending = notes.filter((n) => n.status.includes('Pending')).length;
-      const rejected = notes.filter(
-        (n) => n.status.includes('Rejected') || n.status.includes('Revision')
-      ).length;
+      const approved = notes.filter(n => n.status.includes('Approved')).length;
+      const pending = notes.filter(n => n.status.includes('Pending')).length;
+      const rejected = notes.filter(n => n.status.includes('Rejected') || n.status.includes('Revision')).length;
+
+      // Fetch financial data
+      const paymentsQuery = query(collection(db, 'payments'));
+      const expensesQuery = query(collection(db, 'expenses'));
+      const [paymentsSnapshot, expensesSnapshot] = await Promise.all([
+          getDocs(paymentsQuery),
+          getDocs(expensesQuery),
+      ]);
+      const totalRevenue = paymentsSnapshot.docs.reduce((sum, doc) => sum + (doc.data() as Payment).amountPaid, 0);
+      const totalExpenses = expensesSnapshot.docs.reduce((sum, doc) => sum + (doc.data() as Expense).amount, 0);
+
 
       setStats({
         students: studentData.length,
@@ -213,34 +151,20 @@ export function NewAdminDashboard() {
         pending,
         approved,
         rejected,
+        revenue: totalRevenue,
+        expenses: totalExpenses
       });
 
-      setRecentStaff(staffList);
+      setRecentStaff(staffList.slice(0, 5));
 
-      // Prepare data for status donut chart
       setSubmissionStatusData([
-        {
-          name: 'Approved',
-          value: approved,
-          fill: 'hsl(var(--chart-2))',
-        },
-        {
-          name: 'Pending',
-          value: pending,
-          fill: 'hsl(var(--chart-4))',
-        },
-        {
-          name: 'Needs Revision',
-          value: rejected,
-          fill: 'hsl(var(--destructive))',
-        },
+        { name: 'Approved', value: approved, fill: 'hsl(var(--chart-2))' },
+        { name: 'Pending', value: pending, fill: 'hsl(var(--chart-4))' },
+        { name: 'Needs Revision', value: rejected, fill: 'hsl(var(--destructive))' },
       ]);
 
-      // Prepare data for monthly submissions area chart
       const monthCounts: Record<string, number> = {};
-      const monthNames = [
-        'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec',
-      ];
+      const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
       monthNames.forEach((m) => (monthCounts[m] = 0));
 
       notes.forEach((note) => {
@@ -248,25 +172,18 @@ export function NewAdminDashboard() {
             const date = new Date(note.submissionDate);
             if (!isNaN(date.getTime())) {
                 const month = monthNames[date.getMonth()];
-                if (month) {
-                    monthCounts[month]++;
-                }
+                if (month) monthCounts[month]++;
             }
         }
       });
 
-      setMonthlySubmissions(
-        monthNames.map((month) => ({
-          month,
-          submissions: monthCounts[month] || 0,
-        }))
-      );
+      setMonthlySubmissions(monthNames.map((month) => ({ month, submissions: monthCounts[month] || 0 })));
     } catch (error) {
       console.error('Error fetching dashboard data:', error);
       toast({
         variant: 'destructive',
         title: 'Error',
-        description: 'Could not fetch dashboard data.',
+        description: 'Could not fetch dashboard data. Firestore indexes may be required.',
       });
     } finally {
       setIsLoading(false);
@@ -282,20 +199,9 @@ export function NewAdminDashboard() {
     approved: { label: 'Approved', color: 'hsl(var(--chart-2))' },
     pending: { label: 'Pending', color: 'hsl(var(--chart-4))' },
     rejected: { label: 'Needs Revision', color: 'hsl(var(--destructive))' },
-    students: { label: 'Students', color: 'hsl(var(--chart-1))'},
-    users: { label: 'Users' }
   };
   
-  const userRoleChartConfig = userRoleData.reduce((acc, { name, fill }) => {
-    // Sanitize the key to be valid for object property access
-    const key = name.replace(/\s+/g, '');
-    (acc as any)[key] = { label: name, color: fill };
-    return acc;
-  }, {});
-  
   const totalNotes = stats.approved + stats.pending + stats.rejected;
-  const totalUsers = userRoleData.reduce((acc, role) => acc + role.value, 0);
-
 
   return (
     <div className="flex flex-col gap-8">
@@ -309,13 +215,10 @@ export function NewAdminDashboard() {
         </p>
       </div>
 
-      {/* Top Stat Cards */}
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">
-              Total Students
-            </CardTitle>
+            <CardTitle className="text-sm font-medium">Total Students</CardTitle>
             <GraduationCap className="h-5 w-5 text-muted-foreground" />
           </CardHeader>
           <CardContent>
@@ -324,9 +227,7 @@ export function NewAdminDashboard() {
         </Card>
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">
-              Active Staff
-            </CardTitle>
+            <CardTitle className="text-sm font-medium">Active Staff</CardTitle>
             <BookUser className="h-5 w-5 text-muted-foreground" />
           </CardHeader>
           <CardContent>
@@ -349,39 +250,44 @@ export function NewAdminDashboard() {
           </CardHeader>
           <CardContent>
              <div className="text-sm text-muted-foreground">
-                <p>Approved: {stats.approved}</p>
-                <p>Pending: {stats.pending}</p>
-                <p>Rejected: {stats.rejected}</p>
+                {isLoading ? <Skeleton className="h-12 w-full" /> : (
+                    <>
+                        <p>Approved: {stats.approved}</p>
+                        <p>Pending: {stats.pending}</p>
+                        <p>Rejected: {stats.rejected}</p>
+                    </>
+                )}
              </div>
           </CardContent>
         </Card>
       </div>
 
-      {/* Main content grid */}
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
-        {/* Left column */}
         <div className="lg:col-span-2 space-y-6">
            <Card>
             <CardHeader>
-                <CardTitle>Student Enrollment by Class</CardTitle>
-                <CardDescription>A breakdown of student population in each class.</CardDescription>
+                <CardTitle>Financial Summary (This Term)</CardTitle>
+                <CardDescription>A real-time overview of revenue and expenses.</CardDescription>
             </CardHeader>
-            <CardContent>
-               {isLoading ? ( <Skeleton className="h-[250px] w-full" /> ) : enrollmentData.length > 0 ? (
-                <ChartContainer config={chartConfig} className="h-[250px] w-full">
-                    <BarChart data={enrollmentData} margin={{ top: 20, right: 20, bottom: 5, left: 0 }}>
-                        <CartesianGrid vertical={false} />
-                        <XAxis dataKey="name" tickLine={false} axisLine={false} tickMargin={8} />
-                        <YAxis />
-                        <ChartTooltip content={<ChartTooltipContent />} />
-                        <Bar dataKey="total" fill="var(--color-students)" radius={4} />
-                    </BarChart>
-                </ChartContainer>
-               ) : (
-                <div className="flex h-[250px] items-center justify-center text-center text-muted-foreground">
-                    <p>No student enrollment data available.</p>
-                </div>
-               )}
+            <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-4">
+               <div className="flex items-center gap-4 rounded-lg border p-4">
+                  <div className="flex h-12 w-12 items-center justify-center rounded-full bg-green-100 dark:bg-green-900/50">
+                    <ArrowUp className="h-6 w-6 text-green-500" />
+                  </div>
+                  <div>
+                    <p className="text-sm text-muted-foreground">Total Revenue</p>
+                    {isLoading ? <Skeleton className="h-7 w-28 mt-1" /> : <p className="text-2xl font-bold">₦{stats.revenue.toLocaleString()}</p>}
+                  </div>
+               </div>
+                <div className="flex items-center gap-4 rounded-lg border p-4">
+                  <div className="flex h-12 w-12 items-center justify-center rounded-full bg-red-100 dark:bg-red-900/50">
+                    <ArrowDown className="h-6 w-6 text-red-500" />
+                  </div>
+                  <div>
+                    <p className="text-sm text-muted-foreground">Total Expenses</p>
+                    {isLoading ? <Skeleton className="h-7 w-28 mt-1" /> : <p className="text-2xl font-bold">₦{stats.expenses.toLocaleString()}</p>}
+                  </div>
+               </div>
             </CardContent>
            </Card>
           <Card>
@@ -390,176 +296,41 @@ export function NewAdminDashboard() {
             </CardHeader>
             <CardContent>
               {isLoading ? ( <Skeleton className="h-[250px] w-full" /> ) : (
-                <ChartContainer
-                  config={chartConfig}
-                  className="h-[250px] w-full"
-                >
-                  <AreaChart
-                    accessibilityLayer
-                    data={monthlySubmissions}
-                    margin={{ left: 12, right: 12, top: 5 }}
-                  >
+                <ChartContainer config={chartConfig} className="h-[250px] w-full">
+                  <AreaChart accessibilityLayer data={monthlySubmissions} margin={{ left: 12, right: 12, top: 5 }}>
                     <CartesianGrid vertical={false} />
-                    <XAxis
-                      dataKey="month"
-                      tickLine={false}
-                      axisLine={false}
-                      tickMargin={8}
-                    />
-                    <YAxis
-                      tickLine={false}
-                      axisLine={false}
-                      tickMargin={8}
-                      allowDecimals={false}
-                    />
-                    <ChartTooltip
-                      cursor={false}
-                      content={<ChartTooltipContent />}
-                    />
+                    <XAxis dataKey="month" tickLine={false} axisLine={false} tickMargin={8} />
+                    <YAxis tickLine={false} axisLine={false} tickMargin={8} allowDecimals={false} />
+                    <ChartTooltip cursor={false} content={<ChartTooltipContent />} />
                     <defs>
-                      <linearGradient
-                        id="fillSubmissions"
-                        x1="0"
-                        y1="0"
-                        x2="0"
-                        y2="1"
-                      >
-                        <stop
-                          offset="5%"
-                          stopColor="var(--color-submissions)"
-                          stopOpacity={0.8}
-                        />
-                        <stop
-                          offset="95%"
-                          stopColor="var(--color-submissions)"
-                          stopOpacity={0.1}
-                        />
+                      <linearGradient id="fillSubmissions" x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="5%" stopColor="var(--color-submissions)" stopOpacity={0.8} />
+                        <stop offset="95%" stopColor="var(--color-submissions)" stopOpacity={0.1} />
                       </linearGradient>
                     </defs>
-                    <Area
-                      dataKey="submissions"
-                      type="natural"
-                      fill="url(#fillSubmissions)"
-                      fillOpacity={0.4}
-                      stroke="var(--color-submissions)"
-                      stackId="a"
-                    />
+                    <Area dataKey="submissions" type="natural" fill="url(#fillSubmissions)" fillOpacity={0.4} stroke="var(--color-submissions)" stackId="a" />
                   </AreaChart>
                 </ChartContainer>
               )}
             </CardContent>
           </Card>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <Card>
-                <CardHeader>
-                    <CardTitle className="flex items-center gap-2"><DollarSign /> Finance & Fees Summary</CardTitle>
-                    <CardDescription>A summary of termly fee payments.</CardDescription>
-                </CardHeader>
-                <CardContent>
-                    <ChartContainer config={chartConfig} className="mx-auto aspect-square h-[200px]">
-                        <PieChart>
-                            <ChartTooltip content={<ChartTooltipContent hideLabel />} />
-                            <Pie data={financeData} dataKey="value" nameKey="name" innerRadius={50} />
-                            <ChartLegend content={<ChartLegendContent className="flex-wrap" nameKey="name" />} />
-                        </PieChart>
-                    </ChartContainer>
-                </CardContent>
-            </Card>
-             <Card>
-                <CardHeader>
-                    <CardTitle className="flex items-center gap-2"><CalendarCheck /> Attendance Statistics</CardTitle>
-                    <CardDescription>School-wide attendance trend this term.</CardDescription>
-                </CardHeader>
-                <CardContent>
-                    <ChartContainer config={{ attendance: { label: 'Attendance', color: 'hsl(var(--chart-3))' } }} className="h-[200px] w-full">
-                        <AreaChart data={attendanceData} margin={{ left: 0, right: 10, top: 10, bottom: 0 }}>
-                            <CartesianGrid vertical={false} />
-                            <XAxis dataKey="month" tickLine={false} axisLine={false} tickMargin={8} fontSize={12} />
-                            <YAxis domain={[80, 100]} tickFormatter={(value) => `${value}%`} />
-                            <ChartTooltip content={<ChartTooltipContent indicator="dot" />} />
-                            <Area dataKey="attendance" type="natural" fill="var(--color-attendance)" fillOpacity={0.4} stroke="var(--color-attendance)" />
-                        </AreaChart>
-                    </ChartContainer>
-                </CardContent>
-            </Card>
-          </div>
         </div>
 
-        {/* Right column */}
         <div className="lg:col-span-1 space-y-6">
-           <Card>
-            <CardHeader>
-              <CardTitle>User Roles</CardTitle>
-              <CardDescription>
-                Distribution of user roles
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="flex justify-center">
-              {isLoading ? ( <Skeleton className="h-[250px] w-full" /> ) : totalUsers > 0 ? (
-                <ChartContainer
-                  config={userRoleChartConfig}
-                  className="mx-auto aspect-square h-[250px]"
-                >
-                  <PieChart>
-                    <ChartTooltip
-                      cursor={false}
-                      content={<ChartTooltipContent hideLabel />}
-                    />
-                    <Pie
-                      data={userRoleData}
-                      dataKey="value"
-                      nameKey="name"
-                      innerRadius={60}
-                      strokeWidth={5}
-                    >
-                       {userRoleData.map((entry) => (
-                        <Cell key={`cell-${entry.name}`} fill={entry.fill} />
-                      ))}
-                    </Pie>
-                    <ChartLegend
-                      content={<ChartLegendContent className="flex-wrap" nameKey="name" />}
-                    />
-                  </PieChart>
-                </ChartContainer>
-              ) : (
-                <div className="flex h-[250px] items-center justify-center text-center text-muted-foreground">
-                    <p>No user data to display.</p>
-                </div>
-              )}
-            </CardContent>
-          </Card>
           <Card>
             <CardHeader>
               <CardTitle>Submission Status</CardTitle>
-              <CardDescription>
-                Overview of all lesson notes
-              </CardDescription>
+              <CardDescription>Overview of all lesson notes</CardDescription>
             </CardHeader>
             <CardContent className="flex justify-center">
               {isLoading ? ( <Skeleton className="h-[250px] w-full" /> ) : totalNotes > 0 ? (
-                <ChartContainer
-                  config={chartConfig}
-                  className="mx-auto aspect-square h-[250px]"
-                >
+                <ChartContainer config={chartConfig} className="mx-auto aspect-square h-[250px]">
                   <PieChart>
-                    <ChartTooltip
-                      cursor={false}
-                      content={<ChartTooltipContent hideLabel />}
-                    />
-                    <Pie
-                      data={submissionStatusData}
-                      dataKey="value"
-                      nameKey="name"
-                      innerRadius={60}
-                      strokeWidth={5}
-                    >
-                      {submissionStatusData.map((entry, index) => (
-                        <Cell key={`cell-${index}`} fill={entry.fill} />
-                      ))}
+                    <ChartTooltip cursor={false} content={<ChartTooltipContent hideLabel />} />
+                    <Pie data={submissionStatusData} dataKey="value" nameKey="name" innerRadius={60} strokeWidth={5}>
+                      {submissionStatusData.map((entry) => (<Cell key={`cell-${entry.name}`} fill={entry.fill} />))}
                     </Pie>
-                    <ChartLegend
-                      content={<ChartLegendContent className="flex-wrap" nameKey="name" />}
-                    />
+                    <ChartLegend content={<ChartLegendContent className="flex-wrap" nameKey="name" />} />
                   </PieChart>
                 </ChartContainer>
               ) : (
@@ -583,27 +354,16 @@ export function NewAdminDashboard() {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {isLoading
-                    ? Array.from({ length: 4 }).map((_, i) => (
+                  {isLoading ? Array.from({ length: 4 }).map((_, i) => (
                         <TableRow key={`skeleton-staff-${i}`}>
-                          <TableCell>
-                            <Skeleton className="h-5 w-24" />
-                          </TableCell>
-                          <TableCell>
-                            <Skeleton className="h-6 w-24" />
-                          </TableCell>
+                          <TableCell><Skeleton className="h-5 w-24" /></TableCell>
+                          <TableCell><Skeleton className="h-6 w-24" /></TableCell>
                         </TableRow>
                       ))
-                    : recentStaff.slice(0, 4).map((user) => (
+                    : recentStaff.map((user) => (
                         <TableRow key={user.staffId}>
                           <TableCell>{user.name}</TableCell>
-                          <TableCell>
-                            <Badge
-                              variant="outline"
-                            >
-                              {user.role}
-                            </Badge>
-                          </TableCell>
+                          <TableCell><Badge variant="outline">{user.role}</Badge></TableCell>
                         </TableRow>
                       ))}
                 </TableBody>
@@ -615,7 +375,3 @@ export function NewAdminDashboard() {
     </div>
   );
 }
-
-    
-
-    
