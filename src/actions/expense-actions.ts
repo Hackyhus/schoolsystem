@@ -2,7 +2,7 @@
 'use server';
 
 import { z } from 'zod';
-import { dbService, auth } from '@/lib/firebase';
+import { dbService, authService } from '@/lib/firebase'; // Using authService now
 import { serverTimestamp, Timestamp } from 'firebase/firestore';
 import type { Expense, MockUser } from '@/lib/schema';
 import { revalidatePath } from 'next/cache';
@@ -18,6 +18,24 @@ const expenseSchema = z.object({
   department: z.string().optional(),
 });
 
+// This is a placeholder for a real auth check on the server
+async function getCurrentUserOnServer() {
+    // In a real server environment, you'd verify a session token.
+    // For this context, we'll simulate getting the currently logged-in user.
+    // This is a simplified example. In a production app, use Firebase Admin SDK or session cookies.
+    return new Promise<any>((resolve, reject) => {
+        const unsubscribe = authService.onAuthStateChanged(user => {
+            unsubscribe();
+            if (user) {
+                resolve(user);
+            } else {
+                reject(new Error("Authentication required."));
+            }
+        });
+    });
+}
+
+
 export async function saveExpense(values: z.infer<typeof expenseSchema>) {
   try {
     const parsed = expenseSchema.safeParse(values);
@@ -25,10 +43,8 @@ export async function saveExpense(values: z.infer<typeof expenseSchema>) {
       return { error: parsed.error.flatten().fieldErrors };
     }
 
-    const currentUser = auth.currentUser;
-    if (!currentUser) {
-        throw new Error('Authentication required.');
-    }
+    // Correct way to get user on server-side actions (simplified for this context)
+    const currentUser = await getCurrentUserOnServer();
     
     const accountant = await dbService.getDoc<MockUser>('users', currentUser.uid);
 
@@ -49,7 +65,7 @@ export async function saveExpense(values: z.infer<typeof expenseSchema>) {
       await dbService.addDoc('expenses', expenseData);
     }
 
-    revalidatePath('/dashboard/accountant/expenses');
+    revalidatePath('/dashboard/accountant/expenses'); // Revalidate the path
     return { success: true };
 
   } catch (error: any) {
@@ -61,7 +77,7 @@ export async function saveExpense(values: z.infer<typeof expenseSchema>) {
 export async function deleteExpense(id: string) {
   try {
     await dbService.deleteDoc('expenses', id);
-    revalidatePath('/dashboard/accountant/expenses');
+    revalidatePath('/dashboard/accountant/expenses'); // Revalidate on delete too
     return { success: true };
   } catch (error: any) {
     console.error('Error deleting expense:', error);
