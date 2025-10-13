@@ -53,9 +53,8 @@ export default function IndividualReportPage() {
 
   const handleDownload = async () => {
     const contentElement = document.getElementById('pdf-content');
-    const footerElement = document.getElementById('pdf-footer-container');
 
-    if (!contentElement || !footerElement || !reportCard) return;
+    if (!contentElement || !reportCard) return;
     setIsDownloading(true);
 
     try {
@@ -71,7 +70,8 @@ export default function IndividualReportPage() {
         const contentWidth = pageWidth - (margin * 2);
         
         const canvas = await html2canvas(contentElement, {
-            scale: 2,
+            scale: 2, // Higher scale for better quality
+            useCORS: true,
             width: contentElement.offsetWidth,
         });
 
@@ -84,25 +84,11 @@ export default function IndividualReportPage() {
         pdf.addImage(imgData, 'PNG', margin, position, contentWidth, imgHeight);
         heightLeft -= (pageHeight - margin * 2);
 
-        // Add footer to first page
-        await pdf.html(footerElement, {
-            x: margin,
-            y: pageHeight - margin - 0.5,
-            width: contentWidth,
-        });
-
         // Add new pages if content overflows
         while (heightLeft > 0) {
             position = -heightLeft + margin;
             pdf.addPage();
             pdf.addImage(imgData, 'PNG', margin, position, contentWidth, imgHeight);
-            
-            // Add footer to new page
-            await pdf.html(footerElement, {
-                 x: margin,
-                 y: pageHeight - margin - 0.5,
-                 width: contentWidth
-            });
             heightLeft -= (pageHeight - margin * 2);
         }
 
@@ -146,7 +132,7 @@ export default function IndividualReportPage() {
   return (
     <>
       <div className="space-y-6">
-        <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+        <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between print:hidden">
             <Button variant="outline" onClick={() => router.back()}>
                 <ArrowLeft className="mr-2 h-4 w-4" />
                 Back

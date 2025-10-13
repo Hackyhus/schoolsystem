@@ -34,7 +34,17 @@ export default function IndividualInvoicePage() {
       const docSnap = await getDoc(invoiceDocRef);
 
       if (docSnap.exists()) {
-        setInvoice({ id: docSnap.id, ...docSnap.data() } as Invoice);
+        const data = docSnap.data();
+        // Check if the document ID from Firestore matches the param to handle race conditions
+        const invoiceData = { id: docSnap.id, ...data } as Invoice;
+        if (docSnap.id === invoiceId) {
+             setInvoice(invoiceData);
+        } else {
+             // If they don't match, it could be a stale result from a previous page. Re-fetch.
+             // This is a defensive check.
+             setTimeout(() => fetchInvoice(), 50);
+        }
+
       } else {
         setError('Invoice not found.');
         notFound();
@@ -53,9 +63,8 @@ export default function IndividualInvoicePage() {
 
   const handleDownload = async () => {
     const contentElement = document.getElementById('pdf-content');
-    const footerElement = document.getElementById('pdf-footer-container');
 
-    if (!contentElement || !footerElement || !invoice) return;
+    if (!contentElement || !invoice) return;
     setIsDownloading(true);
 
     try {
@@ -71,39 +80,24 @@ export default function IndividualInvoicePage() {
         const contentWidth = pageWidth - (margin * 2);
         
         const canvas = await html2canvas(contentElement, {
-            scale: 2,
+            scale: 2, // Higher scale for better quality
+            useCORS: true,
             width: contentElement.offsetWidth,
         });
         const imgData = canvas.toDataURL('image/png');
         const imgHeight = (canvas.height * contentWidth) / canvas.width;
         let heightLeft = imgHeight;
         let position = margin;
-        let pageCount = 1;
 
         // Add first page
         pdf.addImage(imgData, 'PNG', margin, position, contentWidth, imgHeight);
         heightLeft -= (pageHeight - margin * 2);
-
-        // Add footer to first page
-        await pdf.html(footerElement, {
-            x: margin,
-            y: pageHeight - margin - 0.5, // Adjust based on footer height
-            width: contentWidth
-        });
-
+        
         // Add new pages if content overflows
         while (heightLeft > 0) {
             position = -heightLeft + margin;
             pdf.addPage();
-            pageCount++;
             pdf.addImage(imgData, 'PNG', margin, position, contentWidth, imgHeight);
-            
-            // Add footer to new page
-            await pdf.html(footerElement, {
-                 x: margin,
-                 y: pageHeight - margin - 0.5,
-                 width: contentWidth
-            });
             heightLeft -= (pageHeight - margin * 2);
         }
 
