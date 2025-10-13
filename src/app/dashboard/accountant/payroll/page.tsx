@@ -59,7 +59,7 @@ export default function PayrollPage() {
             // Fetch all users and filter for active staff with salaries on the client-side
             const allUsers = await dbService.getDocs<MockUser>('users');
             const staffData = allUsers.filter(user => 
-                user.status === 'active' && 
+                user.status?.trim() === 'active' && 
                 user.salary && 
                 user.salary.amount > 0
             );
