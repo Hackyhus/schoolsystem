@@ -26,6 +26,7 @@ import { db } from '@/lib/firebase';
 import type { MockUser } from '@/lib/schema';
 import { Save } from 'lucide-react';
 import { useState } from 'react';
+import { useRole } from '@/context/role-context';
 
 const formSchema = z.object({
   role: z.string().min(1, { message: 'Role is required.' }),
@@ -63,6 +64,9 @@ export function ProfessionalInfoForm({
 }) {
   const { toast } = useToast();
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const { role: currentUserRole } = useRole();
+  const isAdmin = currentUserRole === 'Admin';
+
 
   const form = useForm<ProfessionalInfoFormValues>({
     resolver: zodResolver(formSchema),
@@ -97,6 +101,18 @@ export function ProfessionalInfoForm({
       setIsSubmitting(false);
     }
   }
+  
+  if (!isAdmin) {
+    return (
+        <div className="space-y-4 text-sm pt-4">
+            <p><strong>Role:</strong> {user.role}</p>
+            <p><strong>Department:</strong> {user.department}</p>
+            <p><strong>Employment Date:</strong> {user.employmentDate?.seconds ? new Date(user.employmentDate.seconds * 1000).toLocaleDateString() : 'N/A'}</p>
+             <p className="text-xs text-muted-foreground pt-4">Only administrators can modify this information.</p>
+        </div>
+    )
+  }
+
 
   return (
     <Form {...form}>

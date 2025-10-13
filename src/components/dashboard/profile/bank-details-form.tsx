@@ -51,6 +51,7 @@ export function BankDetailsForm({
   const { toast } = useToast();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const { role: currentUserRole } = useRole();
+  const isAdmin = currentUserRole === 'Admin';
 
   const form = useForm<BankDetailsFormValues>({
     resolver: zodResolver(formSchema),
@@ -90,7 +91,7 @@ export function BankDetailsForm({
         'salary.accountName': values.accountName,
       };
 
-      if (currentUserRole === 'Admin' && values.salaryAmount) {
+      if (isAdmin && values.salaryAmount) {
         updateData['salary.amount'] = Number(values.salaryAmount.replace(/,/g, ''));
       }
 
@@ -129,7 +130,7 @@ export function BankDetailsForm({
                     placeholder="e.g. 150,000"
                     {...field}
                     onChange={(e) => handleSalaryChange(e, field)}
-                    disabled={currentUserRole !== 'Admin'}
+                    disabled={!isAdmin}
                   />
                 </FormControl>
                 <FormMessage />
@@ -149,6 +150,7 @@ export function BankDetailsForm({
                     placeholder="Select a bank"
                     searchPlaceholder="Search banks..."
                     notFoundText="No bank found."
+                    disabled={!isAdmin}
                   />
                 </FormControl>
                 <FormMessage />
@@ -162,7 +164,7 @@ export function BankDetailsForm({
               <FormItem>
                 <FormLabel>Account Number</FormLabel>
                 <FormControl>
-                  <Input type="number" placeholder="e.g. 0123456789" {...field} />
+                  <Input type="number" placeholder="e.g. 0123456789" {...field} disabled={!isAdmin} />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -175,22 +177,24 @@ export function BankDetailsForm({
               <FormItem>
                 <FormLabel>Account Name</FormLabel>
                 <FormControl>
-                  <Input placeholder="e.g. Amina Sani" {...field} />
+                  <Input placeholder="e.g. Amina Sani" {...field} disabled={!isAdmin} />
                 </FormControl>
                 <FormMessage />
               </FormItem>
             )}
           />
         </div>
-        <Button type="submit" className="w-full" disabled={isSubmitting}>
-          {isSubmitting ? (
-            'Saving...'
-          ) : (
-            <>
-              <Save className="mr-2 h-4 w-4" /> Save Changes
-            </>
-          )}
-        </Button>
+        {isAdmin && (
+            <Button type="submit" className="w-full" disabled={isSubmitting}>
+            {isSubmitting ? (
+                'Saving...'
+            ) : (
+                <>
+                <Save className="mr-2 h-4 w-4" /> Save Changes
+                </>
+            )}
+            </Button>
+        )}
       </form>
     </Form>
   );

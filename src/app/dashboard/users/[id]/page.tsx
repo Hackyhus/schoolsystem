@@ -69,9 +69,12 @@ export default function UserProfilePage() {
     setPersonalInfoModalOpen(false);
   };
   
-  const canEdit =
+  const canEditPersonalInfo =
     currentUserRole === 'Admin' ||
     (user && auth.currentUser?.uid === user.id);
+
+  const isAdmin = currentUserRole === 'Admin';
+
 
   if (isLoading) {
     return (
@@ -123,16 +126,19 @@ export default function UserProfilePage() {
                   <span>{user.email}</span> <Badge variant="outline">{user.role}</Badge>
                 </div>
             </div>
-             {canEdit && (
+             {canEditPersonalInfo && (
                <Dialog open={personalInfoModalOpen} onOpenChange={setPersonalInfoModalOpen}>
                   <DialogTrigger asChild>
                      <Button variant="outline">
-                        <Edit className="mr-2 h-4 w-4" /> Edit Profile
+                        <Edit className="mr-2 h-4 w-4" /> Edit Personal Details
                      </Button>
                   </DialogTrigger>
                   <DialogContent>
                      <DialogHeader>
                         <DialogTitle>Edit Personal Information</DialogTitle>
+                        <DialogDescription>
+                            Request a change to your personal information. An admin will approve it.
+                        </DialogDescription>
                      </DialogHeader>
                       <PersonalInfoForm user={user} onUpdate={handleUpdate} />
                   </DialogContent>
@@ -150,7 +156,7 @@ export default function UserProfilePage() {
                    <CardDescription>Role, department, and employment details.</CardDescription>
                 </CardHeader>
                 <CardContent>
-                   {currentUserRole === 'Admin' ? (
+                   {isAdmin ? (
                      <ProfessionalInfoForm user={user} onUpdate={handleUpdate} />
                    ) : (
                      <div className="space-y-4 text-sm">
