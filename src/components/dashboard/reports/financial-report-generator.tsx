@@ -10,7 +10,7 @@ import { DateRangePicker } from '@/components/ui/date-range-picker';
 import { useToast } from '@/hooks/use-toast';
 import { dbService } from '@/lib/firebase';
 import type { Payment, Expense } from '@/lib/schema';
-import { ArrowDown, ArrowUp, BarChart, FileText, Loader2, Minus, Plus } from 'lucide-react';
+import { ArrowDown, ArrowUp, BarChart, FileText, Loader2, Minus, Plus, Printer } from 'lucide-react';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { BarChart as RechartsBarChart, Bar, XAxis, YAxis, CartesianGrid, ResponsiveContainer } from 'recharts';
@@ -79,8 +79,8 @@ export function FinancialReportGenerator() {
                 totalRevenue,
                 totalExpenses,
                 netIncome: totalRevenue - totalExpenses,
-                payments: payments.slice(0, 5), // show recent 5
-                expenses: expenses.slice(0, 5),
+                payments, // Store all payments
+                expenses, // Store all expenses
                 expenseByCategory
             });
 
@@ -94,11 +94,17 @@ export function FinancialReportGenerator() {
         }
     };
     
+    const handlePrintReport = () => {
+        window.print();
+    };
+
     const netIncomeColor = reportData && reportData.netIncome >= 0 ? 'text-green-600' : 'text-red-600';
+    const reportTitle = `Financial Report: ${date?.from ? format(date.from, 'PPP') : ''} - ${date?.to ? format(date.to, 'PPP') : ''}`;
+
 
     return (
-        <div className="space-y-6">
-            <Card>
+        <div className="space-y-6 print:space-y-0">
+            <Card className="print:hidden">
                 <CardHeader>
                     <CardTitle>Generate Financial Report</CardTitle>
                     <CardDescription>Select a date range to generate an income statement and expense report.</CardDescription>
@@ -109,17 +115,27 @@ export function FinancialReportGenerator() {
                         {isLoading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <FileText className="mr-2 h-4 w-4" />}
                         Generate Report
                     </Button>
+                    {reportData && (
+                        <Button onClick={handlePrintReport} variant="outline" className="w-full sm:w-auto">
+                            <Printer className="mr-2 h-4 w-4" />
+                            Print Report
+                        </Button>
+                    )}
                 </CardContent>
             </Card>
 
             {isLoading && <Skeleton className="h-96 w-full" />}
 
             {reportData && (
-                <div className="space-y-6">
+                <div id="print-area" className="space-y-6">
+                     <div className="hidden print:block text-center mb-8">
+                        <h1 className="text-2xl font-bold">Great Insight International Academy</h1>
+                        <h2 className="text-xl font-semibold">{reportTitle}</h2>
+                    </div>
                      <Card>
                         <CardHeader>
                             <CardTitle>Income Statement</CardTitle>
-                            <CardDescription>
+                            <CardDescription className="print:hidden">
                                 Financial summary for the period from {format(date?.from!, 'PPP')} to {format(date?.to!, 'PPP')}.
                             </CardDescription>
                         </CardHeader>
@@ -154,7 +170,7 @@ export function FinancialReportGenerator() {
                         </CardContent>
                      </Card>
 
-                     <Card>
+                     <Card className="print:hidden">
                         <CardHeader>
                             <CardTitle>Expense Breakdown</CardTitle>
                             <CardDescription>Visual breakdown of expenses by category.</CardDescription>
@@ -172,9 +188,9 @@ export function FinancialReportGenerator() {
                         </CardContent>
                      </Card>
 
-                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 print:grid-cols-2">
                         <Card>
-                            <CardHeader><CardTitle>Recent Income Transactions</CardTitle></CardHeader>
+                            <CardHeader><CardTitle>Income Transactions</CardTitle></CardHeader>
                             <CardContent>
                                 <Table>
                                     <TableHeader><TableRow><TableHead>Student</TableHead><TableHead>Amount</TableHead><TableHead>Date</TableHead></TableRow></TableHeader>
@@ -192,7 +208,7 @@ export function FinancialReportGenerator() {
                             </CardContent>
                         </Card>
                          <Card>
-                            <CardHeader><CardTitle>Recent Expense Transactions</CardTitle></CardHeader>
+                            <CardHeader><CardTitle>Expense Transactions</CardTitle></CardHeader>
                             <CardContent>
                                 <Table>
                                     <TableHeader><TableRow><TableHead>Description</TableHead><TableHead>Amount</TableHead><TableHead>Date</TableHead></TableRow></TableHeader>
@@ -212,6 +228,38 @@ export function FinancialReportGenerator() {
                     </div>
                 </div>
             )}
+            <style jsx global>{`
+                @media print {
+                  body > *:not(#print-area) {
+                    display: none;
+                  }
+                  #print-area, #print-area * {
+                    visibility: visible;
+                  }
+                  #print-area {
+                    position: absolute;
+                    left: 0;
+                    top: 0;
+                    width: 100%;
+                  }
+                  .print\\:hidden {
+                      display: none;
+                  }
+                   .print\\:block {
+                      display: block;
+                  }
+                  .print\\:grid-cols-2 {
+                      grid-template-columns: repeat(2, minmax(0, 1fr));
+                  }
+                   .print\\:space-y-0 {
+                        row-gap: 0;
+                   }
+                  body {
+                    -webkit-print-color-adjust: exact;
+                    print-color-adjust: exact;
+                  }
+                }
+            `}</style>
         </div>
     )
 }
