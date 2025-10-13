@@ -56,19 +56,16 @@ export default function PayrollPage() {
     const fetchData = useCallback(async () => {
         setIsLoading(true);
         try {
-            // Fetch all users and filter for active staff with salaries on the client-side
-            const allUsers = await dbService.getDocs<MockUser>('users');
-            const staffData = allUsers.filter(user => 
-                user.status?.trim() === 'active' && 
-                user.salary && 
-                user.salary.amount > 0
-            );
-
+            const allUsers = await dbService.getDocs<MockUser>('users', [
+                { type: 'where', fieldPath: 'status', opStr: '==', value: 'active' },
+                { type: 'where', fieldPath: 'salary.amount', opStr: '>', value: 0 }
+            ]);
+            
             const runsData = await dbService.getDocs<PayrollRun>('payrollRuns', [
                 { type: 'orderBy', fieldPath: 'executedAt', direction: 'desc' }
             ]);
             
-            setStaff(staffData);
+            setStaff(allUsers);
             setPayrollRuns(runsData);
         } catch (error) {
             console.error('Error fetching payroll data:', error);
@@ -152,7 +149,7 @@ export default function PayrollPage() {
                         </div>
                         <AlertDialog>
                             <AlertDialogTrigger asChild>
-                                <Button size="lg" className="w-full sm:w-auto" disabled={isProcessing}>
+                                <Button size="lg" className="w-full sm:w-auto" disabled={isProcessing || isLoading || staff.length === 0}>
                                     {isProcessing ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Briefcase className="mr-2 h-4 w-4" />}
                                     Run Payroll for {selectedMonth} {selectedYear}
                                 </Button>
@@ -191,12 +188,14 @@ export default function PayrollPage() {
                             <TableBody>
                                 {isLoading ? Array.from({length: 5}).map((_, i) => (
                                     <TableRow key={i}><TableCell><Skeleton className="h-5 w-32"/></TableCell><TableCell><Skeleton className="h-5 w-24 ml-auto"/></TableCell></TableRow>
-                                )) : staff.map(user => (
+                                )) : staff.length > 0 ? staff.map(user => (
                                     <TableRow key={user.id}>
                                         <TableCell>{user.name}</TableCell>
                                         <TableCell className="text-right font-medium">{user.salary?.amount.toLocaleString()}</TableCell>
                                     </TableRow>
-                                ))}
+                                )) : (
+                                    <TableRow><TableCell colSpan={2} className="h-24 text-center text-muted-foreground">No staff with active salaries found.</TableCell></TableRow>
+                                )}
                                 <TableRow className="font-bold bg-secondary/50">
                                     <TableCell>Total</TableCell>
                                     <TableCell className="text-right">{totalSalary.toLocaleString()}</TableCell>

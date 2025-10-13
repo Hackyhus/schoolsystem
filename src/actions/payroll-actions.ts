@@ -9,7 +9,7 @@ import { revalidatePath } from 'next/cache';
 export async function runPayroll(month: string, year: number) {
     try {
         // 1. Authenticate the user (must be an accountant or admin)
-        const currentUser = auth.currentUser;
+        const currentUser = await auth.currentUser;
         if (!currentUser) {
             throw new Error("Authentication failed. You must be logged in.");
         }

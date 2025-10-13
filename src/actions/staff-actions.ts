@@ -110,6 +110,12 @@ export async function createStaff(formData: FormData) {
             gender: staffData.gender,
             dob: new Date(staffData.dateOfBirth),
             profilePicture: profilePictureUrl,
+        },
+        salary: {
+            amount: 0,
+            bankName: null,
+            accountNumber: null,
+            accountName: null,
         }
     };
     
@@ -181,6 +187,12 @@ export async function bulkCreateStaff(staffList: any[]) {
                     gender: staff.gender || 'Other',
                     dob: staff['dateOfBirth(YYYY-MM-DD)'] ? new Date(staff['dateOfBirth(YYYY-MM-DD)']) : new Date(),
                     profilePicture: '',
+                },
+                salary: {
+                    amount: 0,
+                    bankName: null,
+                    accountNumber: null,
+                    accountName: null,
                 }
             };
             
