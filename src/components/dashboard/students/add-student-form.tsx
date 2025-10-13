@@ -1,4 +1,3 @@
-
 'use client';
 
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -35,7 +34,8 @@ import {
 } from '@/components/ui/card';
 import { createStudent } from '@/actions/student-actions';
 import { DateOfBirthInput } from '@/components/ui/date-of-birth-input';
-
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
+import { AlertCircle } from 'lucide-react';
 
 const formSchema = z.object({
   // Personal Info
@@ -54,7 +54,7 @@ const formSchema = z.object({
   // Contact & Guardian
   address: z.string().min(1, 'Address is required.'),
   guardianName: z.string().min(1, "Guardian's name is required."),
-  guardianContact: z.string().min(1, "Guardian's contact is required."),
+  guardianContact: z.string().min(6, "Guardian's phone number must be at least 6 characters."),
   guardianEmail: z.string().email('Invalid email address.'),
 
   // Academic Info
@@ -119,7 +119,8 @@ export function AddStudentForm({ onStudentAdded }: { onStudentAdded: () => void 
 
         toast({
             title: 'Student Enrolled Successfully',
-            description: `Student ${values.firstName} ${values.lastName} has been added to the database.`,
+            description: `${values.firstName} ${values.lastName} has been added and a parent account has been created. The default password is the guardian's phone number.`,
+            duration: 10000,
         });
         form.reset();
         onStudentAdded();
@@ -129,6 +130,7 @@ export function AddStudentForm({ onStudentAdded }: { onStudentAdded: () => void 
             variant: 'destructive',
             title: 'Enrollment Failed',
             description: error.message || 'An unexpected error occurred.',
+            duration: 10000,
         });
     } finally {
         setIsSubmitting(false);
@@ -198,8 +200,15 @@ export function AddStudentForm({ onStudentAdded }: { onStudentAdded: () => void 
                  <Card>
                     <CardHeader><CardTitle>Guardian & Contact</CardTitle></CardHeader>
                     <CardContent className="space-y-4">
+                        <Alert variant="destructive">
+                           <AlertCircle className="h-4 w-4" />
+                           <AlertTitle>Important: Parent Account</AlertTitle>
+                           <AlertDescription>
+                                An account will be created for the guardian using their email. The default password will be their phone number. They must use this to log in.
+                           </AlertDescription>
+                        </Alert>
                          <FormField control={form.control} name="guardianName" render={({ field }) => ( <FormItem><FormLabel>Guardian's Full Name</FormLabel><FormControl><Input placeholder="Aisha Ibrahim" {...field} /></FormControl><FormMessage /></FormItem> )}/>
-                         <FormField control={form.control} name="guardianContact" render={({ field }) => ( <FormItem><FormLabel>Guardian's Phone</FormLabel><FormControl><Input placeholder="08012345678" {...field} /></FormControl><FormMessage /></FormItem> )}/>
+                         <FormField control={form.control} name="guardianContact" render={({ field }) => ( <FormItem><FormLabel>Guardian's Phone (Default Password)</FormLabel><FormControl><Input placeholder="08012345678" {...field} /></FormControl><FormMessage /></FormItem> )}/>
                          <FormField control={form.control} name="guardianEmail" render={({ field }) => ( <FormItem><FormLabel>Guardian's Email</FormLabel><FormControl><Input placeholder="parent@example.com" {...field} /></FormControl><FormMessage /></FormItem> )}/>
                          <FormField control={form.control} name="address" render={({ field }) => ( <FormItem><FormLabel>Home Address</FormLabel><FormControl><Input placeholder="123, Main Street, Ikeja, Lagos" {...field} /></FormControl><FormMessage /></FormItem> )}/>
                     </CardContent>

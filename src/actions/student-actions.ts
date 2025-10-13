@@ -2,7 +2,7 @@
 'use server';
 
 import { z } from 'zod';
-import { dbService, storageService } from '@/lib/firebase';
+import { dbService, storageService, authService } from '@/lib/firebase';
 import { Student } from '@/lib/schema';
 import { serverTimestamp } from 'firebase/firestore';
 
@@ -26,11 +26,8 @@ const studentSchema = z.object({
 
 async function generateStudentId(offset = 0): Promise<string> {
     const year = new Date().getFullYear().toString().slice(-2);
-
-    // Get the count of existing students to determine the next sequential number.
     const studentCount = await dbService.getCountFromServer('students');
     const nextId = (studentCount + offset + 1).toString().padStart(4, '0');
-
     return `GIIA/STU/${year}/${nextId}`;
 }
 
@@ -49,10 +46,32 @@ export async function createStudent(formData: FormData) {
 
     if (!parsed.success) {
       console.error(parsed.error);
-      return { error: 'Invalid form data. ' + parsed.error.flatten().fieldErrors };
+      return { error: 'Invalid form data. ' + JSON.stringify(parsed.error.flatten().fieldErrors) };
     }
 
     const { profilePicture, documents: studentDocs, ...studentData } = parsed.data;
+
+    // --- Guardian Account Creation ---
+    // Create a user account for the guardian in Firebase Auth
+    // The default password is the guardian's phone number
+    const guardianAuthUser = await authService.createUser({
+        email: studentData.guardianEmail,
+        password: studentData.guardianContact, 
+    });
+
+    // Create a corresponding user document in Firestore for the guardian
+    const guardianUserDoc = {
+        uid: guardianAuthUser.uid,
+        name: studentData.guardianName,
+        email: studentData.guardianEmail,
+        phone: studentData.guardianContact,
+        role: 'Parent',
+        status: 'active',
+        generatedPassword: studentData.guardianContact,
+        createdAt: serverTimestamp(),
+    };
+    await dbService.setDoc('users', guardianAuthUser.uid, guardianUserDoc);
+    // --- End Guardian Account Creation ---
 
     // 1. Generate Student ID
     const studentId = await generateStudentId();
@@ -96,6 +115,7 @@ export async function createStudent(formData: FormData) {
             email: studentData.guardianEmail,
             address: studentData.address,
             isPrimary: true,
+            userId: guardianAuthUser.uid, // Link to the guardian's user account
         }],
         contacts: [{
              emergencyContactName: studentData.guardianName,
@@ -114,6 +134,12 @@ export async function createStudent(formData: FormData) {
     return { success: true };
   } catch (error: any) {
     console.error('Error creating student:', error);
+    if (error.code === 'auth/email-already-in-use') {
+      return { error: 'A user with this guardian email already exists.' };
+    }
+    if (error.code === 'auth/weak-password') {
+      return { error: `The guardian's phone number is too weak to be a password. It must be at least 6 characters.` };
+    }
     return { error: error.message || 'An unexpected server error occurred.' };
   }
 }
@@ -124,7 +150,7 @@ export async function bulkCreateStudents(students: any[]) {
         const validStudents: any[] = [];
         const invalidRecords: any[] = [];
         
-        const requiredFields = ["firstName", "lastName", "class", "guardianName", "guardianContact"];
+        const requiredFields = ["firstName", "lastName", "class", "guardianName", "guardianContact", "guardianEmail"];
 
         for (let i = 0; i < students.length; i++) {
             const student = students[i];
@@ -134,12 +160,35 @@ export async function bulkCreateStudents(students: any[]) {
                 invalidRecords.push({ ...student, error: `Missing required fields: ${missingFields.join(', ')}` });
                 continue;
             }
+             if (!z.string().email().safeParse(student.guardianEmail).success) {
+                invalidRecords.push({ ...student, error: 'Invalid guardian email format.' });
+                continue;
+            }
 
             validStudents.push(student);
         }
         
         for (let i = 0; i < validStudents.length; i++) {
             const student = validStudents[i];
+            
+            // --- Guardian Account Creation ---
+            const guardianAuthUser = await authService.createUser({
+                email: student.guardianEmail,
+                password: String(student.guardianContact),
+            });
+            const guardianUserDoc = {
+                uid: guardianAuthUser.uid,
+                name: student.guardianName,
+                email: student.guardianEmail,
+                phone: String(student.guardianContact),
+                role: 'Parent',
+                status: 'active',
+                generatedPassword: String(student.guardianContact),
+                createdAt: serverTimestamp(),
+            };
+            batch.set('users', guardianAuthUser.uid, guardianUserDoc);
+            // --- End Guardian Account Creation ---
+
             const studentId = await generateStudentId(i);
             
             const newStudent: Omit<Student, 'id' | 'createdAt' | 'status'> & { createdAt: any; status: string } = {
@@ -155,14 +204,15 @@ export async function bulkCreateStudents(students: any[]) {
                 guardians: [{
                     fullName: student.guardianName,
                     relationship: 'Parent/Guardian',
-                    phone: student.guardianContact,
-                    email: student.guardianEmail || '',
+                    phone: String(student.guardianContact),
+                    email: student.guardianEmail,
                     address: student.address || '',
                     isPrimary: true,
+                    userId: guardianAuthUser.uid, // Link to guardian's auth account
                 }],
                 contacts: [{
                     emergencyContactName: student.guardianName,
-                    emergencyContactPhone: student.guardianContact,
+                    emergencyContactPhone: String(student.guardianContact),
                     relationToStudent: 'Parent/Guardian'
                 }],
                 documents: [],
@@ -172,7 +222,6 @@ export async function bulkCreateStudents(students: any[]) {
                 status: 'Active',
             };
             
-            // Let Firestore generate the ID, and store our generated studentId as a field.
             batch.set('students', null, newStudent);
         }
 
@@ -189,6 +238,9 @@ export async function bulkCreateStudents(students: any[]) {
 
     } catch (error: any) {
         console.error('Error in bulk student creation:', error);
+        if (error.code === 'auth/email-already-in-use') {
+          return { error: 'One or more guardian email addresses are already in use.' };
+        }
         return { error: error.message || 'An unexpected server error occurred during bulk import.' };
     }
 }

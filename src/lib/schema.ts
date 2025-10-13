@@ -1,10 +1,4 @@
 
-
-
-
-
-
-
 export type User = {
   _id: string;
   firstName: string;
@@ -256,6 +250,7 @@ export type Payslip = {
 
 export type MockUser = {
   id: string;
+  uid: string;
   staffId: string;
   firstName: string;
   lastName: string;

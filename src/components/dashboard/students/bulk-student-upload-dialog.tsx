@@ -1,4 +1,3 @@
-
 'use client';
 
 import {
@@ -49,29 +48,6 @@ export function BulkStudentUploadDialog({ onUploadComplete }: { onUploadComplete
     const exampleData = [
       {"firstName":"Fatima","lastName":"Abubakar","middleName":"Zahra","gender":"Female","dateOfBirth(YYYY-MM-DD)":"2010-05-15","address":"15, Ribadu Road, Ikoyi, Lagos","guardianName":"Amina Abubakar","guardianContact":"08023456789","guardianEmail":"a.abubakar@example.com","class":"JSS 1","admissionDate(YYYY-MM-DD)":"2023-09-05","session(YYYY/YYYY)":"2023/2024","medicalConditions":"Asthma"},
       {"firstName":"Muhammad","lastName":"Sani","middleName":"Ibrahim","gender":"Male","dateOfBirth(YYYY-MM-DD)":"2011-02-20","address":"23, Admiralty Way, Lekki, Lagos","guardianName":"Hadiza Sani","guardianContact":"08098765432","guardianEmail":"h.sani@example.com","class":"Primary 6","admissionDate(YYYY-MM-DD)":"2023-09-05","session(YYYY/YYYY)":"2023/2024","medicalConditions":"N/A"},
-      {"firstName":"Aisha","lastName":"Bello","middleName":"Hassan","gender":"Female","dateOfBirth(YYYY-MM-DD)":"2009-08-10","address":"10, Glover Road, Ikoyi, Lagos","guardianName":"Fatima Bello","guardianContact":"08031234567","guardianEmail":"f.bello@example.com","class":"JSS 2","admissionDate(YYYY-MM-DD)":"2022-09-01","session(YYYY/YYYY)":"2023/2024","medicalConditions":"N/A"},
-      {"firstName":"Aliyu","lastName":"Umar","middleName":"","gender":"Male","dateOfBirth(YYYY-MM-DD)":"2012-11-05","address":"5, Bourdillon Road, Ikoyi, Lagos","guardianName":"Zainab Umar","guardianContact":"08055556666","guardianEmail":"z.umar@example.com","class":"Primary 5","admissionDate(YYYY-MM-DD)":"2021-09-03","session(YYYY/YYYY)":"2023/2024","medicalConditions":"N/A"},
-      {"firstName":"Zainab","lastName":"Adamu","middleName":"Garba","gender":"Female","dateOfBirth(YYYY-MM-DD)":"2008-01-25","address":"12, Alexander Avenue, Ikoyi, Lagos","guardianName":"Hajiya Adamu","guardianContact":"08087654321","guardianEmail":"h.adamu@example.com","class":"SS 1","admissionDate(YYYY-MM-DD)":"2020-09-07","session(YYYY/YYYY)":"2023/2024","medicalConditions":"Allergy to nuts"},
-      {"firstName":"Hassan","lastName":"Musa","middleName":"","gender":"Male","dateOfBirth(YYYY-MM-DD)":"2013-07-12","address":"8, Osborne Road, Ikoyi, Lagos","guardianName":"Aisha Musa","guardianContact":"08011223344","guardianEmail":"a.musa@example.com","class":"Primary 4","admissionDate(YYYY-MM-DD)":"2020-09-07","session(YYYY/YYYY)":"2023/2024","medicalConditions":"N/A"},
-      {"firstName":"Khadija","lastName":"Shehu","middleName":"Bala","gender":"Female","dateOfBirth(YYYY-MM-DD)":"2007-03-30","address":"30, Lugard Avenue, Ikoyi, Lagos","guardianName":"Maryam Shehu","guardianContact":"08044332211","guardianEmail":"m.shehu@example.com","class":"SS 2","admissionDate(YYYY-MM-DD)":"2019-09-02","session(YYYY/YYYY)":"2023/2024","medicalConditions":"N/A"},
-      {"firstName":"Ibrahim","lastName":"Lawal","middleName":"","gender":"Male","dateOfBirth(YYYY-MM-DD)":"2014-09-18","address":"1, Second Avenue, Ikoyi, Lagos","guardianName":"Amina Lawal","guardianContact":"08066778899","guardianEmail":"a.lawal@example.com","class":"Primary 3","admissionDate(YYYY-MM-DD)":"2019-09-02","session(YYYY/YYYY)":"2023/2024","medicalConditions":"N/A"},
-      {"firstName":"Amina","lastName":"Dauda","middleName":"Yusuf","gender":"Female","dateOfBirth(YYYY-MM-DD)":"2006-12-01","address":"45, Ikoyi Crescent, Ikoyi, Lagos","guardianName":"Hauwa Dauda","guardianContact":"08099887766","guardianEmail":"h.dauda@example.com","class":"SS 3","admissionDate(YYYY-MM-DD)":"2018-09-04","session(YYYY/YYYY)":"2023/2024","medicalConditions":"N/A"},
-      {"firstName":"Usman","lastName":"Jibril","middleName":"","gender":"Male","dateOfBirth(YYYY-MM-DD)":"2015-04-22","address":"2, Club Road, Ikoyi, Lagos","guardianName":"Fatima Jibril","guardianContact":"08077665544","guardianEmail":"f.jibril@example.com","class":"Primary 2","admissionDate(YYYY-MM-DD)":"2018-09-04","session(YYYY/YYYY)":"2023/2024","medicalConditions":"N/A"},
-      {"firstName":"Maryam","lastName":"Abdullahi","middleName":"Isa","gender":"Female","dateOfBirth(YYYY-MM-DD)":"2016-06-14","address":"18, Cameron Road, Ikoyi, Lagos","guardianName":"Zainab Abdullahi","guardianContact":"08022334455","guardianEmail":"z.abdullahi@example.com","class":"Primary 1","admissionDate(YYYY-MM-DD)":"2022-09-01","session(YYYY/YYYY)":"2023/2024","medicalConditions":"N/A"},
-      {"firstName":"Ahmed","lastName":"Idris","middleName":"","gender":"Male","dateOfBirth(YYYY-MM-DD)":"2017-10-09","address":"7, First Avenue, Ikoyi, Lagos","guardianName":"Aisha Idris","guardianContact":"08055667788","guardianEmail":"a.idris@example.com","class":"Nursery 2","admissionDate(YYYY-MM-DD)":"2022-09-01","session(YYYY/YYYY)":"2023/2024","medicalConditions":"N/A"},
-      {"firstName":"Hauwa","lastName":"Garba","middleName":"Sule","gender":"Female","dateOfBirth(YYYY-MM-DD)":"2018-08-03","address":"9, Temple Road, Ikoyi, Lagos","guardianName":"Khadija Garba","guardianContact":"08033445566","guardianEmail":"k.garba@example.com","class":"Nursery 1","admissionDate(YYYY-MM-DD)":"2023-09-05","session(YYYY/YYYY)":"2023/2024","medicalConditions":"N/A"},
-      {"firstName":"Yusuf","lastName":"Haruna","middleName":"","gender":"Male","dateOfBirth(YYYY-MM-DD)":"2019-01-11","address":"21, Milverton Road, Ikoyi, Lagos","guardianName":"Halima Haruna","guardianContact":"08099887766","guardianEmail":"h.haruna@example.com","class":"Pre-Nursery","admissionDate(YYYY-MM-DD)":"2023-09-05","session(YYYY/YYYY)":"2023/2024","medicalConditions":"N/A"},
-      {"firstName":"Nafisa","lastName":"Bala","middleName":"Tanimu","gender":"Female","dateOfBirth(YYYY-MM-DD)":"2010-09-21","address":"3, Bank Road, Ikoyi, Lagos","guardianName":"Saudat Bala","guardianContact":"08012345678","guardianEmail":"s.bala@example.com","class":"JSS 1","admissionDate(YYYY-MM-DD)":"2023-09-05","session(YYYY/YYYY)":"2023/2024","medicalConditions":"N/A"},
-      {"firstName":"Mustapha","lastName":"Rilwan","middleName":"","gender":"Male","dateOfBirth(YYYY-MM-DD)":"2011-05-18","address":"4, Ilabere Avenue, Ikoyi, Lagos","guardianName":"Amina Rilwan","guardianContact":"08087654321","guardianEmail":"a.rilwan@example.com","class":"Primary 6","admissionDate(YYYY-MM-DD)":"2023-09-05","session(YYYY/YYYY)":"2023/2024","medicalConditions":"N/A"},
-      {"firstName":"Safiya","lastName":"Ismail","middleName":"Abbas","gender":"Female","dateOfBirth(YYYY-MM-DD)":"2009-12-11","address":"6, Oyinkan Abayomi Drive, Ikoyi, Lagos","guardianName":"Zainab Ismail","guardianContact":"08022334455","guardianEmail":"z.ismail@example.com","class":"JSS 2","admissionDate(YYYY-MM-DD)":"2022-09-01","session(YYYY/YYYY)":"2023/2024","medicalConditions":"N/A"},
-      {"firstName":"Bashir","lastName":"Saleh","middleName":"","gender":"Male","dateOfBirth(YYYY-MM-DD)":"2012-02-08","address":"14, Mobolaji Johnson Avenue, Ikoyi, Lagos","guardianName":"Fatima Saleh","guardianContact":"08055667788","guardianEmail":"f.saleh@example.com","class":"Primary 5","admissionDate(YYYY-MM-DD)":"2021-09-03","session(YYYY/YYYY)":"2023/2024","medicalConditions":"N/A"},
-      {"firstName":"Rukayya","lastName":"Abbas","middleName":"Tijjani","gender":"Female","dateOfBirth(YYYY-MM-DD)":"2008-06-19","address":"22, Norman Williams Street, Ikoyi, Lagos","guardianName":"Hauwa Abbas","guardianContact":"08033445566","guardianEmail":"h.abbas@example.com","class":"SS 1","admissionDate(YYYY-MM-DD)":"2020-09-07","session(YYYY/YYYY)":"2023/2024","medicalConditions":"N/A"},
-      {"firstName":"Salisu","lastName":"Abdulkadir","middleName":"","gender":"Male","dateOfBirth(YYYY-MM-DD)":"2013-11-28","address":"11, Awolowo Road, Ikoyi, Lagos","guardianName":"Aisha Abdulkadir","guardianContact":"08099887766","guardianEmail":"a.abdulkadir@example.com","class":"Primary 4","admissionDate(YYYY-MM-DD)":"2020-09-07","session(YYYY/YYYY)":"2023/2024","medicalConditions":"N/A"},
-      {"firstName":"Jamila","lastName":"Ibrahim","middleName":"Musa","gender":"Female","dateOfBirth(YYYY-MM-DD)":"2007-07-07","address":"19, Gerrard Road, Ikoyi, Lagos","guardianName":"Fatima Ibrahim","guardianContact":"08012345678","guardianEmail":"f.ibrahim@example.com","class":"SS 2","admissionDate(YYYY-MM-DD)":"2019-09-02","session(YYYY/YYYY)":"2023/2024","medicalConditions":"N/A"},
-      {"firstName":"Kabir","lastName":"Yusuf","middleName":"","gender":"Male","dateOfBirth(YYYY-MM-DD)":"2014-01-01","address":"25, Queens Drive, Ikoyi, Lagos","guardianName":"Amina Yusuf","guardianContact":"08087654321","guardianEmail":"a.yusuf@example.com","class":"Primary 3","admissionDate(YYYY-MM-DD)":"2019-09-02","session(YYYY/YYYY)":"2023/2024","medicalConditions":"N/A"},
-      {"firstName":"Farida","lastName":"Mohammed","middleName":"Ali","gender":"Female","dateOfBirth(YYYY-MM-DD)":"2006-04-12","address":"28, Alexander Avenue, Ikoyi, Lagos","guardianName":"Hadiza Mohammed","guardianContact":"08022334455","guardianEmail":"h.mohammed@example.com","class":"SS 3","admissionDate(YYYY-MM-DD)":"2018-09-04","session(YYYY/YYYY)":"2023/2024","medicalConditions":"N/A"},
-      {"firstName":"Tahir","lastName":"Shehu","middleName":"","gender":"Male","dateOfBirth(YYYY-MM-DD)":"2015-08-16","address":"16, Bourdillon Road, Ikoyi, Lagos","guardianName":"Zainab Shehu","guardianContact":"08055667788","guardianEmail":"z.shehu@example.com","class":"Primary 2","admissionDate(YYYY-MM-DD)":"2018-09-04","session(YYYY/YYYY)":"2023/2024","medicalConditions":"N/A"},
-      {"firstName":"Habiba","lastName":"Umar","middleName":"Sani","gender":"Female","dateOfBirth(YYYY-MM-DD)":"2016-10-25","address":"17, Glover Road, Ikoyi, Lagos","guardianName":"Fatima Umar","guardianContact":"08033445566","guardianEmail":"f.umar@example.com","class":"Primary 1","admissionDate(YYYY-MM-DD)":"2022-09-01","session(YYYY/YYYY)":"2023/2024","medicalConditions":"N/A"},
     ];
 
     XLSX.utils.sheet_add_json(worksheet, exampleData, { origin: 'A2', skipHeader: true });
@@ -141,7 +117,8 @@ export function BulkStudentUploadDialog({ onUploadComplete }: { onUploadComplete
 
         toast({
             title: 'Import Process Completed',
-            description: `${result.importedCount} students imported. ${result.errorCount} records had errors.`,
+            description: `${result.importedCount} students and parent accounts created. ${result.errorCount} records had errors.`,
+            duration: 10000,
         });
 
         if (result.errorCount === 0) {
@@ -152,6 +129,7 @@ export function BulkStudentUploadDialog({ onUploadComplete }: { onUploadComplete
             variant: 'destructive',
             title: 'Import Failed',
             description: error.message || 'An unexpected error occurred during import.',
+             duration: 10000,
         });
     } finally {
         setIsSubmitting(false);
@@ -168,7 +146,7 @@ export function BulkStudentUploadDialog({ onUploadComplete }: { onUploadComplete
                     <CheckCircle className="h-4 w-4" />
                     <AlertTitle>Import Successful</AlertTitle>
                     <AlertDescription>
-                        {importResult.importedCount} student records were successfully created.
+                        {importResult.importedCount} student and guardian accounts were successfully created. Guardian's default password is their phone number.
                     </AlertDescription>
                 </Alert>
             )}
@@ -208,7 +186,7 @@ export function BulkStudentUploadDialog({ onUploadComplete }: { onUploadComplete
       <DialogHeader>
         <DialogTitle>Bulk Student Upload</DialogTitle>
         <DialogDescription>
-          Upload an Excel or spreadsheet file to enroll multiple students at once.
+          Upload an Excel or spreadsheet file to enroll multiple students at once. This will also create parent accounts.
         </DialogDescription>
       </DialogHeader>
       
@@ -216,7 +194,7 @@ export function BulkStudentUploadDialog({ onUploadComplete }: { onUploadComplete
         <div className="rounded-md border-2 border-dashed p-8 text-center">
             <h3 className="font-semibold">Step 1: Download the Template</h3>
             <p className="text-sm text-muted-foreground mb-4">
-                Use our template to ensure your data is in the correct format.
+                Use our template to ensure your data is in the correct format. A login account will be created for each guardian. Their default password will be their phone number.
             </p>
             <Button variant="outline" onClick={handleDownloadTemplate}>
                 <Download className="mr-2 h-4 w-4" />
