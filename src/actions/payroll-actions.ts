@@ -27,14 +27,16 @@ export async function runPayroll(month: string, year: number) {
             throw new Error(`Payroll for ${month} ${year} has already been executed.`);
         }
 
-        // 3. Fetch all staff with a configured salary
+        // 3. Fetch all staff with a configured salary >= 0
         const staff = await dbService.getDocs<MockUser>('users', [
-            { type: 'where', fieldPath: 'salary.amount', opStr: '>', value: 0 },
+            { type: 'where', fieldPath: 'salary.amount', opStr: '>=', value: 0 },
             { type: 'where', fieldPath: 'status', opStr: '==', value: 'active' },
         ]);
 
-        if (staff.length === 0) {
-            return { error: 'No staff members with configured salaries found.' };
+        const eligibleStaff = staff.filter(employee => employee.salary && employee.salary.amount > 0);
+
+        if (eligibleStaff.length === 0) {
+            return { error: 'No staff members with a configured salary greater than zero found.' };
         }
 
         // 4. Start a batch write
@@ -45,8 +47,8 @@ export async function runPayroll(month: string, year: number) {
         // 5. Create the main PayrollRun document
         const payrollRunRef = doc(db, 'payrollRuns');
         
-        // 6. Loop through staff and create a payslip for each
-        for (const employee of staff) {
+        // 6. Loop through eligible staff and create a payslip for each
+        for (const employee of eligibleStaff) {
             if (employee.salary && employee.salary.amount > 0 && employee.salary.bankName && employee.salary.accountNumber) {
                 totalPayrollAmount += employee.salary.amount;
 
@@ -73,7 +75,7 @@ export async function runPayroll(month: string, year: number) {
             executedBy: currentUser.uid,
             executedByName: userDoc.name,
             totalAmount: totalPayrollAmount,
-            employeeCount: staff.length,
+            employeeCount: eligibleStaff.length,
             executedAt: serverTimestamp(),
         };
         batch.set(payrollRunRef, payrollRunData);
@@ -84,7 +86,7 @@ export async function runPayroll(month: string, year: number) {
 
         return { 
             success: true, 
-            employeeCount: staff.length,
+            employeeCount: eligibleStaff.length,
             totalAmount: totalPayrollAmount,
         };
 

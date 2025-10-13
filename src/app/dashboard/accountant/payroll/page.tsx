@@ -58,6 +58,7 @@ export default function PayrollPage() {
         try {
             const allUsers = await dbService.getDocs<MockUser>('users');
             
+            // Filter for active staff with a salary object defined
             const eligibleStaff = allUsers.filter(
               (user) => user.salary && user.status === 'active'
             );
@@ -109,7 +110,11 @@ export default function PayrollPage() {
         }
     };
     
-    const totalSalary = staff.reduce((acc, user) => acc + (user.salary?.amount || 0), 0);
+    const totalSalary = staff
+        .filter(user => user.salary.amount > 0)
+        .reduce((acc, user) => acc + (user.salary?.amount || 0), 0);
+
+    const staffForPayrollRun = staff.filter(user => user.salary && user.salary.amount > 0);
 
     return (
         <div className="space-y-8">
@@ -123,14 +128,14 @@ export default function PayrollPage() {
             <Card>
                 <CardHeader>
                     <CardTitle>Run Monthly Payroll</CardTitle>
-                    <CardDescription>Select a period to execute the payroll for all eligible staff members.</CardDescription>
+                    <CardDescription>Select a period to execute the payroll for all eligible staff members with a salary greater than zero.</CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-6">
                     <Alert variant="destructive">
                         <AlertCircle className="h-4 w-4" />
                         <AlertTitle>Important</AlertTitle>
                         <AlertDescription>
-                            This action will generate payslips for all active staff with a configured salary. It cannot be undone for the selected month.
+                            This action will generate payslips for all active staff with a configured salary greater than zero. It cannot be undone for the selected month.
                         </AlertDescription>
                     </Alert>
                     <div className="flex flex-col sm:flex-row items-center gap-4">
@@ -150,7 +155,7 @@ export default function PayrollPage() {
                         </div>
                         <AlertDialog>
                             <AlertDialogTrigger asChild>
-                                <Button size="lg" className="w-full sm:w-auto" disabled={isProcessing || isLoading || staff.length === 0}>
+                                <Button size="lg" className="w-full sm:w-auto" disabled={isProcessing || isLoading || staffForPayrollRun.length === 0}>
                                     {isProcessing ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Briefcase className="mr-2 h-4 w-4" />}
                                     Run Payroll for {selectedMonth} {selectedYear}
                                 </Button>
@@ -159,7 +164,7 @@ export default function PayrollPage() {
                                 <AlertDialogHeader>
                                     <AlertDialogTitle>Confirm Payroll Execution</AlertDialogTitle>
                                     <AlertDialogDescription>
-                                        You are about to run payroll for <span className="font-bold">{selectedMonth} {selectedYear}</span> for <span className="font-bold">{staff.length} staff members</span>, with a total amount of <span className="font-bold">NGN {totalSalary.toLocaleString()}</span>. This action is irreversible.
+                                        You are about to run payroll for <span className="font-bold">{selectedMonth} {selectedYear}</span> for <span className="font-bold">{staffForPayrollRun.length} staff members</span>, with a total amount of <span className="font-bold">NGN {totalSalary.toLocaleString()}</span>. This action is irreversible.
                                     </AlertDialogDescription>
                                 </AlertDialogHeader>
                                 <AlertDialogFooter>
@@ -190,16 +195,16 @@ export default function PayrollPage() {
                                 {isLoading ? Array.from({length: 5}).map((_, i) => (
                                     <TableRow key={i}><TableCell><Skeleton className="h-5 w-32"/></TableCell><TableCell><Skeleton className="h-5 w-24 ml-auto"/></TableCell></TableRow>
                                 )) : staff.length > 0 ? staff.map(user => (
-                                    <TableRow key={user.id}>
+                                    <TableRow key={user.id} className={user.salary.amount === 0 ? 'text-muted-foreground' : ''}>
                                         <TableCell>{user.name}</TableCell>
                                         <TableCell className="text-right font-medium">{user.salary?.amount.toLocaleString()}</TableCell>
                                     </TableRow>
                                 )) : (
-                                    <TableRow><TableCell colSpan={2} className="h-24 text-center text-muted-foreground">No staff with active salaries found.</TableCell></TableRow>
+                                    <TableRow><TableCell colSpan={2} className="h-24 text-center text-muted-foreground">No staff found.</TableCell></TableRow>
                                 )}
                                 {!isLoading && staff.length > 0 && (
                                     <TableRow className="font-bold bg-secondary/50">
-                                        <TableCell>Total</TableCell>
+                                        <TableCell>Total (for salaries > 0)</TableCell>
                                         <TableCell className="text-right">{totalSalary.toLocaleString()}</TableCell>
                                     </TableRow>
                                 )}
