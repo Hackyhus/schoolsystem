@@ -10,7 +10,7 @@ import { DateRangePicker } from '@/components/ui/date-range-picker';
 import { useToast } from '@/hooks/use-toast';
 import { dbService } from '@/lib/firebase';
 import type { Payment, Expense } from '@/lib/schema';
-import { ArrowDown, ArrowUp, BarChart, FileText, Loader2, IndianRupee, Minus } from 'lucide-react';
+import { ArrowDown, ArrowUp, BarChart, FileText, Loader2, Minus, Plus } from 'lucide-react';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { BarChart as RechartsBarChart, Bar, XAxis, YAxis, CartesianGrid, ResponsiveContainer } from 'recharts';
