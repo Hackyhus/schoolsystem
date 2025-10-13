@@ -27,15 +27,13 @@ export async function runPayroll(month: string, year: number) {
             throw new Error(`Payroll for ${month} ${year} has already been executed.`);
         }
 
-        // 3. Fetch all staff with a configured salary >= 0
+        // 3. Fetch all staff with a configured salary > 0
         const staff = await dbService.getDocs<MockUser>('users', [
-            { type: 'where', fieldPath: 'salary.amount', opStr: '>=', value: 0 },
+            { type: 'where', fieldPath: 'salary.amount', opStr: '>', value: 0 },
             { type: 'where', fieldPath: 'status', opStr: '==', value: 'active' },
         ]);
 
-        const eligibleStaff = staff.filter(employee => employee.salary && employee.salary.amount > 0);
-
-        if (eligibleStaff.length === 0) {
+        if (staff.length === 0) {
             return { error: 'No staff members with a configured salary greater than zero found.' };
         }
 
@@ -48,7 +46,7 @@ export async function runPayroll(month: string, year: number) {
         const payrollRunRef = doc(db, 'payrollRuns');
         
         // 6. Loop through eligible staff and create a payslip for each
-        for (const employee of eligibleStaff) {
+        for (const employee of staff) {
             if (employee.salary && employee.salary.amount > 0 && employee.salary.bankName && employee.salary.accountNumber) {
                 totalPayrollAmount += employee.salary.amount;
 
@@ -75,7 +73,7 @@ export async function runPayroll(month: string, year: number) {
             executedBy: currentUser.uid,
             executedByName: userDoc.name,
             totalAmount: totalPayrollAmount,
-            employeeCount: eligibleStaff.length,
+            employeeCount: staff.length,
             executedAt: serverTimestamp(),
         };
         batch.set(payrollRunRef, payrollRunData);
@@ -86,7 +84,7 @@ export async function runPayroll(month: string, year: number) {
 
         return { 
             success: true, 
-            employeeCount: eligibleStaff.length,
+            employeeCount: staff.length,
             totalAmount: totalPayrollAmount,
         };
 

@@ -40,7 +40,7 @@ import { runPayroll } from '@/actions/payroll-actions';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 
 const MONTHS = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
-const YEARS = [new Date().getFullYear(), new Date().getFullYear() - 1, new Date().getFullYear() - 2];
+const YEARS = [new Date().getFullYear(), new Date().getFullYear() + 1, new Date().getFullYear() - 1];
 
 export default function PayrollPage() {
     const [staff, setStaff] = useState<MockUser[]>([]);
@@ -56,11 +56,13 @@ export default function PayrollPage() {
     const fetchData = useCallback(async () => {
         setIsLoading(true);
         try {
-            const allUsers = await dbService.getDocs<MockUser>('users');
+            const allUsers = await dbService.getDocs<MockUser>('users', [
+              { type: 'where', fieldPath: 'status', opStr: '==', value: 'active' }
+            ]);
             
             // Filter for active staff with a salary object defined
             const eligibleStaff = allUsers.filter(
-              (user) => user.salary && user.status === 'active'
+              (user) => user.salary
             );
             
             const runsData = await dbService.getDocs<PayrollRun>('payrollRuns', [
@@ -110,11 +112,8 @@ export default function PayrollPage() {
         }
     };
     
-    const totalSalary = staff
-        .filter(user => user.salary.amount > 0)
-        .reduce((acc, user) => acc + (user.salary?.amount || 0), 0);
-
     const staffForPayrollRun = staff.filter(user => user.salary && user.salary.amount > 0);
+    const totalSalary = staffForPayrollRun.reduce((acc, user) => acc + (user.salary?.amount || 0), 0);
 
     return (
         <div className="space-y-8">
@@ -128,7 +127,7 @@ export default function PayrollPage() {
             <Card>
                 <CardHeader>
                     <CardTitle>Run Monthly Payroll</CardTitle>
-                    <CardDescription>Select a period to execute the payroll for all eligible staff members with a salary greater than zero.</CardDescription>
+                    <CardDescription>Select a period to execute the payroll for all eligible staff members with a configured salary greater than zero.</CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-6">
                     <Alert variant="destructive">
@@ -174,6 +173,8 @@ export default function PayrollPage() {
                             </AlertDialogContent>
                         </AlertDialog>
                     </div>
+                     {isLoading && (<div className="text-sm text-muted-foreground">Loading staff data...</div>)}
+                     {!isLoading && staffForPayrollRun.length === 0 && (<div className="text-sm text-muted-foreground">No staff with active salaries greater than zero found for the upcoming payroll run. Please configure salaries in the staff management section.</div>)}
                 </CardContent>
             </Card>
 
@@ -200,9 +201,9 @@ export default function PayrollPage() {
                                         <TableCell className="text-right font-medium">{user.salary?.amount.toLocaleString()}</TableCell>
                                     </TableRow>
                                 )) : (
-                                    <TableRow><TableCell colSpan={2} className="h-24 text-center text-muted-foreground">No staff found.</TableCell></TableRow>
+                                    <TableRow><TableCell colSpan={2} className="h-24 text-center text-muted-foreground">No active staff found.</TableCell></TableRow>
                                 )}
-                                {!isLoading && staff.length > 0 && (
+                                {!isLoading && staffForPayrollRun.length > 0 && (
                                     <TableRow className="font-bold bg-secondary/50">
                                         <TableCell>Total (for salaries > 0)</TableCell>
                                         <TableCell className="text-right">{totalSalary.toLocaleString()}</TableCell>
