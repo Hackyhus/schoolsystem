@@ -19,17 +19,26 @@ const expenseSchema = z.object({
 });
 
 // This is a placeholder for a real auth check on the server
-async function getCurrentUserOnServer() {
-    // In a real server environment, you'd verify a session token.
-    // For this context, we'll simulate getting the currently logged-in user.
-    // This is a simplified example. In a production app, use Firebase Admin SDK or session cookies.
-    return new Promise<any>((resolve, reject) => {
+async function getCurrentUserOnServer(): Promise<any> {
+    // In a real server environment, you'd verify a session token from cookies or headers.
+    // For this demonstration, we'll simulate a server-side user check.
+    // NOTE: This is a simplified approach. In a production Next.js app,
+    // you would typically use a library like `next-auth` or handle session cookies manually.
+    const user = authService.auth.currentUser;
+    if (user) {
+        return user;
+    }
+    // As a fallback for server actions where currentUser might be null,
+    // we use onAuthStateChanged, but this is not ideal for server environments.
+    return new Promise((resolve, reject) => {
         const unsubscribe = authService.onAuthStateChanged(user => {
             unsubscribe();
             if (user) {
                 resolve(user);
             } else {
-                reject(new Error("Authentication required."));
+                // If still no user, we have to reject.
+                // This indicates the user is not authenticated on the server context.
+                reject(new Error("Authentication required. Please log in again."));
             }
         });
     });
@@ -43,8 +52,11 @@ export async function saveExpense(values: z.infer<typeof expenseSchema>) {
       return { error: parsed.error.flatten().fieldErrors };
     }
 
-    // Correct way to get user on server-side actions (simplified for this context)
+    // Correct way to get user on server-side actions
     const currentUser = await getCurrentUserOnServer();
+    if (!currentUser) {
+        throw new Error("Authentication failed.");
+    }
     
     const accountant = await dbService.getDoc<MockUser>('users', currentUser.uid);
 
