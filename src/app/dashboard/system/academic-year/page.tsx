@@ -1,13 +1,14 @@
-
 'use client';
 
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Calendar } from "lucide-react";
 
 export default function AcademicYearPage() {
     return (
         <div className="space-y-8">
             <div>
-                <h1 className="font-headline text-3xl font-bold">Academic Year & Terms</h1>
+                <h1 className="font-headline text-3xl font-bold">Academic Year &amp; Terms</h1>
                 <p className="text-muted-foreground">
                     Set term dates, school holidays, and manage academic sessions.
                 </p>
@@ -22,7 +23,18 @@ export default function AcademicYearPage() {
                     </CardDescription>
                 </CardHeader>
                 <CardContent>
-                    <p className="text-sm text-muted-foreground">An interface to set start and end dates for terms and the current session will be available here.</p>
+                     <div className="flex flex-col items-center justify-center rounded-lg border-2 border-dashed p-12 text-center">
+                         <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-primary/10">
+                             <Calendar className="h-8 w-8 text-primary" />
+                         </div>
+                        <h3 className="text-lg font-semibold">Academic Calendar is Coming Soon</h3>
+                        <p className="text-sm text-muted-foreground mt-2">
+                           An interface to manage sessions and term dates will be available here.
+                        </p>
+                        <Button disabled className="mt-4">
+                            Configure Session
+                        </Button>
+                    </div>
                 </CardContent>
             </Card>
         </div>

@@ -1,4 +1,3 @@
-
 'use client';
 
 import {
@@ -16,14 +15,11 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
-import { Button } from '@/components/ui/button';
 import { useEffect, useState, useCallback } from 'react';
 import {
   collection,
   getDocs,
   doc,
-  query,
-  where,
   updateDoc,
 } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
@@ -56,12 +52,11 @@ export default function RolesPermissionsPage() {
   const fetchUsers = useCallback(async () => {
     setIsLoading(true);
     try {
-      // Firestore does not support `!=` queries. We fetch all users and filter client-side.
       const usersRef = collection(db, 'users');
       const querySnapshot = await getDocs(usersRef);
       const usersList = querySnapshot.docs
         .map((doc) => ({ id: doc.id, ...doc.data() } as MockUser))
-        .filter((user) => user.role !== 'Student'); // Filter out students here
+        .filter((user) => user.role !== 'Student' && user.staffId); // Filter out students and ensure they are staff
       setUsers(usersList);
     } catch (error) {
       console.error('Error fetching users:', error);
@@ -107,7 +102,7 @@ export default function RolesPermissionsPage() {
     <div className="space-y-8">
       <div>
         <h1 className="font-headline text-3xl font-bold">
-          Roles & Permissions
+          Roles &amp; Permissions
         </h1>
         <p className="text-muted-foreground">
           Manage user roles and what they can access within the portal.
@@ -177,7 +172,7 @@ export default function RolesPermissionsPage() {
                     colSpan={3}
                     className="h-24 text-center text-muted-foreground"
                   >
-                    No users found.
+                    No staff users found.
                   </TableCell>
                 </TableRow>
               )}

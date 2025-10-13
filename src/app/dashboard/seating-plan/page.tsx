@@ -1,4 +1,3 @@
-
 'use client';
 
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -16,22 +15,26 @@ export default function SeatingPlanPage() {
             </div>
             <Card>
                 <CardHeader>
-                    <CardTitle>Generate New Plan</CardTitle>
+                    <CardTitle>Generate New Seating Plan</CardTitle>
                     <CardDescription>
                        This tool will assist the Exam Officer in creating and visualizing seating arrangements for examination halls. The system will be able to automatically generate randomized, spaced-out seating plans based on the list of registered students to uphold exam integrity. The final plan can be exported as a PDF for invigilators.
                        <br /><br />
                         <strong className="text-primary">This feature is currently in development and will be available once the project is approved.</strong>
                     </CardDescription>
                 </CardHeader>
-                <CardContent className="flex gap-4">
-                     <Button disabled>
-                        <Grid className="mr-2 h-4 w-4" />
-                        Generate Plan
-                    </Button>
-                    <Button variant="outline" disabled>
-                        <Download className="mr-2 h-4 w-4" />
-                        Export as PDF
-                    </Button>
+                <CardContent>
+                     <div className="flex flex-col items-center justify-center rounded-lg border-2 border-dashed p-12 text-center">
+                         <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-primary/10">
+                             <Grid className="h-8 w-8 text-primary" />
+                         </div>
+                        <h3 className="text-lg font-semibold">Seating Plan Generator is Coming Soon</h3>
+                        <p className="text-sm text-muted-foreground mt-2">
+                           An automated tool for creating exam seating plans will be available here.
+                        </p>
+                        <Button disabled className="mt-4">
+                            Generate Plan
+                        </Button>
+                    </div>
                 </CardContent>
             </Card>
         </div>
