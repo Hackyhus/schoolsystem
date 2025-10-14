@@ -55,9 +55,9 @@ export default function DashboardLayout({
           <DashboardSidebar />
         </div>
         <SidebarInset data-sidebar="inset">
-          <MaintenanceBanner />
           <div className="print-hidden">
-            <DashboardHeader />
+             <MaintenanceBanner />
+             <DashboardHeader />
           </div>
           <main className="min-h-[calc(100vh-4rem)] p-4 md:p-6 lg:p-8">
             {children}
