@@ -12,7 +12,7 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '
 import { dbService } from '@/lib/firebase';
 import type { Invoice, Payment } from '@/lib/schema';
 import { useToast } from '@/hooks/use-toast';
-import { AlertCircle, Loader2, Search, CheckCircle, RefreshCw } from 'lucide-react';
+import { AlertCircle, Loader2, Search, CheckCircle, RefreshCw, Eye } from 'lucide-react';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { recordPayment } from '@/actions/payment-actions';
 import {
@@ -34,6 +34,7 @@ import {
 import { Skeleton } from '@/components/ui/skeleton';
 import { format } from 'date-fns';
 import { Badge } from '@/components/ui/badge';
+import Link from 'next/link';
 
 const paymentSchema = z.object({
   invoiceId: z.string().min(1, 'Invoice ID is required'),
@@ -257,7 +258,7 @@ export default function PaymentsPage() {
                         <TableHead>Amount Paid (NGN)</TableHead>
                         <TableHead>Payment Method</TableHead>
                         <TableHead>Payment Date</TableHead>
-                        <TableHead>Recorded By</TableHead>
+                        <TableHead className="text-right">Action</TableHead>
                     </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -268,7 +269,7 @@ export default function PaymentsPage() {
                                 <TableCell><Skeleton className="h-5 w-24" /></TableCell>
                                 <TableCell><Skeleton className="h-6 w-28" /></TableCell>
                                 <TableCell><Skeleton className="h-5 w-24" /></TableCell>
-                                <TableCell><Skeleton className="h-5 w-32" /></TableCell>
+                                <TableCell className="text-right"><Skeleton className="h-8 w-16" /></TableCell>
                             </TableRow>
                         ))
                     ) : recentPayments.length > 0 ? (
@@ -281,7 +282,13 @@ export default function PaymentsPage() {
                                 <TableCell>{payment.amountPaid.toLocaleString()}</TableCell>
                                 <TableCell><Badge variant="secondary">{payment.paymentMethod}</Badge></TableCell>
                                 <TableCell>{format(new Date(payment.paymentDate.seconds * 1000), 'PPP')}</TableCell>
-                                <TableCell>{payment.recordedByName}</TableCell>
+                                <TableCell className="text-right">
+                                    <Button asChild variant="outline" size="sm">
+                                        <Link href={`/dashboard/accountant/receipts/${payment.id}`}>
+                                            <Eye className="mr-2 h-4 w-4" /> View Receipt
+                                        </Link>
+                                    </Button>
+                                </TableCell>
                             </TableRow>
                         ))
                     ) : (
