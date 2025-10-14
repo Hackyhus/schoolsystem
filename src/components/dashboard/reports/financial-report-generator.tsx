@@ -79,8 +79,8 @@ export function FinancialReportGenerator() {
                 totalRevenue,
                 totalExpenses,
                 netIncome: totalRevenue - totalExpenses,
-                payments, // Store all payments
-                expenses, // Store all expenses
+                payments,
+                expenses,
                 expenseByCategory
             });
 
@@ -265,3 +265,5 @@ export function FinancialReportGenerator() {
         </div>
     )
 }
+
+    
