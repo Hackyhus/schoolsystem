@@ -3,9 +3,6 @@
 
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { useParams, notFound, useRouter } from 'next/navigation';
-import { doc, getDoc } from 'firebase/firestore';
-import { db } from '@/lib/firebase';
-import type { Invoice } from '@/lib/schema';
 import { Button } from '@/components/ui/button';
 import { Download, Loader2, AlertCircle, ArrowLeft, Printer } from 'lucide-react';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
@@ -13,6 +10,8 @@ import { InvoiceTemplate } from '@/components/dashboard/invoices/invoice-templat
 import { Skeleton } from '@/components/ui/skeleton';
 import jsPDF from 'jspdf';
 import html2canvas from 'html2canvas';
+import { dbService } from '@/lib/firebase';
+import type { Invoice, SchoolInfo } from '@/lib/schema';
 
 export default function IndividualInvoicePage() {
   const params = useParams();
@@ -20,37 +19,36 @@ export default function IndividualInvoicePage() {
   const { invoiceId } = params;
 
   const [invoice, setInvoice] = useState<Invoice | null>(null);
+  const [schoolInfo, setSchoolInfo] = useState<SchoolInfo | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isDownloading, setIsDownloading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const fetchInvoice = useCallback(async () => {
+  const fetchData = useCallback(async () => {
     if (typeof invoiceId !== 'string') return;
     
     setIsLoading(true);
     setError(null);
     try {
-      const invoiceDocRef = doc(db, 'invoices', invoiceId);
-      const docSnap = await getDoc(invoiceDocRef);
+      const [invoiceData, schoolInfoData] = await Promise.all([
+        dbService.getDoc<Invoice>('invoices', invoiceId),
+        dbService.getDoc<SchoolInfo>('system', 'schoolInfo'),
+      ]);
 
-      if (docSnap.exists()) {
-        const data = docSnap.data();
-        // Check if the document ID from Firestore matches the param to handle race conditions
-        const invoiceData = { id: docSnap.id, ...data } as Invoice;
-        if (docSnap.id === invoiceId) {
-             setInvoice(invoiceData);
-        } else {
-             // If they don't match, it could be a stale result from a previous page. Re-fetch.
-             // This is a defensive check.
-             setTimeout(() => fetchInvoice(), 50);
-        }
-
+      if (invoiceData) {
+        setInvoice(invoiceData);
       } else {
         setError('Invoice not found.');
         notFound();
       }
+
+      if (schoolInfoData) {
+        setSchoolInfo(schoolInfoData);
+      } else {
+        console.warn("School information is not configured in System > School Info.");
+      }
     } catch (e: any) {
-      console.error('Error fetching invoice:', e);
+      console.error('Error fetching data:', e);
       setError(e.message || 'An error occurred while fetching the invoice.');
     } finally {
       setIsLoading(false);
@@ -58,8 +56,8 @@ export default function IndividualInvoicePage() {
   }, [invoiceId]);
 
   useEffect(() => {
-    fetchInvoice();
-  }, [fetchInvoice]);
+    fetchData();
+  }, [fetchData]);
   
   const handlePrint = () => {
     window.print();
@@ -67,9 +65,14 @@ export default function IndividualInvoicePage() {
 
   const handleDownload = async () => {
     const contentElement = document.getElementById('pdf-content');
+    const sidebarElement = document.querySelector('[data-sidebar="sidebar"]') as HTMLElement | null;
 
     if (!contentElement || !invoice) return;
     setIsDownloading(true);
+
+    if (sidebarElement) {
+        sidebarElement.style.display = 'none';
+    }
 
     try {
         const pdf = new jsPDF({
@@ -111,6 +114,9 @@ export default function IndividualInvoicePage() {
         console.error("Failed to generate PDF", error);
         setError("Could not generate the PDF for download.");
     } finally {
+        if (sidebarElement) {
+            sidebarElement.style.display = 'flex';
+        }
         setIsDownloading(false);
     }
   };
@@ -171,7 +177,7 @@ export default function IndividualInvoicePage() {
       </div>
       
       {/* The visible template on the page */}
-      <InvoiceTemplate invoice={invoice} />
+      <InvoiceTemplate invoice={invoice} schoolInfo={schoolInfo} />
     </div>
   );
 }

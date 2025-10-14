@@ -1,8 +1,7 @@
 
 'use client';
 
-import type { ReportCard } from '@/lib/schema';
-import { Card, CardContent, CardHeader } from '@/components/ui/card';
+import type { ReportCard, SchoolInfo } from '@/lib/schema';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Separator } from '@/components/ui/separator';
 import Image from 'next/image';
@@ -11,9 +10,10 @@ import { format } from 'date-fns';
 
 interface ReportCardTemplateProps {
   reportCard: ReportCard;
+  schoolInfo: SchoolInfo | null;
 }
 
-export function ReportCardTemplate({ reportCard }: ReportCardTemplateProps) {
+export function ReportCardTemplate({ reportCard, schoolInfo }: ReportCardTemplateProps) {
   const gradeColor = (grade: string) => {
     if (['A'].includes(grade)) return 'text-green-600';
     if (['B'].includes(grade)) return 'text-blue-600';
@@ -23,16 +23,16 @@ export function ReportCardTemplate({ reportCard }: ReportCardTemplateProps) {
   };
 
   return (
-    <div className="print-container bg-white">
-        <div id="pdf-content" className="max-w-4xl mx-auto p-8 bg-white text-black">
+    <div className="print-container bg-background">
+        <div id="pdf-content" className="max-w-4xl mx-auto p-8 bg-white text-black font-serif">
             <header>
                  <div className="flex flex-row items-start justify-between border-b-4 border-black pb-4">
-                    <div className="flex items-center gap-4">
-                        <Image src="/school-logo.png" alt="School Logo" width={200} height={50} className="h-12 w-auto" />
-                    </div>
+                    {schoolInfo?.logoUrl && (
+                      <Image src={schoolInfo.logoUrl} alt="School Logo" width={200} height={50} className="h-12 w-auto object-contain" />
+                    )}
                     <div className="text-right">
-                        <h2 className="text-2xl font-bold text-black">Great Insight International Academy</h2>
-                        <p className="text-sm text-gray-500">123 Education Lane, Knowledge City</p>
+                        <h2 className="text-2xl font-bold text-black">{schoolInfo?.name || 'School Name'}</h2>
+                        <p className="text-sm text-gray-500">{schoolInfo?.address}</p>
                     </div>
                 </div>
                 <div className="text-center py-2">
@@ -113,9 +113,9 @@ export function ReportCardTemplate({ reportCard }: ReportCardTemplateProps) {
                 </div>
             </main>
             <footer id="pdf-footer-container" className="mt-12 text-center text-xs text-gray-500 border-t pt-4">
-                <p className="font-bold">Great Insight International Academy</p>
-                <p>123 Education Lane, Knowledge City</p>
-                <p>Phone: (123) 456-7890 | Email: info@giia.com.ng</p>
+                <p className="font-bold">{schoolInfo?.name}</p>
+                <p>{schoolInfo?.address}</p>
+                <p>Phone: {schoolInfo?.phone} | Email: {schoolInfo?.email}</p>
             </footer>
         </div>
         <style jsx global>{`

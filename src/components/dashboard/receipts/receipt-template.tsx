@@ -1,26 +1,26 @@
 
 'use client';
 
-import type { Payment } from '@/lib/schema';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow, TableFooter } from '@/components/ui/table';
+import type { Payment, SchoolInfo } from '@/lib/schema';
 import { Separator } from '@/components/ui/separator';
 import Image from 'next/image';
 import { format } from 'date-fns';
 
 interface ReceiptTemplateProps {
   payment: Payment;
+  schoolInfo: SchoolInfo | null;
 }
 
-export function ReceiptTemplate({ payment }: ReceiptTemplateProps) {
+export function ReceiptTemplate({ payment, schoolInfo }: ReceiptTemplateProps) {
   const paymentDate = payment.paymentDate?.seconds ? format(new Date(payment.paymentDate.seconds * 1000), 'PPP') : 'N/A';
 
   return (
-    <div className="print-container bg-white">
-      <div id="pdf-content" className="max-w-4xl mx-auto p-8 bg-white text-black">
+    <div className="print-container bg-background">
+      <div id="pdf-content" className="max-w-4xl mx-auto p-8 bg-white text-black font-serif">
         <header className="flex flex-row items-start justify-between border-b-4 border-black pb-4">
-          <div className="flex items-center gap-4">
-            <Image src="/school-logo.png" alt="School Logo" width={250} height={60} className="h-16 w-auto" />
-          </div>
+          {schoolInfo?.logoUrl && (
+            <Image src={schoolInfo.logoUrl} alt="School Logo" width={250} height={60} className="h-16 w-auto object-contain" />
+          )}
           <div className="text-right">
             <h2 className="text-4xl font-bold text-black">PAYMENT RECEIPT</h2>
             <p className="text-gray-500">Receipt No: {payment.id}</p>
@@ -59,9 +59,9 @@ export function ReceiptTemplate({ payment }: ReceiptTemplateProps) {
         </main>
 
         <footer id="pdf-footer-container" className="mt-12 text-center text-xs text-gray-500 border-t pt-4">
-            <p className="font-bold">Great Insight International Academy</p>
-            <p>123 Education Lane, Knowledge City</p>
-            <p>Phone: (123) 456-7890 | Email: info@giia.com.ng</p>
+            <p className="font-bold">{schoolInfo?.name}</p>
+            <p>{schoolInfo?.address}</p>
+            <p>Phone: {schoolInfo?.phone} | Email: {schoolInfo?.email}</p>
         </footer>
       </div>
 

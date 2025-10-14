@@ -1,7 +1,7 @@
 
 'use client';
 
-import type { Invoice } from '@/lib/schema';
+import type { Invoice, SchoolInfo } from '@/lib/schema';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow, TableFooter } from '@/components/ui/table';
 import { Separator } from '@/components/ui/separator';
@@ -11,9 +11,10 @@ import { Badge } from '@/components/ui/badge';
 
 interface InvoiceTemplateProps {
   invoice: Invoice;
+  schoolInfo: SchoolInfo | null;
 }
 
-export function InvoiceTemplate({ invoice }: InvoiceTemplateProps) {
+export function InvoiceTemplate({ invoice, schoolInfo }: InvoiceTemplateProps) {
     const getStatusVariant = (status: Invoice['status']) => {
         switch (status) {
             case 'Paid': return 'default';
@@ -25,19 +26,19 @@ export function InvoiceTemplate({ invoice }: InvoiceTemplateProps) {
     const dueDate = invoice.dueDate?.seconds ? format(new Date(invoice.dueDate.seconds * 1000), 'PPP') : 'N/A';
 
   return (
-    <div className="print-container bg-white">
-        <div id="pdf-content" className="max-w-4xl mx-auto p-8 bg-white text-black">
+    <div className="print-container bg-background">
+        <div id="pdf-content" className="max-w-4xl mx-auto p-8 bg-white text-black font-serif">
              <header className="flex flex-row items-start justify-between border-b-4 border-black pb-4">
-                <div className="flex items-center gap-4">
-                <Image src="/school-logo.png" alt="School Logo" width={250} height={60} className="h-16 w-auto" />
-                </div>
+                {schoolInfo?.logoUrl && (
+                  <Image src={schoolInfo.logoUrl} alt="School Logo" width={250} height={60} className="h-16 w-auto object-contain" />
+                )}
                 <div className="text-right">
-                <h2 className="text-4xl font-bold text-black">INVOICE</h2>
-                <p className="text-gray-500">{invoice.invoiceId}</p>
+                    <h2 className="text-4xl font-bold text-black">INVOICE</h2>
+                    <p className="text-gray-500">{invoice.invoiceId}</p>
                 </div>
             </header>
-            <main>
-                <div className="grid grid-cols-2 gap-4 pt-6 text-sm">
+            <main className="py-8">
+                <div className="grid grid-cols-2 gap-4 text-sm">
                     <div>
                     <h3 className="font-bold text-gray-700">Bill To:</h3>
                     <p className="font-semibold text-lg">{invoice.studentName}</p>
@@ -91,16 +92,16 @@ export function InvoiceTemplate({ invoice }: InvoiceTemplateProps) {
                  <div className="text-sm text-gray-600 space-y-2">
                     <h4 className="font-bold text-base text-black">Payment Instructions:</h4>
                     <p>Please make payments to the following bank account:</p>
-                    <p><strong>Bank Name:</strong> First Bank of Nigeria</p>
-                    <p><strong>Account Name:</strong> Great Insight International Academy</p>
+                    <p><strong>Bank Name:</strong> {schoolInfo?.name || 'School Bank'}</p>
+                    <p><strong>Account Name:</strong> {schoolInfo?.name || 'School Account Name'}</p>
                     <p><strong>Account Number:</strong> 2012345678</p>
                     <p>Use the Invoice ID as the payment reference.</p>
                 </div>
             </main>
              <footer id="pdf-footer-container" className="mt-12 text-center text-xs text-gray-500 border-t pt-4">
-                <p className="font-bold">Great Insight International Academy</p>
-                <p>123 Education Lane, Knowledge City</p>
-                <p>Phone: (123) 456-7890 | Email: info@giia.com.ng</p>
+                <p className="font-bold">{schoolInfo?.name}</p>
+                <p>{schoolInfo?.address}</p>
+                <p>Phone: {schoolInfo?.phone} | Email: {schoolInfo?.email}</p>
             </footer>
         </div>
         

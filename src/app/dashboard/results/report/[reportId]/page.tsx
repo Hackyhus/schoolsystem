@@ -3,9 +3,6 @@
 
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { useParams, notFound, useRouter } from 'next/navigation';
-import { doc, getDoc } from 'firebase/firestore';
-import { db } from '@/lib/firebase';
-import type { ReportCard } from '@/lib/schema';
 import { Button } from '@/components/ui/button';
 import { Download, Loader2, AlertCircle, ArrowLeft, Printer } from 'lucide-react';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
@@ -13,6 +10,8 @@ import { ReportCardTemplate } from '@/components/dashboard/results/report-card-t
 import { Skeleton } from '@/components/ui/skeleton';
 import jsPDF from 'jspdf';
 import html2canvas from 'html2canvas';
+import { dbService } from '@/lib/firebase';
+import type { ReportCard, SchoolInfo } from '@/lib/schema';
 
 export default function IndividualReportPage() {
   const params = useParams();
@@ -20,24 +19,33 @@ export default function IndividualReportPage() {
   const { reportId } = params;
 
   const [reportCard, setReportCard] = useState<ReportCard | null>(null);
+  const [schoolInfo, setSchoolInfo] = useState<SchoolInfo | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isDownloading, setIsDownloading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const fetchReport = useCallback(async () => {
+  const fetchData = useCallback(async () => {
     if (typeof reportId !== 'string') return;
     
     setIsLoading(true);
     setError(null);
     try {
-      const reportDocRef = doc(db, 'reportCards', reportId);
-      const docSnap = await getDoc(reportDocRef);
+      const [reportCardData, schoolInfoData] = await Promise.all([
+        dbService.getDoc<ReportCard>('reportCards', reportId),
+        dbService.getDoc<SchoolInfo>('system', 'schoolInfo'),
+      ]);
 
-      if (docSnap.exists()) {
-        setReportCard({ id: docSnap.id, ...docSnap.data() } as ReportCard);
+      if (reportCardData) {
+        setReportCard(reportCardData);
       } else {
         setError('Report card not found.');
         notFound();
+      }
+      
+      if (schoolInfoData) {
+        setSchoolInfo(schoolInfoData);
+      } else {
+        console.warn("School information is not configured in System > School Info.");
       }
     } catch (e: any) {
       console.error('Error fetching report card:', e);
@@ -48,8 +56,8 @@ export default function IndividualReportPage() {
   }, [reportId]);
 
   useEffect(() => {
-    fetchReport();
-  }, [fetchReport]);
+    fetchData();
+  }, [fetchData]);
 
   const handlePrint = () => {
     window.print();
@@ -57,9 +65,14 @@ export default function IndividualReportPage() {
 
   const handleDownload = async () => {
     const contentElement = document.getElementById('pdf-content');
+    const sidebarElement = document.querySelector('[data-sidebar="sidebar"]') as HTMLElement | null;
 
     if (!contentElement || !reportCard) return;
     setIsDownloading(true);
+    
+    if (sidebarElement) {
+        sidebarElement.style.display = 'none';
+    }
 
     try {
         const pdf = new jsPDF({
@@ -102,6 +115,9 @@ export default function IndividualReportPage() {
         console.error("Failed to generate PDF", error);
         setError("Could not generate the PDF for download.");
     } finally {
+        if (sidebarElement) {
+            sidebarElement.style.display = 'flex';
+        }
         setIsDownloading(false);
     }
   };
@@ -162,7 +178,7 @@ export default function IndividualReportPage() {
             </div>
         </div>
 
-        <ReportCardTemplate reportCard={reportCard} />
+        <ReportCardTemplate reportCard={reportCard} schoolInfo={schoolInfo} />
 
       </div>
     </>

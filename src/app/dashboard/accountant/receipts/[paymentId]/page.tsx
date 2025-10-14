@@ -3,9 +3,6 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { useParams, notFound, useRouter } from 'next/navigation';
-import { doc, getDoc } from 'firebase/firestore';
-import { db } from '@/lib/firebase';
-import type { Payment } from '@/lib/schema';
 import { Button } from '@/components/ui/button';
 import { Download, Loader2, AlertCircle, ArrowLeft, Printer } from 'lucide-react';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
@@ -13,6 +10,8 @@ import { ReceiptTemplate } from '@/components/dashboard/receipts/receipt-templat
 import { Skeleton } from '@/components/ui/skeleton';
 import jsPDF from 'jspdf';
 import html2canvas from 'html2canvas';
+import { dbService } from '@/lib/firebase';
+import type { Payment, SchoolInfo } from '@/lib/schema';
 
 export default function IndividualReceiptPage() {
   const params = useParams();
@@ -20,27 +19,36 @@ export default function IndividualReceiptPage() {
   const { paymentId } = params;
 
   const [payment, setPayment] = useState<Payment | null>(null);
+  const [schoolInfo, setSchoolInfo] = useState<SchoolInfo | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isDownloading, setIsDownloading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const fetchPayment = useCallback(async () => {
+  const fetchData = useCallback(async () => {
     if (typeof paymentId !== 'string') return;
     
     setIsLoading(true);
     setError(null);
     try {
-      const paymentDocRef = doc(db, 'payments', paymentId);
-      const docSnap = await getDoc(paymentDocRef);
+      const [paymentData, schoolInfoData] = await Promise.all([
+        dbService.getDoc<Payment>('payments', paymentId),
+        dbService.getDoc<SchoolInfo>('system', 'schoolInfo'),
+      ]);
 
-      if (docSnap.exists()) {
-        setPayment({ id: docSnap.id, ...docSnap.data() } as Payment);
+      if (paymentData) {
+        setPayment(paymentData);
       } else {
         setError('Payment record not found.');
         notFound();
       }
+
+      if (schoolInfoData) {
+        setSchoolInfo(schoolInfoData);
+      } else {
+        console.warn("School information is not configured in System > School Info.");
+      }
     } catch (e: any) {
-      console.error('Error fetching payment:', e);
+      console.error('Error fetching data:', e);
       setError(e.message || 'An error occurred while fetching the receipt data.');
     } finally {
       setIsLoading(false);
@@ -48,8 +56,8 @@ export default function IndividualReceiptPage() {
   }, [paymentId]);
 
   useEffect(() => {
-    fetchPayment();
-  }, [fetchPayment]);
+    fetchData();
+  }, [fetchData]);
 
   const handlePrint = () => {
     window.print();
@@ -57,9 +65,14 @@ export default function IndividualReceiptPage() {
 
   const handleDownload = async () => {
     const contentElement = document.getElementById('pdf-content');
+    const sidebarElement = document.querySelector('[data-sidebar="sidebar"]') as HTMLElement | null;
 
     if (!contentElement || !payment) return;
     setIsDownloading(true);
+    
+    if (sidebarElement) {
+        sidebarElement.style.display = 'none';
+    }
 
     try {
         const pdf = new jsPDF({
@@ -90,6 +103,9 @@ export default function IndividualReceiptPage() {
         console.error("Failed to generate PDF", error);
         setError("Could not generate the PDF for download.");
     } finally {
+        if (sidebarElement) {
+            sidebarElement.style.display = 'flex';
+        }
         setIsDownloading(false);
     }
   };
@@ -148,7 +164,7 @@ export default function IndividualReceiptPage() {
           </div>
       </div>
       
-      <ReceiptTemplate payment={payment} />
+      <ReceiptTemplate payment={payment} schoolInfo={schoolInfo} />
     </div>
   );
 }
