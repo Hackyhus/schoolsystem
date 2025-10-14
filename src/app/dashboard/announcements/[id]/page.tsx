@@ -4,11 +4,9 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useParams, notFound, useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
-import { Download, Loader2, AlertCircle, ArrowLeft, Printer } from 'lucide-react';
+import { Loader2, AlertCircle, ArrowLeft, Printer } from 'lucide-react';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Skeleton } from '@/components/ui/skeleton';
-import jsPDF from 'jspdf';
-import html2canvas from 'html2canvas';
 import { dbService } from '@/lib/firebase';
 import type { Announcement, SchoolInfo } from '@/lib/schema';
 import { AnnouncementTemplate } from '@/components/dashboard/announcements/announcement-template';
@@ -21,7 +19,6 @@ export default function IndividualAnnouncementPage() {
   const [announcement, setAnnouncement] = useState<Announcement | null>(null);
   const [schoolInfo, setSchoolInfo] = useState<SchoolInfo | null>(null);
   const [isLoading, setIsLoading] = useState(true);
-  const [isDownloading, setIsDownloading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   const fetchData = useCallback(async () => {
@@ -65,48 +62,6 @@ export default function IndividualAnnouncementPage() {
     window.print();
   };
 
-  const handleDownload = async () => {
-    const contentElement = document.getElementById('pdf-content');
-    if (!contentElement || !announcement) return;
-    setIsDownloading(true);
-
-    try {
-        const pdf = new jsPDF({
-            orientation: 'portrait',
-            unit: 'in',
-            format: 'a4',
-        });
-        const pageHeight = pdf.internal.pageSize.getHeight();
-        const pageWidth = pdf.internal.pageSize.getWidth();
-        const margin = 0.5;
-        const contentWidth = pageWidth - (margin * 2);
-        
-        const canvas = await html2canvas(contentElement, { scale: 2, useCORS: true });
-        const imgData = canvas.toDataURL('image/png');
-        const imgHeight = (canvas.height * contentWidth) / canvas.width;
-        let heightLeft = imgHeight;
-        let position = margin;
-
-        pdf.addImage(imgData, 'PNG', margin, position, contentWidth, imgHeight);
-        heightLeft -= (pageHeight - margin * 2);
-        
-        while (heightLeft > 0) {
-            position = -heightLeft + margin;
-            pdf.addPage();
-            pdf.addImage(imgData, 'PNG', margin, position, contentWidth, imgHeight);
-            heightLeft -= (pageHeight - margin * 2);
-        }
-
-        pdf.save(`Announcement-${announcement.title.replace(/ /g, '-')}.pdf`);
-
-    } catch (error) {
-        console.error("Failed to generate PDF", error);
-        setError("Could not generate the PDF for download.");
-    } finally {
-        setIsDownloading(false);
-    }
-  };
-
   if (isLoading) {
     return (
       <div className="space-y-4">
@@ -135,7 +90,7 @@ export default function IndividualAnnouncementPage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between print:hidden">
+       <div className="print-hidden flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
           <Button variant="outline" onClick={() => router.back()}>
               <ArrowLeft className="mr-2 h-4 w-4" />
               Back to Announcements
@@ -143,20 +98,7 @@ export default function IndividualAnnouncementPage() {
           <div className="flex gap-2">
             <Button onClick={handlePrint} variant="outline">
                 <Printer className="mr-2 h-4 w-4" />
-                Print
-            </Button>
-            <Button onClick={handleDownload} size="lg" disabled={isDownloading}>
-                {isDownloading ? (
-                    <>
-                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                        Downloading...
-                    </>
-                ) : (
-                    <>
-                        <Download className="mr-2 h-4 w-4" />
-                        Download PDF
-                    </>
-                )}
+                Print or Save as PDF
             </Button>
           </div>
       </div>
