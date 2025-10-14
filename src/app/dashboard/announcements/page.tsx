@@ -1,9 +1,10 @@
+
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Megaphone, PlusCircle, Rss } from "lucide-react";
+import { PlusCircle, Rss } from "lucide-react";
 import { useRole } from '@/context/role-context';
 import { dbService } from '@/lib/firebase';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -11,6 +12,7 @@ import { format } from 'date-fns';
 import { Dialog, DialogTrigger, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { AnnouncementForm } from '@/components/dashboard/announcements/announcement-form';
 import usePersistentState from '@/hooks/use-persistent-state';
+import Link from 'next/link';
 
 type Announcement = {
     id: string;
@@ -94,15 +96,17 @@ export default function AnnouncementsPage() {
                         ) : (
                             <div className="space-y-6">
                                 {announcements.map((ann) => (
-                                     <Card key={ann.id} className="shadow-none border">
+                                     <Card key={ann.id} className="shadow-none border hover:shadow-md transition-shadow">
                                         <CardHeader>
-                                            <CardTitle>{ann.title}</CardTitle>
+                                            <Link href={`/dashboard/announcements/${ann.id}`} className="hover:underline">
+                                                <CardTitle>{ann.title}</CardTitle>
+                                            </Link>
                                             <CardDescription>
                                                 Posted by {ann.authorName} on {format(new Date(ann.createdAt.seconds * 1000), 'PPP')}
                                             </CardDescription>
                                         </CardHeader>
                                         <CardContent>
-                                            <p className="text-sm whitespace-pre-wrap">{ann.content}</p>
+                                            <p className="text-sm whitespace-pre-wrap line-clamp-3">{ann.content}</p>
                                         </CardContent>
                                      </Card>
                                 ))}
