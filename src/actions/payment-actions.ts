@@ -6,7 +6,6 @@ import { dbService } from '@/lib/firebase';
 import { serverTimestamp, Timestamp } from 'firebase/firestore';
 import type { Invoice, Payment, MockUser } from '@/lib/schema';
 import { revalidatePath } from 'next/cache';
-import { auth } from '@/lib/firebase';
 
 const paymentSchema = z.object({
   invoiceId: z.string().min(1, 'Invoice ID is required'),
@@ -14,6 +13,7 @@ const paymentSchema = z.object({
   paymentDate: z.date({ required_error: 'Payment date is required' }),
   paymentMethod: z.enum(['Bank Transfer', 'POS', 'Cash']),
   notes: z.string().optional(),
+  userId: z.string(), // Added to pass the current user's ID
 });
 
 export async function recordPayment(values: z.infer<typeof paymentSchema>) {
@@ -23,13 +23,11 @@ export async function recordPayment(values: z.infer<typeof paymentSchema>) {
             return { error: 'Invalid data provided.' };
         }
         
-        // This is a protected action, so we can assume user is logged in
-        const currentUser = auth.currentUser;
-        if (!currentUser) {
+        const { userId, invoiceId, amountPaid, paymentDate, paymentMethod, notes } = parsed.data;
+
+        if (!userId) {
             return { error: 'Authentication required.' };
         }
-
-        const { invoiceId, amountPaid, paymentDate, paymentMethod, notes } = parsed.data;
 
         // 1. Fetch the invoice by its main document ID
         const invoices = await dbService.getDocs<Invoice>('invoices', [{ type: 'where', fieldPath: 'invoiceId', opStr: '==', value: invoiceId }]);
@@ -63,7 +61,7 @@ export async function recordPayment(values: z.infer<typeof paymentSchema>) {
         });
         
         // 5. Create a new payment record for auditing
-        const accountantDoc = await dbService.getDoc<MockUser>('users', currentUser.uid);
+        const accountantDoc = await dbService.getDoc<MockUser>('users', userId);
 
         const newPayment: Omit<Payment, 'id'> = {
             invoiceId: invoice.invoiceId,
@@ -72,7 +70,7 @@ export async function recordPayment(values: z.infer<typeof paymentSchema>) {
             amountPaid,
             paymentDate: Timestamp.fromDate(paymentDate),
             paymentMethod,
-            recordedBy: currentUser.uid,
+            recordedBy: userId,
             recordedByName: accountantDoc?.name || 'N/A',
             notes,
             createdAt: serverTimestamp(),

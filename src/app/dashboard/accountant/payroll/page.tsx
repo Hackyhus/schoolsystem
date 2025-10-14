@@ -38,6 +38,7 @@ import {
 } from '@/components/ui/select';
 import { runPayroll } from '@/actions/payroll-actions';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
+import { useRole } from '@/context/role-context';
 
 const MONTHS = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
 const YEARS = [new Date().getFullYear(), new Date().getFullYear() + 1, new Date().getFullYear() - 1];
@@ -50,6 +51,7 @@ export default function PayrollPage() {
     
     const [selectedMonth, setSelectedMonth] = useState(MONTHS[new Date().getMonth()]);
     const [selectedYear, setSelectedYear] = useState(YEARS[0]);
+    const { user } = useRole();
 
     const { toast } = useToast();
 
@@ -88,9 +90,13 @@ export default function PayrollPage() {
     }, [fetchData]);
 
     const handleRunPayroll = async () => {
+        if (!user) {
+            toast({ variant: 'destructive', title: 'Error', description: 'You must be logged in.' });
+            return;
+        }
         setIsProcessing(true);
         try {
-            const result = await runPayroll(selectedMonth, selectedYear);
+            const result = await runPayroll(selectedMonth, selectedYear, user.uid);
             if(result.error) throw new Error(result.error);
             
             toast({

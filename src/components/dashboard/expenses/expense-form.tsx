@@ -28,6 +28,7 @@ import { Loader2 } from 'lucide-react';
 import type { Expense } from '@/lib/schema';
 import { DatePicker } from '@/components/ui/date-picker';
 import { useAcademicData } from '@/hooks/use-academic-data';
+import { useRole } from '@/context/role-context';
 
 const EXPENSE_CATEGORIES = ['Utilities', 'Salaries', 'Maintenance', 'Supplies', 'Marketing', 'Capital Expenditure', 'Miscellaneous'] as const;
 
@@ -50,6 +51,7 @@ interface ExpenseFormProps {
 export function ExpenseForm({ initialData, onFormSubmit }: ExpenseFormProps) {
   const { toast } = useToast();
   const { departments } = useAcademicData();
+  const { user } = useRole();
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const form = useForm<ExpenseFormValues>({
@@ -65,9 +67,13 @@ export function ExpenseForm({ initialData, onFormSubmit }: ExpenseFormProps) {
   });
 
   const onSubmit = async (values: ExpenseFormValues) => {
+    if (!user) {
+        toast({ variant: 'destructive', title: 'Error', description: 'You must be logged in.' });
+        return;
+    }
     setIsSubmitting(true);
     try {
-      const result = await saveExpense(values);
+      const result = await saveExpense({ ...values, userId: user.uid });
       if (result.error) {
           Object.entries(result.error).forEach(([key, messages]) => {
               if (Array.isArray(messages)) {

@@ -2,7 +2,7 @@
 'use server';
 
 import { z } from 'zod';
-import { dbService, auth } from '@/lib/firebase'; // Using auth directly now
+import { auth, dbService } from '@/lib/firebase';
 import { serverTimestamp, Timestamp } from 'firebase/firestore';
 import type { Expense, MockUser } from '@/lib/schema';
 import { revalidatePath } from 'next/cache';
@@ -16,6 +16,7 @@ const expenseSchema = z.object({
   amount: z.coerce.number().positive('Amount must be a positive number.'),
   date: z.date({ required_error: 'Expense date is required.' }),
   department: z.string().optional(),
+  userId: z.string(), // Added to pass the current user's ID
 });
 
 
@@ -26,21 +27,19 @@ export async function saveExpense(values: z.infer<typeof expenseSchema>) {
       return { error: parsed.error.flatten().fieldErrors };
     }
 
-    // This is a protected action, so we can reliably get the user this way on the server.
-    const currentUser = auth.currentUser;
-    if (!currentUser) {
+    const { id, userId, ...data } = parsed.data;
+    
+    if (!userId) {
         throw new Error("Authentication failed. You must be logged in to record an expense.");
     }
-    
-    const accountant = await dbService.getDoc<MockUser>('users', currentUser.uid);
 
-    const { id, ...data } = parsed.data;
+    const accountant = await dbService.getDoc<MockUser>('users', userId);
 
     const expenseData: Omit<Expense, 'id'> = {
       ...data,
       date: Timestamp.fromDate(data.date),
       amount: data.amount,
-      recordedBy: currentUser.uid,
+      recordedBy: userId,
       recordedByName: accountant?.name || 'N/A',
       createdAt: serverTimestamp(),
     };

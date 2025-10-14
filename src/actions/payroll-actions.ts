@@ -1,19 +1,18 @@
 
 'use server';
 
-import { dbService, auth, db } from '@/lib/firebase';
-import { serverTimestamp, Timestamp, doc } from 'firebase/firestore';
+import { dbService, db } from '@/lib/firebase';
+import { serverTimestamp, writeBatch, doc, collection } from 'firebase/firestore';
 import type { MockUser, PayrollRun, Payslip } from '@/lib/schema';
 import { revalidatePath } from 'next/cache';
 
-export async function runPayroll(month: string, year: number) {
+export async function runPayroll(month: string, year: number, userId: string) {
     try {
         // 1. Authenticate the user (must be an accountant or admin)
-        const currentUser = auth.currentUser;
-        if (!currentUser) {
+        if (!userId) {
             throw new Error("Authentication failed. You must be logged in.");
         }
-        const userDoc = await dbService.getDoc<MockUser>('users', currentUser.uid);
+        const userDoc = await dbService.getDoc<MockUser>('users', userId);
         if (!userDoc || !['Accountant', 'Admin'].includes(userDoc.role)) {
             throw new Error("You do not have permission to run payroll.");
         }
@@ -38,12 +37,12 @@ export async function runPayroll(month: string, year: number) {
         }
 
         // 4. Start a batch write
-        const batch = dbService.createBatch();
+        const batch = writeBatch(db);
         let totalPayrollAmount = 0;
         const payPeriod = `${month} ${year}`;
         
-        // 5. Create the main PayrollRun document
-        const payrollRunRef = doc(db, 'payrollRuns');
+        // 5. Create the main PayrollRun document reference
+        const payrollRunRef = doc(collection(db, 'payrollRuns'));
         
         // 6. Loop through eligible staff and create a payslip for each
         for (const employee of staff) {
@@ -61,16 +60,16 @@ export async function runPayroll(month: string, year: number) {
                     status: 'Generated',
                     generatedAt: serverTimestamp(),
                 };
-                const payslipRef = doc(db, 'payslips');
+                const payslipRef = doc(collection(db, 'payslips'));
                 batch.set(payslipRef, newPayslip);
             }
         }
         
-        // 7. Update the PayrollRun document with final details
+        // 7. Set the PayrollRun document with final details
          const payrollRunData: Omit<PayrollRun, 'id'> = {
             month,
             year,
-            executedBy: currentUser.uid,
+            executedBy: userId,
             executedByName: userDoc.name,
             totalAmount: totalPayrollAmount,
             employeeCount: staff.length,

@@ -36,6 +36,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { format } from 'date-fns';
 import { Badge } from '@/components/ui/badge';
 import Link from 'next/link';
+import { useRole } from '@/context/role-context';
 
 const paymentSchema = z.object({
   invoiceId: z.string().min(1, 'Invoice ID is required'),
@@ -54,6 +55,7 @@ export default function PaymentsPage() {
   const [searchError, setSearchError] = useState<string | null>(null);
   const [recentPayments, setRecentPayments] = useState<Payment[]>([]);
   const [isLoadingPayments, setIsLoadingPayments] = useState(true);
+  const { user } = useRole();
 
   const { toast } = useToast();
   const form = useForm<PaymentFormValues>({
@@ -123,8 +125,12 @@ export default function PaymentsPage() {
   };
 
   const onSubmit = async (values: PaymentFormValues) => {
+    if (!user) {
+        toast({ variant: 'destructive', title: 'Error', description: 'You must be logged in.' });
+        return;
+    }
     try {
-        const result = await recordPayment(values);
+        const result = await recordPayment({ ...values, userId: user.uid });
         if(result.error) throw new Error(result.error);
 
         toast({

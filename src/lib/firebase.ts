@@ -23,17 +23,17 @@ const firebaseConfig = {
 const app = !getApps().length ? initializeApp(firebaseConfig) : getApp();
 
 // Firebase SDK instances
-const firestore = getFirestore(app);
+const db = getFirestore(app);
 const auth = getAuth(app);
 const storage = getStorage(app);
 
 // Conditionally initialize Analytics only on the client side
-const analytics = isSupported().then(yes => yes ? getAnalytics(app) : null);
+const analytics = typeof window !== 'undefined' && isSupported().then(yes => yes ? getAnalytics(app) : null);
 
 // Abstracted Service Instances
-const dbService: IDatabaseService = new FirebaseDatabaseService(firestore);
+const dbService: IDatabaseService = new FirebaseDatabaseService(db);
 const storageService: IStorageService = new FirebaseStorageService(storage);
 const authService: IAuthService = new FirebaseAuthService(auth);
 
 
-export { app, firestore as db, auth, storage, analytics, dbService, storageService, authService };
+export { app, db, auth, storage, analytics, dbService, storageService, authService };
