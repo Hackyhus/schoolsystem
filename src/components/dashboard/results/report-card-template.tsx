@@ -24,7 +24,7 @@ export function ReportCardTemplate({ reportCard }: ReportCardTemplateProps) {
 
   return (
     <div className="print-container bg-white">
-        <div id="pdf-content" className="w-full mx-auto p-8 bg-white text-black">
+        <div id="pdf-content" className="max-w-4xl mx-auto p-8 bg-white text-black">
             <header>
                  <div className="flex flex-row items-start justify-between border-b-4 border-black pb-4">
                     <div className="flex items-center gap-4">
