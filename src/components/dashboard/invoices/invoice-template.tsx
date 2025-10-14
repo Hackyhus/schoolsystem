@@ -26,7 +26,7 @@ export function InvoiceTemplate({ invoice, schoolInfo }: InvoiceTemplateProps) {
     const dueDate = invoice.dueDate?.seconds ? format(new Date(invoice.dueDate.seconds * 1000), 'PPP') : 'N/A';
 
   return (
-    <div className="print-container bg-background">
+    <div id="printable-area">
         <div id="pdf-content" className="max-w-4xl mx-auto p-8 bg-white text-black font-serif">
              <header className="flex flex-row items-start justify-between border-b-4 border-black pb-4">
                 {schoolInfo?.logoUrl && (
@@ -92,39 +92,18 @@ export function InvoiceTemplate({ invoice, schoolInfo }: InvoiceTemplateProps) {
                  <div className="text-sm text-gray-600 space-y-2">
                     <h4 className="font-bold text-base text-black">Payment Instructions:</h4>
                     <p>Please make payments to the following bank account:</p>
-                    <p><strong>Bank Name:</strong> {schoolInfo?.name || 'School Bank'}</p>
+                    <p><strong>Bank Name:</strong> First Bank</p>
                     <p><strong>Account Name:</strong> {schoolInfo?.name || 'School Account Name'}</p>
                     <p><strong>Account Number:</strong> 2012345678</p>
                     <p>Use the Invoice ID as the payment reference.</p>
                 </div>
             </main>
-             <footer id="pdf-footer-container" className="mt-12 text-center text-xs text-gray-500 border-t pt-4">
+             <footer className="mt-12 text-center text-xs text-gray-500 border-t pt-4">
                 <p className="font-bold">{schoolInfo?.name}</p>
                 <p>{schoolInfo?.address}</p>
                 <p>Phone: {schoolInfo?.phone} | Email: {schoolInfo?.email}</p>
             </footer>
         </div>
-        
-        <style jsx global>{`
-            @media print {
-              body * {
-                visibility: hidden;
-              }
-              .print-container, .print-container * {
-                visibility: visible;
-              }
-              .print-container {
-                position: absolute;
-                left: 0;
-                top: 0;
-                width: 100%;
-              }
-              body {
-                -webkit-print-color-adjust: exact;
-                print-color-adjust: exact;
-              }
-            }
-        `}</style>
     </div>
   );
 }

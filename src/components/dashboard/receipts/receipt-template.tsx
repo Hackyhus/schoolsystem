@@ -15,7 +15,7 @@ export function ReceiptTemplate({ payment, schoolInfo }: ReceiptTemplateProps) {
   const paymentDate = payment.paymentDate?.seconds ? format(new Date(payment.paymentDate.seconds * 1000), 'PPP') : 'N/A';
 
   return (
-    <div className="print-container bg-background">
+    <div id="printable-area">
       <div id="pdf-content" className="max-w-4xl mx-auto p-8 bg-white text-black font-serif">
         <header className="flex flex-row items-start justify-between border-b-4 border-black pb-4">
           {schoolInfo?.logoUrl && (
@@ -58,33 +58,12 @@ export function ReceiptTemplate({ payment, schoolInfo }: ReceiptTemplateProps) {
            </div>
         </main>
 
-        <footer id="pdf-footer-container" className="mt-12 text-center text-xs text-gray-500 border-t pt-4">
+        <footer className="mt-12 text-center text-xs text-gray-500 border-t pt-4">
             <p className="font-bold">{schoolInfo?.name}</p>
             <p>{schoolInfo?.address}</p>
             <p>Phone: {schoolInfo?.phone} | Email: {schoolInfo?.email}</p>
         </footer>
       </div>
-
-      <style jsx global>{`
-        @media print {
-          body * {
-            visibility: hidden;
-          }
-          .print-container, .print-container * {
-            visibility: visible;
-          }
-          .print-container {
-            position: absolute;
-            left: 0;
-            top: 0;
-            width: 100%;
-          }
-          body {
-            -webkit-print-color-adjust: exact;
-            print-color-adjust: exact;
-          }
-        }
-      `}</style>
     </div>
   );
 }
