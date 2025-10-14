@@ -65,14 +65,8 @@ export default function IndividualInvoicePage() {
 
   const handleDownload = async () => {
     const contentElement = document.getElementById('pdf-content');
-    const sidebarElement = document.querySelector('[data-sidebar="sidebar"]') as HTMLElement | null;
-
     if (!contentElement || !invoice) return;
     setIsDownloading(true);
-
-    if (sidebarElement) {
-        sidebarElement.style.display = 'none';
-    }
 
     try {
         const pdf = new jsPDF({
@@ -83,29 +77,28 @@ export default function IndividualInvoicePage() {
 
         const pageHeight = pdf.internal.pageSize.getHeight();
         const pageWidth = pdf.internal.pageSize.getWidth();
-        const margin = 0.5;
-        const contentWidth = pageWidth - (margin * 2);
         
         const canvas = await html2canvas(contentElement, {
-            scale: 2, // Higher scale for better quality
+            scale: 2,
             useCORS: true,
-            width: contentElement.offsetWidth,
         });
-        const imgData = canvas.toDataURL('image/png');
-        const imgHeight = (canvas.height * contentWidth) / canvas.width;
-        let heightLeft = imgHeight;
-        let position = margin;
 
-        // Add first page
-        pdf.addImage(imgData, 'PNG', margin, position, contentWidth, imgHeight);
-        heightLeft -= (pageHeight - margin * 2);
-        
-        // Add new pages if content overflows
+        const imgData = canvas.toDataURL('image/png');
+        const imgProps= pdf.getImageProperties(imgData);
+        const pdfWidth = pageWidth;
+        const pdfHeight = (imgProps.height * pdfWidth) / imgProps.width;
+
+        let heightLeft = pdfHeight;
+        let position = 0;
+
+        pdf.addImage(imgData, 'PNG', 0, position, pdfWidth, pdfHeight);
+        heightLeft -= pageHeight;
+
         while (heightLeft > 0) {
-            position = -heightLeft + margin;
+            position = -heightLeft;
             pdf.addPage();
-            pdf.addImage(imgData, 'PNG', margin, position, contentWidth, imgHeight);
-            heightLeft -= (pageHeight - margin * 2);
+            pdf.addImage(imgData, 'PNG', 0, position, pdfWidth, pdfHeight);
+            heightLeft -= pageHeight;
         }
 
         pdf.save(`Invoice-${invoice.invoiceId}.pdf`);
@@ -114,9 +107,6 @@ export default function IndividualInvoicePage() {
         console.error("Failed to generate PDF", error);
         setError("Could not generate the PDF for download.");
     } finally {
-        if (sidebarElement) {
-            sidebarElement.style.display = 'flex';
-        }
         setIsDownloading(false);
     }
   };
@@ -150,7 +140,7 @@ export default function IndividualInvoicePage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between print:hidden">
+      <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between print-hidden">
           <Button variant="outline" onClick={() => router.back()}>
               <ArrowLeft className="mr-2 h-4 w-4" />
               Back to Invoices
@@ -176,8 +166,9 @@ export default function IndividualInvoicePage() {
           </div>
       </div>
       
-      {/* The visible template on the page */}
-      <InvoiceTemplate invoice={invoice} schoolInfo={schoolInfo} />
+      <div id="printable-area">
+        <InvoiceTemplate invoice={invoice} schoolInfo={schoolInfo} />
+      </div>
     </div>
   );
 }

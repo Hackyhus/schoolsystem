@@ -65,15 +65,9 @@ export default function IndividualReportPage() {
 
   const handleDownload = async () => {
     const contentElement = document.getElementById('pdf-content');
-    const sidebarElement = document.querySelector('[data-sidebar="sidebar"]') as HTMLElement | null;
-
     if (!contentElement || !reportCard) return;
     setIsDownloading(true);
     
-    if (sidebarElement) {
-        sidebarElement.style.display = 'none';
-    }
-
     try {
         const pdf = new jsPDF({
             orientation: 'portrait',
@@ -83,30 +77,28 @@ export default function IndividualReportPage() {
 
         const pageHeight = pdf.internal.pageSize.getHeight();
         const pageWidth = pdf.internal.pageSize.getWidth();
-        const margin = 0.5;
-        const contentWidth = pageWidth - (margin * 2);
         
         const canvas = await html2canvas(contentElement, {
-            scale: 2, // Higher scale for better quality
+            scale: 2,
             useCORS: true,
-            width: contentElement.offsetWidth,
         });
 
         const imgData = canvas.toDataURL('image/png');
-        const imgHeight = (canvas.height * contentWidth) / canvas.width;
-        let heightLeft = imgHeight;
-        let position = margin;
+        const imgProps= pdf.getImageProperties(imgData);
+        const pdfWidth = pageWidth;
+        const pdfHeight = (imgProps.height * pdfWidth) / imgProps.width;
 
-        // Add first page
-        pdf.addImage(imgData, 'PNG', margin, position, contentWidth, imgHeight);
-        heightLeft -= (pageHeight - margin * 2);
+        let heightLeft = pdfHeight;
+        let position = 0;
 
-        // Add new pages if content overflows
+        pdf.addImage(imgData, 'PNG', 0, position, pdfWidth, pdfHeight);
+        heightLeft -= pageHeight;
+
         while (heightLeft > 0) {
-            position = -heightLeft + margin;
+            position = -heightLeft;
             pdf.addPage();
-            pdf.addImage(imgData, 'PNG', margin, position, contentWidth, imgHeight);
-            heightLeft -= (pageHeight - margin * 2);
+            pdf.addImage(imgData, 'PNG', 0, position, pdfWidth, pdfHeight);
+            heightLeft -= pageHeight;
         }
 
         pdf.save(`Report-Card-${reportCard.studentName.replace(/ /g, '-')}.pdf`);
@@ -115,9 +107,6 @@ export default function IndividualReportPage() {
         console.error("Failed to generate PDF", error);
         setError("Could not generate the PDF for download.");
     } finally {
-        if (sidebarElement) {
-            sidebarElement.style.display = 'flex';
-        }
         setIsDownloading(false);
     }
   };

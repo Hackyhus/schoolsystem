@@ -65,15 +65,9 @@ export default function IndividualReceiptPage() {
 
   const handleDownload = async () => {
     const contentElement = document.getElementById('pdf-content');
-    const sidebarElement = document.querySelector('[data-sidebar="sidebar"]') as HTMLElement | null;
-
     if (!contentElement || !payment) return;
     setIsDownloading(true);
     
-    if (sidebarElement) {
-        sidebarElement.style.display = 'none';
-    }
-
     try {
         const pdf = new jsPDF({
             orientation: 'portrait',
@@ -83,19 +77,28 @@ export default function IndividualReceiptPage() {
 
         const pageHeight = pdf.internal.pageSize.getHeight();
         const pageWidth = pdf.internal.pageSize.getWidth();
-        const margin = 0.5;
-        const contentWidth = pageWidth - (margin * 2);
         
         const canvas = await html2canvas(contentElement, {
             scale: 2,
             useCORS: true,
-            width: contentElement.offsetWidth,
         });
         const imgData = canvas.toDataURL('image/png');
-        const imgHeight = (canvas.height * contentWidth) / canvas.width;
-        let position = margin;
+        const imgProps= pdf.getImageProperties(imgData);
+        const pdfWidth = pageWidth;
+        const pdfHeight = (imgProps.height * pdfWidth) / imgProps.width;
+        
+        let position = 0;
+        let heightLeft = pdfHeight;
 
-        pdf.addImage(imgData, 'PNG', margin, position, contentWidth, imgHeight);
+        pdf.addImage(imgData, 'PNG', 0, position, pdfWidth, pdfHeight);
+        heightLeft -= pageHeight;
+
+        while (heightLeft > 0) {
+            position = -heightLeft;
+            pdf.addPage();
+            pdf.addImage(imgData, 'PNG', 0, position, pdfWidth, pdfHeight);
+            heightLeft -= pageHeight;
+        }
 
         pdf.save(`Receipt-${payment.invoiceId}.pdf`);
 
@@ -103,9 +106,6 @@ export default function IndividualReceiptPage() {
         console.error("Failed to generate PDF", error);
         setError("Could not generate the PDF for download.");
     } finally {
-        if (sidebarElement) {
-            sidebarElement.style.display = 'flex';
-        }
         setIsDownloading(false);
     }
   };
@@ -138,7 +138,7 @@ export default function IndividualReceiptPage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between print:hidden">
+      <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between print-hidden">
           <Button variant="outline" onClick={() => router.back()}>
               <ArrowLeft className="mr-2 h-4 w-4" />
               Back to Payments
@@ -164,7 +164,9 @@ export default function IndividualReceiptPage() {
           </div>
       </div>
       
-      <ReceiptTemplate payment={payment} schoolInfo={schoolInfo} />
+      <div id="printable-area">
+        <ReceiptTemplate payment={payment} schoolInfo={schoolInfo} />
+      </div>
     </div>
   );
 }
