@@ -48,6 +48,9 @@ export default function DashboardLayout({
           .print-hidden {
             display: none !important;
           }
+          main {
+            padding: 0 !important;
+          }
         }
       `}</style>
       <SidebarProvider>
