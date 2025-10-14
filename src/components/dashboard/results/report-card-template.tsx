@@ -23,15 +23,15 @@ export function ReportCardTemplate({ reportCard, schoolInfo }: ReportCardTemplat
   };
 
   return (
-    <div className="print-container bg-background">
+    <div id="printable-area">
         <div id="pdf-content" className="max-w-4xl mx-auto p-8 bg-white text-black font-serif">
             <header className="text-center border-b-4 border-black pb-4">
                 {schoolInfo?.logoUrl && (
                   <div className="flex justify-center mb-4">
-                    <Image src={schoolInfo.logoUrl} alt="School Logo" width={200} height={50} className="h-20 w-auto object-contain" />
+                    <Image src={schoolInfo.logoUrl} alt="School Logo" width={250} height={60} className="h-20 w-auto object-contain" />
                   </div>
                 )}
-                <h1 className="text-4xl font-bold text-black">{schoolInfo?.name}</h1>
+                <h1 className="text-4xl font-bold text-primary">{schoolInfo?.name || 'School Name'}</h1>
                 <p className="text-sm text-gray-600 mt-1">{schoolInfo?.address}</p>
             </header>
             <main className="mt-4">

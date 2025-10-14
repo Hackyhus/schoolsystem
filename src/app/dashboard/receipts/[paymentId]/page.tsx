@@ -1,59 +1,59 @@
 
 'use client';
 
-import { useState, useEffect, useCallback, useRef } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useParams, notFound, useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { Download, Loader2, AlertCircle, ArrowLeft, Printer } from 'lucide-react';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
-import { ReportCardTemplate } from '@/components/dashboard/results/report-card-template';
+import { ReceiptTemplate } from '@/components/dashboard/receipts/receipt-template';
 import { Skeleton } from '@/components/ui/skeleton';
 import jsPDF from 'jspdf';
 import html2canvas from 'html2canvas';
 import { dbService } from '@/lib/firebase';
-import type { ReportCard, SchoolInfo } from '@/lib/schema';
+import type { Payment, SchoolInfo } from '@/lib/schema';
 
-export default function IndividualReportPage() {
+export default function IndividualReceiptPage() {
   const params = useParams();
   const router = useRouter();
-  const { reportId } = params;
+  const { paymentId } = params;
 
-  const [reportCard, setReportCard] = useState<ReportCard | null>(null);
+  const [payment, setPayment] = useState<Payment | null>(null);
   const [schoolInfo, setSchoolInfo] = useState<SchoolInfo | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isDownloading, setIsDownloading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   const fetchData = useCallback(async () => {
-    if (typeof reportId !== 'string') return;
+    if (typeof paymentId !== 'string') return;
     
     setIsLoading(true);
     setError(null);
     try {
-      const [reportCardData, schoolInfoData] = await Promise.all([
-        dbService.getDoc<ReportCard>('reportCards', reportId),
+      const [paymentData, schoolInfoData] = await Promise.all([
+        dbService.getDoc<Payment>('payments', paymentId),
         dbService.getDoc<SchoolInfo>('system', 'schoolInfo'),
       ]);
 
-      if (reportCardData) {
-        setReportCard(reportCardData);
+      if (paymentData) {
+        setPayment(paymentData);
       } else {
-        setError('Report card not found.');
+        setError('Payment record not found.');
         notFound();
       }
-      
+
       if (schoolInfoData) {
         setSchoolInfo(schoolInfoData);
       } else {
         console.warn("School information is not configured in System > School Info.");
       }
     } catch (e: any) {
-      console.error('Error fetching report card:', e);
-      setError(e.message || 'An error occurred while fetching the report.');
+      console.error('Error fetching data:', e);
+      setError(e.message || 'An error occurred while fetching the receipt data.');
     } finally {
       setIsLoading(false);
     }
-  }, [reportId]);
+  }, [paymentId]);
 
   useEffect(() => {
     fetchData();
@@ -67,7 +67,7 @@ export default function IndividualReportPage() {
     const contentElement = document.getElementById('pdf-content');
     const sidebarElement = document.querySelector('[data-sidebar="sidebar"]') as HTMLElement | null;
 
-    if (!contentElement || !reportCard) return;
+    if (!contentElement || !payment) return;
     setIsDownloading(true);
     
     if (sidebarElement) {
@@ -87,29 +87,17 @@ export default function IndividualReportPage() {
         const contentWidth = pageWidth - (margin * 2);
         
         const canvas = await html2canvas(contentElement, {
-            scale: 2, // Higher scale for better quality
+            scale: 2,
             useCORS: true,
             width: contentElement.offsetWidth,
         });
-
         const imgData = canvas.toDataURL('image/png');
         const imgHeight = (canvas.height * contentWidth) / canvas.width;
-        let heightLeft = imgHeight;
         let position = margin;
 
-        // Add first page
         pdf.addImage(imgData, 'PNG', margin, position, contentWidth, imgHeight);
-        heightLeft -= (pageHeight - margin * 2);
 
-        // Add new pages if content overflows
-        while (heightLeft > 0) {
-            position = -heightLeft + margin;
-            pdf.addPage();
-            pdf.addImage(imgData, 'PNG', margin, position, contentWidth, imgHeight);
-            heightLeft -= (pageHeight - margin * 2);
-        }
-
-        pdf.save(`Report-Card-${reportCard.studentName.replace(/ /g, '-')}.pdf`);
+        pdf.save(`Receipt-${payment.invoiceId}.pdf`);
 
     } catch (error) {
         console.error("Failed to generate PDF", error);
@@ -121,7 +109,6 @@ export default function IndividualReportPage() {
         setIsDownloading(false);
     }
   };
-
 
   if (isLoading) {
     return (
@@ -145,7 +132,7 @@ export default function IndividualReportPage() {
     );
   }
 
-  if (!reportCard) {
+  if (!payment) {
     return null;
   }
 
@@ -171,31 +158,30 @@ export default function IndividualReportPage() {
         <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between print-hidden">
             <Button variant="outline" onClick={() => router.back()}>
                 <ArrowLeft className="mr-2 h-4 w-4" />
-                Back
+                Back to Payments
             </Button>
             <div className="flex gap-2">
-                <Button onClick={handlePrint} variant="outline">
-                    <Printer className="mr-2 h-4 w-4" />
-                    Print
-                </Button>
-                <Button onClick={handleDownload} size="lg" disabled={isDownloading}>
-                    {isDownloading ? (
-                        <>
-                            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                            Downloading...
-                        </>
-                    ) : (
-                        <>
-                            <Download className="mr-2 h-4 w-4" />
-                            Download PDF
-                        </>
-                    )}
-                </Button>
+              <Button onClick={handlePrint} variant="outline">
+                  <Printer className="mr-2 h-4 w-4" />
+                  Print
+              </Button>
+              <Button onClick={handleDownload} size="lg" disabled={isDownloading}>
+                  {isDownloading ? (
+                      <>
+                          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                          Downloading...
+                      </>
+                  ) : (
+                      <>
+                          <Download className="mr-2 h-4 w-4" />
+                          Download PDF
+                      </>
+                  )}
+              </Button>
             </div>
         </div>
-
-        <ReportCardTemplate reportCard={reportCard} schoolInfo={schoolInfo} />
-
+        
+        <ReceiptTemplate payment={payment} schoolInfo={schoolInfo} />
       </div>
     </>
   );

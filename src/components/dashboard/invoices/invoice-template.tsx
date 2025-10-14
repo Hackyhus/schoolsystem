@@ -34,7 +34,7 @@ export function InvoiceTemplate({ invoice, schoolInfo }: InvoiceTemplateProps) {
                     <Image src={schoolInfo.logoUrl} alt="School Logo" width={250} height={60} className="h-20 w-auto object-contain" />
                   </div>
                 )}
-                <h1 className="text-4xl font-bold text-black">{schoolInfo?.name}</h1>
+                <h1 className="text-4xl font-bold text-primary">{schoolInfo?.name || 'School Name'}</h1>
                 <p className="text-sm text-gray-600 mt-1">{schoolInfo?.address}</p>
             </header>
             <main className="py-8">
