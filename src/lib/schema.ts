@@ -1,4 +1,5 @@
 
+
 export type User = {
   _id: string;
   firstName: string;
@@ -65,12 +66,13 @@ export type AppNotification = {
 
 
 export type Announcement = {
-  _id: string;
+  id: string;
   title: string;
-  message: string;
-  audience: 'all' | 'staff' | 'parents';
-  postedBy: string; // ObjectId -> users._id
-  createdAt: Date;
+  content: string;
+  authorId: string;
+  authorName: string;
+  createdAt: { seconds: number, nanoseconds: number };
+  updatedAt?: { seconds: number, nanoseconds: number };
 };
 
 // New, detailed Student Schema
@@ -298,6 +300,7 @@ export type MockLessonNote = {
     status: string;
     submissionDate: string;
     fileUrl: string;
+    storagePath: string;
     content: string; // this is legacy, should be removed later
     hod_review: string | null;
     admin_review: string | null;

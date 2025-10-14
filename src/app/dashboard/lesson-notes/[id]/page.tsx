@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useEffect, useState, useCallback } from 'react';
@@ -23,6 +24,7 @@ import { Button } from '@/components/ui/button';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Dialog, DialogTrigger, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { AddLessonNoteForm } from '@/components/dashboard/lesson-notes/add-lesson-note-form';
+import { format } from 'date-fns';
 
 
 async function createLessonNoteNotification(teacherId: string, noteId: string, noteTitle: string, action: 'Approved' | 'Needs Revision', comment?: string) {
@@ -192,6 +194,9 @@ export default function LessonNoteDetailPage() {
     const encodedUrl = encodeURIComponent(fileUrl);
     return `https://docs.google.com/gview?url=${encodedUrl}&embedded=true`;
   }
+  
+  const formattedSubmissionDate = note?.submittedOn ? format(new Date(note.submittedOn.seconds * 1000), 'PPP') : 'N/A';
+
 
   if (isLoading) {
     return (
@@ -227,7 +232,7 @@ export default function LessonNoteDetailPage() {
        <div>
         <h1 className="font-headline text-3xl font-bold">{note.title}</h1>
         <p className="text-muted-foreground">
-          Submitted by {note.teacherName} on {note.submissionDate}
+          Submitted by {note.teacherName} on {formattedSubmissionDate}
         </p>
       </div>
 
@@ -343,7 +348,7 @@ export default function LessonNoteDetailPage() {
                             </div>
                             <div>
                                 <p className="font-medium">Submitted by Teacher</p>
-                                <p className="text-sm text-muted-foreground">{note.teacherName} on {note.submissionDate}</p>
+                                <p className="text-sm text-muted-foreground">{note.teacherName} on {formattedSubmissionDate}</p>
                             </div>
                         </li>
                          {note.hod_review && (

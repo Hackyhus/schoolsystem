@@ -146,11 +146,11 @@ export function BankDetailsForm({
                 <FormControl>
                   <Combobox
                     options={NIGERIAN_BANKS}
-                    {...field}
+                    value={field.value}
+                    onChange={field.onChange}
                     placeholder="Select a bank"
                     searchPlaceholder="Search banks..."
                     notFoundText="No bank found."
-                    disabled={!isAdmin}
                   />
                 </FormControl>
                 <FormMessage />

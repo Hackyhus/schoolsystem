@@ -86,3 +86,4 @@ export function AnnouncementTemplate({ announcement, schoolInfo }: AnnouncementT
       </div>
   );
 }
+

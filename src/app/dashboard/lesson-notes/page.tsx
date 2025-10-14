@@ -30,6 +30,7 @@ import {
 } from '@/components/ui/dialog';
 import { AddLessonNoteForm } from '@/components/dashboard/lesson-notes/add-lesson-note-form';
 import usePersistentState from '@/hooks/use-persistent-state';
+import { format } from 'date-fns';
 
 
 export default function LessonNotesPage() {
@@ -49,22 +50,15 @@ export default function LessonNotesPage() {
     try {
       let notesQuery;
       if (role === 'Teacher') {
-        notesQuery = query(collection(db, 'lessonNotes'), where("teacherId", "==", user.uid));
+        notesQuery = query(collection(db, 'lessonNotes'), where("teacherId", "==", user.uid), orderBy('submittedOn', 'desc'));
       } else {
-        notesQuery = query(collection(db, 'lessonNotes'));
+        notesQuery = query(collection(db, 'lessonNotes'), orderBy('submittedOn', 'desc'));
       }
       
       const querySnapshot = await getDocs(notesQuery);
       const notesList = querySnapshot.docs.map(
         (doc) => ({ id: doc.id, ...doc.data() } as MockLessonNote)
       );
-
-      // Sort on the client-side to ensure consistent ordering and avoid complex indexes
-      notesList.sort((a, b) => {
-          const dateA = a.submittedOn?.seconds ? a.submittedOn.seconds : new Date(a.submissionDate).getTime() / 1000;
-          const dateB = b.submittedOn?.seconds ? b.submittedOn.seconds : new Date(b.submissionDate).getTime() / 1000;
-          return dateB - dateA;
-      });
 
       setNotes(notesList);
     } catch (error) {
@@ -171,7 +165,7 @@ export default function LessonNotesPage() {
                   <TableCell className="font-medium">{note.title}</TableCell>
                   {role !== 'Teacher' && <TableCell>{note.teacherName}</TableCell>}
                   <TableCell>{note.subject}</TableCell>
-                  <TableCell>{note.submissionDate}</TableCell>
+                  <TableCell>{note.submittedOn ? format(new Date(note.submittedOn.seconds * 1000), 'PPP') : 'N/A'}</TableCell>
                   <TableCell>
                     <Badge variant={statusVariant(note.status)}>{note.status}</Badge>
                   </TableCell>

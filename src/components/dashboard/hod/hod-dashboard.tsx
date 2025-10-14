@@ -50,16 +50,10 @@ type SubmissionStatusData = {
   fill: string;
 };
 
-type LessonNoteWithDate = Omit<MockLessonNote, 'submissionDate' | 'submittedOn'> & {
-  submissionDate: string | { seconds: number; nanoseconds: number; }; // Keep original for type safety
-  submittedOn?: any;
-  formattedDate: string;
-};
-
 export function HodDashboard() {
   const { user } = useRole();
   const { toast } = useToast();
-  const [notes, setNotes] = useState<LessonNoteWithDate[]>([]);
+  const [notes, setNotes] = useState<MockLessonNote[]>([]);
   const [stats, setStats] = useState({
     pending: 0,
     approved: 0,
@@ -96,33 +90,11 @@ export function HodDashboard() {
       }
 
       // Firestore 'in' query has a limit of 30 values. If there are more teachers, we'd need multiple queries.
-      const notesQuery = query(collection(db, 'lessonNotes'), where('teacherId', 'in', teacherIds));
+      const notesQuery = query(collection(db, 'lessonNotes'), where('teacherId', 'in', teacherIds), orderBy('submittedOn', 'desc'));
       const notesSnapshot = await getDocs(notesQuery);
       
       const notesList = notesSnapshot.docs.map(doc => {
-        const data = doc.data() as MockLessonNote;
-        let formattedDate = 'Invalid Date';
-        try {
-          const dateSource = data.submittedOn?.seconds ? new Date(data.submittedOn.seconds * 1000) : (typeof data.submissionDate === 'string' ? new Date(data.submissionDate) : null);
-          if (dateSource && !isNaN(dateSource.getTime())) {
-              formattedDate = format(dateSource, 'PPP');
-          }
-        } catch(e) {
-            console.warn(`Could not parse date for note ${doc.id}:`, data.submittedOn || data.submissionDate);
-        }
-
-        return { 
-            id: doc.id, 
-            ...data,
-            formattedDate: formattedDate
-        } as LessonNoteWithDate;
-      });
-
-      // Sort client-side to avoid complex indexes
-      notesList.sort((a, b) => {
-          const dateA = a.submittedOn?.seconds ? new Date(a.submittedOn.seconds * 1000) : new Date(a.submissionDate);
-          const dateB = b.submittedOn?.seconds ? new Date(b.submittedOn.seconds * 1000) : new Date(b.submissionDate);
-          return dateB.getTime() - dateA.getTime();
+        return { id: doc.id, ...doc.data() } as MockLessonNote;
       });
 
       setNotes(notesList.slice(0, 5)); // Show recent 5
