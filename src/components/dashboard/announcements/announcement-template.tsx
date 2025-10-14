@@ -25,7 +25,7 @@ export function AnnouncementTemplate({ announcement, schoolInfo }: AnnouncementT
   };
 
   return (
-    <div className="print-container bg-background">
+    <div id="printable-area">
       <div id="pdf-content" className="max-w-4xl mx-auto p-8 bg-white text-black font-serif">
         <header className="flex items-start justify-between border-b-2 border-gray-300 pb-4">
           {schoolInfo?.logoUrl && (
@@ -68,38 +68,12 @@ export function AnnouncementTemplate({ announcement, schoolInfo }: AnnouncementT
           </div>
         </main>
 
-        <footer id="pdf-footer-container" className="absolute bottom-8 left-8 right-8 text-center text-xs text-gray-500 border-t pt-4">
+        <footer className="mt-12 text-center text-xs text-gray-500 border-t pt-4">
             <p className="font-bold">{schoolInfo?.name}</p>
             <p>{schoolInfo?.address}</p>
             <p>Phone: {schoolInfo?.phone} | Email: {schoolInfo?.email}</p>
         </footer>
       </div>
-
-      <style jsx global>{`
-        @media print {
-          body * {
-            visibility: hidden;
-          }
-          .print-container, .print-container * {
-            visibility: visible;
-          }
-          .print-container {
-            position: absolute;
-            left: 0;
-            top: 0;
-            width: 100%;
-          }
-           #pdf-content {
-              position: relative;
-              min-height: 29.7cm; /* A4 height */
-              margin: 0 auto;
-          }
-          body {
-            -webkit-print-color-adjust: exact;
-            print-color-adjust: exact;
-          }
-        }
-      `}</style>
     </div>
   );
 }

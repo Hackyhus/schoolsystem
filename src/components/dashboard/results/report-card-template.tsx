@@ -112,32 +112,12 @@ export function ReportCardTemplate({ reportCard, schoolInfo }: ReportCardTemplat
                     </div>
                 </div>
             </main>
-            <footer id="pdf-footer-container" className="mt-12 text-center text-xs text-gray-500 border-t pt-4">
+            <footer className="mt-12 text-center text-xs text-gray-500 border-t pt-4">
                 <p className="font-bold">{schoolInfo?.name}</p>
                 <p>{schoolInfo?.address}</p>
                 <p>Phone: {schoolInfo?.phone} | Email: {schoolInfo?.email}</p>
             </footer>
         </div>
-        <style jsx global>{`
-            @media print {
-              body * {
-                visibility: hidden;
-              }
-              .print-container, .print-container * {
-                visibility: visible;
-              }
-              .print-container {
-                position: absolute;
-                left: 0;
-                top: 0;
-                width: 100%;
-              }
-              body {
-                -webkit-print-color-adjust: exact;
-                print-color-adjust: exact;
-              }
-            }
-        `}</style>
     </div>
   );
 }
