@@ -149,23 +149,6 @@ export default function IndividualInvoicePage() {
   }
 
   return (
-    <>
-       <style jsx global>{`
-        @media print {
-          body > *:not(#printable-area) {
-            display: none;
-          }
-          #printable-area, #printable-area * {
-            visibility: visible;
-          }
-          #printable-area {
-            position: absolute;
-            left: 0;
-            top: 0;
-            width: 100%;
-          }
-        }
-      `}</style>
       <div className="space-y-6">
         <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between print-hidden">
             <Button variant="outline" onClick={() => router.back()}>
@@ -193,8 +176,9 @@ export default function IndividualInvoicePage() {
             </div>
         </div>
         
-        <InvoiceTemplate invoice={invoice} schoolInfo={schoolInfo} />
+        <div id="printable-area">
+            <InvoiceTemplate invoice={invoice} schoolInfo={schoolInfo} />
+        </div>
       </div>
-    </>
   );
 }

@@ -45,6 +45,9 @@ export default function DashboardLayout({
           main[data-sidebar="inset"] {
             margin-left: 0 !important;
           }
+          .print-hidden {
+            display: none;
+          }
         }
       `}</style>
       <SidebarProvider>
