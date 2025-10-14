@@ -23,7 +23,6 @@ export function ReportCardTemplate({ reportCard, schoolInfo }: ReportCardTemplat
   };
 
   return (
-    <div id="printable-area">
         <div id="pdf-content" className="max-w-4xl mx-auto p-8 bg-white text-black font-serif">
             <header className="text-center border-b-4 border-black pb-4">
                 {schoolInfo?.logoUrl && (
@@ -115,6 +114,5 @@ export function ReportCardTemplate({ reportCard, schoolInfo }: ReportCardTemplat
                 <p>Phone: {schoolInfo?.phone} | Email: {schoolInfo?.email}</p>
             </footer>
         </div>
-    </div>
   );
 }

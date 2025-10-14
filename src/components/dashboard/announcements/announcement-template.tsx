@@ -24,7 +24,6 @@ export function AnnouncementTemplate({ announcement, schoolInfo }: AnnouncementT
   };
 
   return (
-    <div id="printable-area">
       <div id="pdf-content" className="max-w-4xl mx-auto p-8 bg-white text-black font-serif">
          <header className="text-center border-b-4 border-black pb-4">
             {schoolInfo?.logoUrl && (
@@ -34,7 +33,6 @@ export function AnnouncementTemplate({ announcement, schoolInfo }: AnnouncementT
             )}
             <h1 className="text-4xl font-bold text-primary">{schoolInfo?.name || 'School Name'}</h1>
             <p className="text-sm text-gray-600 mt-1">{schoolInfo?.address}</p>
-            <p className="text-xs text-gray-500">Phone: {schoolInfo?.phone} | Email: {schoolInfo?.email}</p>
         </header>
 
         <main className="py-8">
@@ -61,7 +59,9 @@ export function AnnouncementTemplate({ announcement, schoolInfo }: AnnouncementT
              <p className="text-sm text-gray-700">For: Management</p>
           </div>
         </main>
+         <footer className="mt-12 text-center text-xs text-gray-500 border-t pt-4">
+            <p>Phone: {schoolInfo?.phone} | Email: {schoolInfo?.email}</p>
+        </footer>
       </div>
-    </div>
   );
 }

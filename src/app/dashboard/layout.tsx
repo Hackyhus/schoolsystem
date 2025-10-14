@@ -41,15 +41,13 @@ export default function DashboardLayout({
     <div className="font-body">
       <style jsx global>{`
         @media print {
-          /* This targets the main content area and removes the margin-left added by the sidebar logic */
-          main[data-sidebar="inset"] {
+          /* This targets the main content area and removes the margin-left and padding added by the layout logic */
+          main {
             margin-left: 0 !important;
+            padding: 0 !important;
           }
           .print-hidden {
             display: none !important;
-          }
-          main {
-            padding: 0 !important;
           }
         }
       `}</style>

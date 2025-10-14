@@ -15,7 +15,6 @@ export function ReceiptTemplate({ payment, schoolInfo }: ReceiptTemplateProps) {
   const paymentDate = payment.paymentDate?.seconds ? format(new Date(payment.paymentDate.seconds * 1000), 'PPP') : 'N/A';
 
   return (
-    <div id="printable-area">
       <div id="pdf-content" className="max-w-4xl mx-auto p-8 bg-white text-black font-serif">
         <header className="text-center border-b-4 border-black pb-4">
           {schoolInfo?.logoUrl && (
@@ -66,6 +65,5 @@ export function ReceiptTemplate({ payment, schoolInfo }: ReceiptTemplateProps) {
             <p>Phone: {schoolInfo?.phone} | Email: {schoolInfo?.email}</p>
         </footer>
       </div>
-    </div>
   );
 }
