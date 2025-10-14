@@ -1,37 +1,27 @@
+
 'use client';
 
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { ArrowRight } from "lucide-react";
-import Link from "next/link";
+import { useEffect } from 'react';
+import { useRouter } from 'next/navigation';
+import { Loader2 } from 'lucide-react';
 
+// This component now acts as a redirect to the consolidated fee management page.
+export default function SystemFeesRedirectPage() {
+    const router = useRouter();
 
-export default function SystemFeesPage() {
+    useEffect(() => {
+        router.replace('/dashboard/accountant/fees');
+    }, [router]);
+
     return (
-        <div className="space-y-8">
-            <div>
-                <h1 className="font-headline text-3xl font-bold">System Fee Structure</h1>
+        <div className="flex h-64 w-full flex-col items-center justify-center gap-4 text-center">
+            <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+            <div className="space-y-1">
+                <h2 className="text-xl font-semibold text-foreground">Redirecting...</h2>
                 <p className="text-muted-foreground">
-                    Define tuition fees, payment deadlines, and other charges for different class groups.
+                    Fee management has been moved to the Accountant dashboard.
                 </p>
             </div>
-            <Card>
-                <CardHeader>
-                    <CardTitle>Fee Management Moved</CardTitle>
-                    <CardDescription>
-                        To better align with operational workflows, the management of fee structures has been moved to the Accountant's dashboard.
-                        <br /><br />
-                        Please use the link below to access the fee management page.
-                    </CardDescription>
-                </CardHeader>
-                <CardContent>
-                    <Button asChild>
-                        <Link href="/dashboard/accountant/fees">
-                            Go to Fee Management <ArrowRight className="ml-2 h-4 w-4" />
-                        </Link>
-                    </Button>
-                </CardContent>
-            </Card>
         </div>
     );
 }
