@@ -39,9 +39,17 @@ export default function DashboardLayout({
 
   return (
     <div className="font-body">
+      <style jsx global>{`
+        @media print {
+          /* This targets the main content area and removes the margin-left added by the sidebar logic */
+          main[data-sidebar="inset"] {
+            margin-left: 0 !important;
+          }
+        }
+      `}</style>
       <SidebarProvider>
         <DashboardSidebar />
-        <SidebarInset>
+        <SidebarInset data-sidebar="inset">
           <MaintenanceBanner />
           <DashboardHeader />
           <main className="min-h-[calc(100vh-4rem)] p-4 md:p-6 lg:p-8">
