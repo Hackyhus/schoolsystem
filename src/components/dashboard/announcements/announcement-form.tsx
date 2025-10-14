@@ -15,12 +15,14 @@ import {
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/hooks/use-toast';
-import { createAnnouncement } from '@/actions/announcement-actions';
+import { saveAnnouncement } from '@/actions/announcement-actions';
 import { useState } from 'react';
 import { Loader2, Send } from 'lucide-react';
 import { useRole } from '@/context/role-context';
+import type { Announcement } from '@/lib/schema';
 
 const formSchema = z.object({
+  id: z.string().optional(),
   title: z.string().min(3, 'Title must be at least 3 characters long.'),
   content: z.string().min(10, 'Content must be at least 10 characters long.'),
 });
@@ -28,10 +30,11 @@ const formSchema = z.object({
 type AnnouncementFormValues = z.infer<typeof formSchema>;
 
 interface AnnouncementFormProps {
+  initialData?: Announcement;
   onFormSubmit: (success: boolean) => void;
 }
 
-export function AnnouncementForm({ onFormSubmit }: AnnouncementFormProps) {
+export function AnnouncementForm({ initialData, onFormSubmit }: AnnouncementFormProps) {
   const { toast } = useToast();
   const { user } = useRole();
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -39,8 +42,9 @@ export function AnnouncementForm({ onFormSubmit }: AnnouncementFormProps) {
   const form = useForm<AnnouncementFormValues>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      title: '',
-      content: '',
+      id: initialData?.id,
+      title: initialData?.title || '',
+      content: initialData?.content || '',
     },
   });
 
@@ -51,7 +55,7 @@ export function AnnouncementForm({ onFormSubmit }: AnnouncementFormProps) {
     }
     setIsSubmitting(true);
     try {
-      const result = await createAnnouncement({ ...values, authorId: user.uid });
+      const result = await saveAnnouncement({ ...values, authorId: user.uid });
       if (result.error) {
           Object.entries(result.error).forEach(([key, messages]) => {
               if (Array.isArray(messages)) {
@@ -60,7 +64,7 @@ export function AnnouncementForm({ onFormSubmit }: AnnouncementFormProps) {
           });
           throw new Error('Validation failed.');
       }
-      toast({ title: 'Success', description: 'Announcement published successfully.' });
+      toast({ title: 'Success', description: 'Announcement saved successfully.' });
       onFormSubmit(true);
     } catch (error: any) {
       if (error.message !== 'Validation failed.') {
@@ -104,7 +108,7 @@ export function AnnouncementForm({ onFormSubmit }: AnnouncementFormProps) {
           <Button type="button" variant="ghost" onClick={() => onFormSubmit(false)}>Cancel</Button>
           <Button type="submit" disabled={isSubmitting}>
             {isSubmitting ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Send className="mr-2 h-4 w-4" />}
-            Publish Announcement
+            {initialData ? 'Save Changes' : 'Publish Announcement'}
           </Button>
         </div>
       </form>

@@ -4,7 +4,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { PlusCircle, Rss } from "lucide-react";
+import { PlusCircle, Rss, MoreHorizontal, Edit, Trash2 } from "lucide-react";
 import { useRole } from '@/context/role-context';
 import { dbService } from '@/lib/firebase';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -13,6 +13,24 @@ import { Dialog, DialogTrigger, DialogContent, DialogHeader, DialogTitle } from 
 import { AnnouncementForm } from '@/components/dashboard/announcements/announcement-form';
 import usePersistentState from '@/hooks/use-persistent-state';
 import Link from 'next/link';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import { useToast } from '@/hooks/use-toast';
+import { deleteAnnouncement } from '@/actions/announcement-actions';
 
 type Announcement = {
     id: string;
@@ -24,11 +42,13 @@ type Announcement = {
 
 export default function AnnouncementsPage() {
     const { role } = useRole();
+    const { toast } = useToast();
     const [announcements, setAnnouncements] = useState<Announcement[]>([]);
     const [isLoading, setIsLoading] = useState(true);
     const [isFormOpen, setIsFormOpen] = usePersistentState('announcement-form-open', false);
+    const [editingAnnouncement, setEditingAnnouncement] = useState<Announcement | undefined>(undefined);
 
-    const canCreate = role === 'Admin' || role === 'SLT';
+    const canManage = role === 'Admin' || role === 'SLT';
 
     const fetchAnnouncements = useCallback(async () => {
         setIsLoading(true);
@@ -48,8 +68,25 @@ export default function AnnouncementsPage() {
 
     const handleFormSubmit = (success: boolean) => {
         setIsFormOpen(false);
+        setEditingAnnouncement(undefined);
         if (success) {
             fetchAnnouncements();
+        }
+    };
+    
+    const handleEdit = (ann: Announcement) => {
+        setEditingAnnouncement(ann);
+        setIsFormOpen(true);
+    };
+
+    const handleDelete = async (id: string) => {
+        try {
+            const result = await deleteAnnouncement(id);
+            if (result.error) throw new Error(result.error);
+            toast({ title: 'Success', description: 'Announcement deleted successfully.' });
+            fetchAnnouncements();
+        } catch (error: any) {
+            toast({ variant: 'destructive', title: 'Error', description: error.message });
         }
     };
 
@@ -63,7 +100,10 @@ export default function AnnouncementsPage() {
                 </p>
             </div>
             
-             <Dialog open={isFormOpen} onOpenChange={setIsFormOpen}>
+             <Dialog open={isFormOpen} onOpenChange={(open) => {
+                 setIsFormOpen(open);
+                 if (!open) setEditingAnnouncement(undefined);
+             }}>
                 <Card>
                     <CardHeader className="flex flex-row items-center justify-between">
                         <div>
@@ -72,7 +112,7 @@ export default function AnnouncementsPage() {
                                 Official announcements from the school administration.
                             </CardDescription>
                         </div>
-                        {canCreate && (
+                        {canManage && (
                             <DialogTrigger asChild>
                                 <Button>
                                     <PlusCircle className="mr-2 h-4 w-4" /> Create Announcement
@@ -98,12 +138,43 @@ export default function AnnouncementsPage() {
                                 {announcements.map((ann) => (
                                      <Card key={ann.id} className="shadow-none border hover:shadow-md transition-shadow">
                                         <CardHeader>
-                                            <Link href={`/dashboard/announcements/${ann.id}`} className="hover:underline">
-                                                <CardTitle>{ann.title}</CardTitle>
-                                            </Link>
-                                            <CardDescription>
-                                                Posted by {ann.authorName} on {format(new Date(ann.createdAt.seconds * 1000), 'PPP')}
-                                            </CardDescription>
+                                            <div className="flex justify-between items-start">
+                                                <div className="flex-1">
+                                                    <Link href={`/dashboard/announcements/${ann.id}`} className="hover:underline">
+                                                        <CardTitle>{ann.title}</CardTitle>
+                                                    </Link>
+                                                    <CardDescription>
+                                                        Posted by {ann.authorName} on {format(new Date(ann.createdAt.seconds * 1000), 'PPP')}
+                                                    </CardDescription>
+                                                </div>
+                                                {canManage && (
+                                                     <AlertDialog>
+                                                        <DropdownMenu>
+                                                            <DropdownMenuTrigger asChild>
+                                                                <Button variant="ghost" size="icon"><MoreHorizontal className="h-4 w-4" /></Button>
+                                                            </DropdownMenuTrigger>
+                                                            <DropdownMenuContent>
+                                                                <DropdownMenuItem onClick={() => handleEdit(ann)}><Edit className="mr-2 h-4 w-4" /> Edit</DropdownMenuItem>
+                                                                <AlertDialogTrigger asChild>
+                                                                    <DropdownMenuItem className="text-destructive"><Trash2 className="mr-2 h-4 w-4" /> Delete</DropdownMenuItem>
+                                                                </AlertDialogTrigger>
+                                                            </DropdownMenuContent>
+                                                        </DropdownMenu>
+                                                        <AlertDialogContent>
+                                                            <AlertDialogHeader>
+                                                                <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
+                                                                <AlertDialogDescription>
+                                                                    This action cannot be undone. This will permanently delete this announcement.
+                                                                </AlertDialogDescription>
+                                                            </AlertDialogHeader>
+                                                            <AlertDialogFooter>
+                                                                <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                                                <AlertDialogAction onClick={() => handleDelete(ann.id)}>Delete</AlertDialogAction>
+                                                            </AlertDialogFooter>
+                                                        </AlertDialogContent>
+                                                     </AlertDialog>
+                                                )}
+                                            </div>
                                         </CardHeader>
                                         <CardContent>
                                             <p className="text-sm whitespace-pre-wrap line-clamp-3">{ann.content}</p>
@@ -117,9 +188,12 @@ export default function AnnouncementsPage() {
 
                  <DialogContent>
                     <DialogHeader>
-                        <DialogTitle>Create New Announcement</DialogTitle>
+                        <DialogTitle>{editingAnnouncement ? 'Edit' : 'Create New'} Announcement</DialogTitle>
                     </DialogHeader>
-                    <AnnouncementForm onFormSubmit={handleFormSubmit} />
+                    <AnnouncementForm
+                        initialData={editingAnnouncement}
+                        onFormSubmit={handleFormSubmit}
+                    />
                 </DialogContent>
             </Dialog>
         </div>
