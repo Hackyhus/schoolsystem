@@ -25,16 +25,16 @@ export function ReportCardTemplate({ reportCard, schoolInfo }: ReportCardTemplat
   return (
     <div className="print-container bg-background">
         <div id="pdf-content" className="max-w-4xl mx-auto p-8 bg-white text-black font-serif">
-            <header>
-                 <div className="flex flex-row items-start justify-between border-b-4 border-black pb-4">
-                    {schoolInfo?.logoUrl && (
-                      <Image src={schoolInfo.logoUrl} alt="School Logo" width={200} height={50} className="h-12 w-auto object-contain" />
-                    )}
-                    <div className="text-right">
-                        <h2 className="text-2xl font-bold text-black">{schoolInfo?.name || 'School Name'}</h2>
-                        <p className="text-sm text-gray-500">{schoolInfo?.address}</p>
-                    </div>
-                </div>
+            <header className="text-center border-b-4 border-black pb-4">
+                {schoolInfo?.logoUrl && (
+                  <div className="flex justify-center mb-4">
+                    <Image src={schoolInfo.logoUrl} alt="School Logo" width={200} height={50} className="h-20 w-auto object-contain" />
+                  </div>
+                )}
+                <h1 className="text-4xl font-bold text-black">{schoolInfo?.name}</h1>
+                <p className="text-sm text-gray-600 mt-1">{schoolInfo?.address}</p>
+            </header>
+            <main className="mt-4">
                 <div className="text-center py-2">
                     <h3 className="text-xl font-bold uppercase tracking-wider text-black">Student Report Card</h3>
                     <p className="font-medium text-gray-800">{reportCard.term} - {reportCard.session} Session</p>
@@ -44,8 +44,7 @@ export function ReportCardTemplate({ reportCard, schoolInfo }: ReportCardTemplat
                     <div><strong className="text-gray-600">Student ID:</strong> {reportCard.studentId}</div>
                     <div><strong className="text-gray-600">Class:</strong> {reportCard.class}</div>
                 </div>
-            </header>
-            <main>
+           
                 <div className="overflow-x-auto mt-6">
                     <Table>
                     <TableHeader>
@@ -113,8 +112,6 @@ export function ReportCardTemplate({ reportCard, schoolInfo }: ReportCardTemplat
                 </div>
             </main>
             <footer className="mt-12 text-center text-xs text-gray-500 border-t pt-4">
-                <p className="font-bold">{schoolInfo?.name}</p>
-                <p>{schoolInfo?.address}</p>
                 <p>Phone: {schoolInfo?.phone} | Email: {schoolInfo?.email}</p>
             </footer>
         </div>

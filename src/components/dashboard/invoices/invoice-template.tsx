@@ -28,16 +28,20 @@ export function InvoiceTemplate({ invoice, schoolInfo }: InvoiceTemplateProps) {
   return (
     <div id="printable-area">
         <div id="pdf-content" className="max-w-4xl mx-auto p-8 bg-white text-black font-serif">
-             <header className="flex flex-row items-start justify-between border-b-4 border-black pb-4">
+             <header className="text-center border-b-4 border-black pb-4">
                 {schoolInfo?.logoUrl && (
-                  <Image src={schoolInfo.logoUrl} alt="School Logo" width={250} height={60} className="h-16 w-auto object-contain" />
+                  <div className="flex justify-center mb-4">
+                    <Image src={schoolInfo.logoUrl} alt="School Logo" width={250} height={60} className="h-20 w-auto object-contain" />
+                  </div>
                 )}
-                <div className="text-right">
-                    <h2 className="text-4xl font-bold text-black">INVOICE</h2>
-                    <p className="text-gray-500">{invoice.invoiceId}</p>
-                </div>
+                <h1 className="text-4xl font-bold text-black">{schoolInfo?.name}</h1>
+                <p className="text-sm text-gray-600 mt-1">{schoolInfo?.address}</p>
             </header>
             <main className="py-8">
+                <div className="text-center mb-6">
+                    <h2 className="text-3xl font-bold text-black">INVOICE</h2>
+                    <p className="text-gray-500">{invoice.invoiceId}</p>
+                </div>
                 <div className="grid grid-cols-2 gap-4 text-sm">
                     <div>
                     <h3 className="font-bold text-gray-700">Bill To:</h3>
@@ -99,8 +103,6 @@ export function InvoiceTemplate({ invoice, schoolInfo }: InvoiceTemplateProps) {
                 </div>
             </main>
              <footer className="mt-12 text-center text-xs text-gray-500 border-t pt-4">
-                <p className="font-bold">{schoolInfo?.name}</p>
-                <p>{schoolInfo?.address}</p>
                 <p>Phone: {schoolInfo?.phone} | Email: {schoolInfo?.email}</p>
             </footer>
         </div>
