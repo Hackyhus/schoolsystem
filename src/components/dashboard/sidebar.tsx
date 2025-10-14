@@ -1,4 +1,3 @@
-
 'use client';
 
 import React from 'react';
@@ -68,6 +67,7 @@ const allNavLinks = {
   profile: { icon: 'User', label: 'Profile', path: '/profile' },
   notifications: { icon: 'Bell', label: 'Notifications', path: '/dashboard/notifications' },
   messaging: { icon: 'MessageSquare', label: 'Messaging', path: '/dashboard/messaging' },
+  announcements: { icon: 'Bell', label: 'Announcements', path: '/dashboard/announcements' },
   
   // Admin & SLT
   reports: { icon: 'TrendingUp', label: 'Reports & Analytics', path: '/dashboard/reports' },
@@ -128,6 +128,7 @@ const allNavLinks = {
 const navConfig: Record<string, { group: string; links: (keyof typeof allNavLinks)[] }[]> = {
   Admin: [
     { group: 'Main', links: ['dashboard', 'profile', 'notifications'] },
+    { group: 'Communication', links: ['announcements', 'messaging'] },
     { group: 'Management', links: ['reports', 'system', 'manageStaff', 'manageStudents', 'departments'] },
     { group: 'Finance', links: ['feeSystem', 'invoices', 'payments', 'expenses', 'payroll', 'reconciliation', 'financialReports'] },
     { group: 'Academics', links: ['lessonApprovals', 'reviewQuestions', 'enterScores', 'generateResults', 'viewResults'] },
@@ -135,12 +136,14 @@ const navConfig: Record<string, { group: string; links: (keyof typeof allNavLink
   ],
   SLT: [
     { group: 'Main', links: ['dashboard', 'profile', 'notifications'] },
+    { group: 'Communication', links: ['announcements', 'messaging'] },
     { group: 'Oversight', links: ['reports', 'manageStaff', 'manageStudents'] },
     { group: 'Academics', links: ['lessonApprovals', 'gradingSystem', 'classesAndSubjects'] },
     { group: 'Finance', links: ['financialReports'] },
   ],
   HeadOfDepartment: [
     { group: 'Main', links: ['dashboard', 'profile', 'notifications'] },
+    { group: 'Communication', links: ['announcements', 'messaging'] },
     { group: 'Department', links: ['lessonApprovals', 'hodAnalytics', 'manageStaff'] },
     { group: 'Academics', links: ['classesAndSubjects'] },
   ],
@@ -154,6 +157,7 @@ const navConfig: Record<string, { group: string; links: (keyof typeof allNavLink
   ],
   Teacher: [
     { group: 'Main', links: ['dashboard', 'profile', 'notifications'] },
+    { group: 'Communication', links: ['announcements', 'messaging'] },
     { group: 'My Work', links: ['lessonPlans', 'examQuestions', 'enterScores', 'myStudents'] },
   ],
   Parent: [
@@ -183,7 +187,7 @@ export function DashboardSidebar() {
               const item = allNavLinks[key];
               if (!item) return null;
 
-              const Icon = iconMap[item.icon] || Home;
+              const Icon = iconMap[item.icon] || LayoutDashboard;
               return (
                  <SidebarMenuItem key={item.path}>
                     <Link href={item.path}>
