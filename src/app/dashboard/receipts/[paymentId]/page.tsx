@@ -138,7 +138,7 @@ export default function IndividualReceiptPage() {
 
   return (
       <div className="space-y-6">
-        <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between print-hidden">
+        <div className="print-hidden flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
             <Button variant="outline" onClick={() => router.back()}>
                 <ArrowLeft className="mr-2 h-4 w-4" />
                 Back to Payments

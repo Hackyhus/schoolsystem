@@ -38,33 +38,34 @@ export default function DashboardLayout({
   }
 
   return (
-    <div className="font-body">
-      <style jsx global>{`
-        @media print {
-          /* This targets the main content area and removes the margin-left and padding added by the layout logic */
-          main {
-            margin-left: 0 !important;
-            padding: 0 !important;
+    <SidebarProvider>
+      <div className="font-body">
+        <style jsx global>{`
+          @media print {
+            .print-hidden {
+              display: none !important;
+            }
+            main {
+              width: 100%;
+              margin: 0;
+              padding: 0 !important;
+              min-height: 100vh;
+            }
           }
-          .print-hidden {
-            display: none !important;
-          }
-        }
-      `}</style>
-      <SidebarProvider>
+        `}</style>
         <div className="print-hidden">
           <DashboardSidebar />
         </div>
         <SidebarInset data-sidebar="inset">
-          <div className="print-hidden">
-             <MaintenanceBanner />
-             <DashboardHeader />
-          </div>
-          <main className="min-h-[calc(100vh-4rem)] p-4 md:p-6 lg:p-8">
-            {children}
-          </main>
-        </SidebarInset>
-      </SidebarProvider>
-    </div>
+            <div className="print-hidden">
+              <MaintenanceBanner />
+              <DashboardHeader />
+            </div>
+            <main className="min-h-[calc(100vh-4rem)] p-4 md:p-6 lg:p-8">
+              {children}
+            </main>
+          </SidebarInset>
+      </div>
+    </SidebarProvider>
   );
 }
