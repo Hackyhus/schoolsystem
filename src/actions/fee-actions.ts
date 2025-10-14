@@ -43,7 +43,7 @@ export async function saveFeeStructure(values: z.infer<typeof feeStructureSchema
       await dbService.addDoc('feeStructures', data);
     }
 
-    revalidatePath('/dashboard/system/fees');
+    revalidatePath('/dashboard/accountant/fees');
     return { success: true };
 
   } catch (error: any) {
@@ -55,7 +55,7 @@ export async function saveFeeStructure(values: z.infer<typeof feeStructureSchema
 export async function deleteFeeStructure(id: string) {
   try {
     await dbService.deleteDoc('feeStructures', id);
-    revalidatePath('/dashboard/system/fees');
+    revalidatePath('/dashboard/accountant/fees');
     return { success: true };
   } catch (error: any) {
     console.error('Error deleting fee structure:', error);

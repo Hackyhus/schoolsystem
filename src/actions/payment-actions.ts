@@ -31,11 +31,12 @@ export async function recordPayment(values: z.infer<typeof paymentSchema>) {
 
         const { invoiceId, amountPaid, paymentDate, paymentMethod, notes } = parsed.data;
 
-        // 1. Fetch the invoice
-        const invoice = await dbService.getDoc<Invoice>('invoices', invoiceId);
-        if (!invoice) {
+        // 1. Fetch the invoice by its main document ID
+        const invoices = await dbService.getDocs<Invoice>('invoices', [{ type: 'where', fieldPath: 'invoiceId', opStr: '==', value: invoiceId }]);
+        if (invoices.length === 0) {
             return { error: 'Invoice not found.' };
         }
+        const invoice = invoices[0];
         
         // 2. Validate payment
         if (invoice.status === 'Paid') {
@@ -55,7 +56,7 @@ export async function recordPayment(values: z.infer<typeof paymentSchema>) {
         }
 
         // 4. Update the invoice document
-        batch.update('invoices', invoiceId, {
+        batch.update('invoices', invoice.id, {
             amountPaid: newAmountPaid,
             balance: newBalance,
             status: newStatus,
@@ -92,4 +93,3 @@ export async function recordPayment(values: z.infer<typeof paymentSchema>) {
         return { error: error.message || 'An unexpected error occurred.' };
     }
 }
-

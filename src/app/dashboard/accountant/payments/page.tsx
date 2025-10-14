@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState, useCallback, useEffect } from 'react';
@@ -92,7 +93,10 @@ export default function PaymentsPage() {
     setIsSearching(true);
     setSearchError(null);
     setFoundInvoice(null);
-    form.reset();
+    form.reset({
+      paymentMethod: 'Bank Transfer',
+      notes: '',
+    });
 
     try {
       const invoices = await dbService.getDocs<Invoice>('invoices', [
@@ -105,7 +109,8 @@ export default function PaymentsPage() {
             setSearchError(`This invoice has already been fully paid.`);
         } else {
             setFoundInvoice(invoice);
-            form.setValue('invoiceId', invoice.id);
+            // Pass the custom invoice ID to the form, not the document ID
+            form.setValue('invoiceId', invoice.invoiceId);
         }
       } else {
         setSearchError(`No invoice found with ID: ${invoiceIdToSearch}`);
