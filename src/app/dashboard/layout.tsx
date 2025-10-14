@@ -46,15 +46,19 @@ export default function DashboardLayout({
             margin-left: 0 !important;
           }
           .print-hidden {
-            display: none;
+            display: none !important;
           }
         }
       `}</style>
       <SidebarProvider>
-        <DashboardSidebar />
+        <div className="print-hidden">
+          <DashboardSidebar />
+        </div>
         <SidebarInset data-sidebar="inset">
           <MaintenanceBanner />
-          <DashboardHeader />
+          <div className="print-hidden">
+            <DashboardHeader />
+          </div>
           <main className="min-h-[calc(100vh-4rem)] p-4 md:p-6 lg:p-8">
             {children}
           </main>
