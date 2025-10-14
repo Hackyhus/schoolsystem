@@ -1,4 +1,3 @@
-
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
@@ -64,49 +63,41 @@ export default function IndividualReceiptPage() {
   };
 
   const handleDownload = async () => {
-    const contentElement = document.getElementById('pdf-content');
-    const sidebarElement = document.querySelector('[data-sidebar="sidebar"]') as HTMLElement | null;
-
+    const contentElement = document.getElementById('printable-area');
     if (!contentElement || !payment) return;
     setIsDownloading(true);
-    
-    if (sidebarElement) {
-        sidebarElement.style.display = 'none';
-    }
 
     try {
-        const pdf = new jsPDF({
-            orientation: 'portrait',
-            unit: 'in',
-            format: 'a4',
-        });
+      const pdf = new jsPDF({
+        orientation: 'portrait',
+        unit: 'in',
+        format: 'a4',
+      });
 
-        const pageHeight = pdf.internal.pageSize.getHeight();
-        const pageWidth = pdf.internal.pageSize.getWidth();
-        const margin = 0.5;
-        const contentWidth = pageWidth - (margin * 2);
-        
-        const canvas = await html2canvas(contentElement, {
-            scale: 2,
-            useCORS: true,
-            width: contentElement.offsetWidth,
-        });
-        const imgData = canvas.toDataURL('image/png');
-        const imgHeight = (canvas.height * contentWidth) / canvas.width;
-        let position = margin;
+      const pageHeight = pdf.internal.pageSize.getHeight();
+      const pageWidth = pdf.internal.pageSize.getWidth();
+      const margin = 0.5; // Half-inch margin
+      const contentWidth = pageWidth - (margin * 2);
+      
+      const canvas = await html2canvas(contentElement, {
+        scale: 2, // Higher scale for better quality
+        useCORS: true,
+        width: contentElement.offsetWidth,
+      });
 
-        pdf.addImage(imgData, 'PNG', margin, position, contentWidth, imgHeight);
+      const imgData = canvas.toDataURL('image/png');
+      const imgHeight = (canvas.height * contentWidth) / canvas.width;
+      let position = margin;
 
-        pdf.save(`Receipt-${payment.invoiceId}.pdf`);
-
+      // Add first page
+      pdf.addImage(imgData, 'PNG', margin, position, contentWidth, imgHeight);
+      
+      pdf.save(`Receipt-${payment.invoiceId}.pdf`);
     } catch (error) {
-        console.error("Failed to generate PDF", error);
-        setError("Could not generate the PDF for download.");
+      console.error("Failed to generate PDF", error);
+      setError("Could not generate the PDF for download.");
     } finally {
-        if (sidebarElement) {
-            sidebarElement.style.display = 'flex';
-        }
-        setIsDownloading(false);
+      setIsDownloading(false);
     }
   };
 

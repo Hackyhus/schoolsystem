@@ -1,4 +1,3 @@
-
 'use client';
 
 import { useState, useEffect, useCallback, useRef } from 'react';
@@ -64,50 +63,51 @@ export default function IndividualReportPage() {
   };
 
   const handleDownload = async () => {
-    const contentElement = document.getElementById('pdf-content');
+    const contentElement = document.getElementById('printable-area');
     if (!contentElement || !reportCard) return;
     setIsDownloading(true);
-    
+
     try {
-        const pdf = new jsPDF({
-            orientation: 'portrait',
-            unit: 'in',
-            format: 'a4',
-        });
+      const pdf = new jsPDF({
+        orientation: 'portrait',
+        unit: 'in',
+        format: 'a4',
+      });
 
-        const pageHeight = pdf.internal.pageSize.getHeight();
-        const pageWidth = pdf.internal.pageSize.getWidth();
-        
-        const canvas = await html2canvas(contentElement, {
-            scale: 2,
-            useCORS: true,
-        });
+      const pageHeight = pdf.internal.pageSize.getHeight();
+      const pageWidth = pdf.internal.pageSize.getWidth();
+      const margin = 0.5; // Half-inch margin
+      const contentWidth = pageWidth - (margin * 2);
+      
+      const canvas = await html2canvas(contentElement, {
+        scale: 2, // Higher scale for better quality
+        useCORS: true,
+        width: contentElement.offsetWidth,
+      });
 
-        const imgData = canvas.toDataURL('image/png');
-        const imgProps= pdf.getImageProperties(imgData);
-        const pdfWidth = pageWidth;
-        const pdfHeight = (imgProps.height * pdfWidth) / imgProps.width;
+      const imgData = canvas.toDataURL('image/png');
+      const imgHeight = (canvas.height * contentWidth) / canvas.width;
+      let heightLeft = imgHeight;
+      let position = margin;
 
-        let heightLeft = pdfHeight;
-        let position = 0;
+      // Add first page
+      pdf.addImage(imgData, 'PNG', margin, position, contentWidth, imgHeight);
+      heightLeft -= (pageHeight - margin * 2);
+      
+      // Add new pages if content overflows
+      while (heightLeft > 0) {
+        position = -heightLeft + margin;
+        pdf.addPage();
+        pdf.addImage(imgData, 'PNG', margin, position, contentWidth, imgHeight);
+        heightLeft -= (pageHeight - margin * 2);
+      }
 
-        pdf.addImage(imgData, 'PNG', 0, position, pdfWidth, pdfHeight);
-        heightLeft -= pageHeight;
-
-        while (heightLeft > 0) {
-            position = -heightLeft;
-            pdf.addPage();
-            pdf.addImage(imgData, 'PNG', 0, position, pdfWidth, pdfHeight);
-            heightLeft -= pageHeight;
-        }
-
-        pdf.save(`Report-Card-${reportCard.studentName.replace(/ /g, '-')}.pdf`);
-
+      pdf.save(`Report-Card-${reportCard.studentName.replace(/ /g, '-')}.pdf`);
     } catch (error) {
-        console.error("Failed to generate PDF", error);
-        setError("Could not generate the PDF for download.");
+      console.error("Failed to generate PDF", error);
+      setError("Could not generate the PDF for download.");
     } finally {
-        setIsDownloading(false);
+      setIsDownloading(false);
     }
   };
 
