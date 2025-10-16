@@ -6,7 +6,7 @@ import { useEffect } from 'react';
 
 import { DashboardHeader } from '@/components/dashboard/header';
 import { DashboardSidebar } from '@/components/dashboard/sidebar';
-import { SidebarProvider, SidebarInset } from '@/components/ui/sidebar';
+import { SidebarProvider, SidebarInset, Sidebar } from '@/components/ui/sidebar';
 import { useRole } from '@/context/role-context';
 import { Loader2 } from 'lucide-react';
 import { MaintenanceBanner } from '@/components/maintenance-banner';
@@ -39,7 +39,7 @@ export default function DashboardLayout({
 
   return (
     <SidebarProvider>
-      <div className="font-body">
+      <div className="font-body h-screen flex flex-col">
         <style jsx global>{`
           @media print {
             .print-hidden {
@@ -49,22 +49,32 @@ export default function DashboardLayout({
               width: 100%;
               margin: 0;
               padding: 0 !important;
-              min-height: 100vh;
+              min-height: auto;
             }
+            body > div, body > .font-body {
+              display: block !important;
+              height: auto !important;
+            }
+             body > .font-body > .flex.h-screen {
+               display: block !important;
+               height: auto !important;
+             }
           }
         `}</style>
-        <div className="print-hidden">
-          <DashboardSidebar />
+         <div className="flex flex-1 overflow-hidden">
+          <div className="print-hidden">
+            <DashboardSidebar />
+          </div>
+          <div className="flex flex-1 flex-col overflow-y-auto">
+             <div className="print-hidden sticky top-0 z-20 bg-background">
+                <MaintenanceBanner />
+                <DashboardHeader />
+              </div>
+              <main className="flex-1 p-4 md:p-6 lg:p-8">
+                {children}
+              </main>
+          </div>
         </div>
-        <SidebarInset data-sidebar="inset">
-            <div className="print-hidden">
-              <MaintenanceBanner />
-              <DashboardHeader />
-            </div>
-            <main className="min-h-[calc(100vh-4rem)] p-4 md:p-6 lg:p-8">
-              {children}
-            </main>
-          </SidebarInset>
       </div>
     </SidebarProvider>
   );
