@@ -1,4 +1,3 @@
-
 'use server';
 /**
  * @fileOverview An AI agent for categorizing financial expenses.
@@ -14,5 +13,6 @@ export type { CategorizeExpenseInput, CategorizeExpenseOutput };
 
 
 export async function categorizeExpense(input: CategorizeExpenseInput): Promise<CategorizeExpenseOutput> {
-  return categorizeExpenseFlow(input);
+  const flow = await categorizeExpenseFlow;
+  return flow(input);
 }

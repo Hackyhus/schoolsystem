@@ -1,4 +1,3 @@
-
 'use server';
 /**
  * @fileOverview An AI agent for creating narrative summaries from structured data.
@@ -14,5 +13,6 @@ export type { NarrateDataInput, NarrateDataOutput };
 
 
 export async function narrateData(input: NarrateDataInput): Promise<NarrateDataOutput> {
-  return narrateDataFlow(input);
+  const flow = await narrateDataFlow;
+  return flow(input);
 }

@@ -1,4 +1,3 @@
-
 'use server';
 /**
  * @fileOverview A financial analysis AI agent.
@@ -14,5 +13,6 @@ export type { FinancialAnalysisInput, FinancialAnalysisOutput };
 
 
 export async function analyzeFinancials(input: FinancialAnalysisInput): Promise<FinancialAnalysisOutput> {
-  return analyzeFinancialsFlow(input);
+  const flow = await analyzeFinancialsFlow;
+  return flow(input);
 }

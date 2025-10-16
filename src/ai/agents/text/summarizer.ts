@@ -1,4 +1,3 @@
-
 'use server';
 /**
  * @fileOverview A generic text summarization AI agent.
@@ -14,5 +13,6 @@ export type { SummarizeTextInput, SummarizeTextOutput };
 
 
 export async function summarizeText(input: SummarizeTextInput): Promise<SummarizeTextOutput> {
-  return summarizeTextFlow(input);
+  const flow = await summarizeTextFlow;
+  return flow(input);
 }

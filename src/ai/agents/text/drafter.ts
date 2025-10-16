@@ -1,4 +1,3 @@
-
 'use server';
 /**
  * @fileOverview An AI agent for drafting communications like announcements.
@@ -14,5 +13,6 @@ export type { DraftCommunicationInput, DraftCommunicationOutput };
 
 
 export async function draftCommunication(input: DraftCommunicationInput): Promise<DraftCommunicationOutput> {
-  return draftCommunicationFlow(input);
+  const flow = await draftCommunicationFlow;
+  return flow(input);
 }

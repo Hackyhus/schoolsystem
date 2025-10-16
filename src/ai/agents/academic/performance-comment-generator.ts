@@ -1,4 +1,3 @@
-
 'use server';
 /**
  * @fileOverview An AI agent for generating student performance comments for report cards.
@@ -14,5 +13,6 @@ export type { PerformanceCommentInput, PerformanceCommentOutput };
 
 
 export async function generatePerformanceComment(input: PerformanceCommentInput): Promise<PerformanceCommentOutput> {
-  return generateCommentFlow(input);
+  const flow = await generateCommentFlow;
+  return flow(input);
 }
