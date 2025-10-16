@@ -228,12 +228,7 @@ const Sidebar = React.forwardRef<
         data-side={side}
         {...props}
       >
-        <div
-          data-sidebar="sidebar"
-          className="flex h-full w-full flex-col bg-sidebar"
-        >
-          {children}
-        </div>
+        {children}
       </div>
     )
   }
