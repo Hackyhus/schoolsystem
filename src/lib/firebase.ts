@@ -10,13 +10,13 @@ import { FirebaseAuthService, IAuthService } from "@/services/authService";
 
 // Your web app's Firebase configuration
 const firebaseConfig = {
-  apiKey: "AIzaSyCGaM7dKTaYAAx159WjlENGASvUoQhXh-c",
-  authDomain: "haschat-31cbd.firebaseapp.com",
-  projectId: "haschat-31cbd",
-  storageBucket: "haschat-31cbd.appspot.com",
-  messagingSenderId: "419048730722",
-  appId: "1:419048730722:web:68ec923496b3046430613b",
-  measurementId: "G-MXHEHWDHKF"
+  apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY,
+  authDomain: process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN,
+  projectId: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID,
+  storageBucket: process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET,
+  messagingSenderId: process.env.NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID,
+  appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID,
+  measurementId: process.env.NEXT_PUBLIC_FIREBASE_MEASUREMENT_ID,
 };
 
 // Initialize Firebase

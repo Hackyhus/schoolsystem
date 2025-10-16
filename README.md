@@ -44,12 +44,12 @@ This is a comprehensive, role-based school management portal built with a modern
     ```
 
 3.  **Set up Firebase & AI:**
-    - Create a `.env` file in the root directory.
+    - Create a `.env` file in the root directory by copying the `.env.example` file.
     - **Add your Gemini API Key:** Get a key from [Google AI Studio](https://aistudio.google.com/app/apikey) and add it to your `.env` file:
       ```
       GEMINI_API_KEY=YOUR_API_KEY_HERE
       ```
-    - Add your Firebase project configuration to `src/lib/firebase.ts`.
+    - **Add your Firebase project configuration:** Find your Firebase config in your Firebase project settings (Project Settings > General > Your apps > Web app) and add the values to your `.env` file.
 
 4.  **Run the development server:**
     ```bash
