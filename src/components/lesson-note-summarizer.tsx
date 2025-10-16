@@ -12,7 +12,7 @@ import { Sparkles, Loader2 } from 'lucide-react';
 import { aiEngine } from '@/ai';
 import { Alert, AlertDescription, AlertTitle } from './ui/alert';
 
-export function LessonNoteSummarizer({ lessonNotes }: { lessonNotes: string }) {
+export function LessonNoteSummarizer({ lessonNotes, subject, className }: { lessonNotes: string, subject: string, className: string }) {
   const [isPending, startTransition] = useTransition();
   const [summary, setSummary] = useState('');
   const [error, setError] = useState('');
@@ -22,7 +22,10 @@ export function LessonNoteSummarizer({ lessonNotes }: { lessonNotes: string }) {
     setSummary('');
     startTransition(async () => {
       try {
-        const result = await aiEngine.text.summarize({ text: lessonNotes });
+        const result = await aiEngine.text.summarize({ 
+            text: lessonNotes,
+            context: `A lesson note for the subject '${subject}' for the class '${className}'. The summary should be easy for an academic reviewer (like a Head of Department) to quickly understand.`
+        });
         if (result.summary) {
             setSummary(result.summary);
         } else {

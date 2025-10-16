@@ -25,6 +25,7 @@ import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Dialog, DialogTrigger, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { AddLessonNoteForm } from '@/components/dashboard/lesson-notes/add-lesson-note-form';
 import { format } from 'date-fns';
+import { LessonNoteSummarizer } from '@/components/lesson-note-summarizer';
 
 
 async function createLessonNoteNotification(teacherId: string, noteId: string, noteTitle: string, action: 'Approved' | 'Needs Revision', comment?: string) {
@@ -226,6 +227,7 @@ export default function LessonNoteDetailPage() {
   const reviewerFeedback = getReviewerFeedback();
   const canTeacherResubmit = role === 'Teacher' && note.status === 'Needs Revision';
   const canReview = (role === 'Admin' || role === 'HeadOfDepartment' || role === 'SLT') && !note.status.includes('Approved');
+  const showSummarizer = (role === 'Admin' || role === 'HeadOfDepartment' || role === 'SLT');
 
   return (
     <div className="space-y-8">
@@ -331,6 +333,9 @@ export default function LessonNoteDetailPage() {
             )}
         </div>
         <div className="lg:col-span-1 space-y-8">
+            {showSummarizer && note.content && (
+              <LessonNoteSummarizer lessonNotes={note.content} subject={note.subject} className={note.class} />
+            )}
             <Card>
                 <CardHeader>
                     <CardTitle>Status & History</CardTitle>
