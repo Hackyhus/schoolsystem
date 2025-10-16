@@ -5,11 +5,13 @@
  */
 
 import { summarizeText } from './agents/text/summarizer';
+import { draftCommunication } from './agents/text/drafter';
 import { analyzeFinancials } from './agents/financial/analyst';
 
 export const aiEngine = {
   text: {
     summarize: summarizeText,
+    draft: draftCommunication,
   },
   financial: {
     analyze: analyzeFinancials,

@@ -16,10 +16,13 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/hooks/use-toast';
 import { saveAnnouncement } from '@/actions/announcement-actions';
-import { useState } from 'react';
-import { Loader2, Send } from 'lucide-react';
+import { useState, useTransition } from 'react';
+import { Loader2, Send, Sparkles } from 'lucide-react';
 import { useRole } from '@/context/role-context';
 import type { Announcement } from '@/lib/schema';
+import { Separator } from '@/components/ui/separator';
+import { aiEngine } from '@/ai';
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 
 const formSchema = z.object({
   id: z.string().optional(),
@@ -38,6 +41,10 @@ export function AnnouncementForm({ initialData, onFormSubmit }: AnnouncementForm
   const { toast } = useToast();
   const { user } = useRole();
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isAiGenerating, startAiTransition] = useTransition();
+  const [aiKeyPoints, setAiKeyPoints] = useState('');
+  const [aiError, setAiError] = useState('');
+
 
   const form = useForm<AnnouncementFormValues>({
     resolver: zodResolver(formSchema),
@@ -47,6 +54,36 @@ export function AnnouncementForm({ initialData, onFormSubmit }: AnnouncementForm
       content: initialData?.content || '',
     },
   });
+
+  const handleGenerateWithAi = () => {
+    if (!aiKeyPoints) {
+      toast({
+        variant: 'destructive',
+        title: 'Key Points Required',
+        description: 'Please enter some points for the AI to draft from.',
+      });
+      return;
+    }
+
+    setAiError('');
+    startAiTransition(async () => {
+      try {
+        const result = await aiEngine.text.draft({
+          points: aiKeyPoints,
+          audience: 'All Users',
+          tone: 'Formal',
+        });
+        if (result.draft) {
+          form.setValue('content', result.draft);
+        } else {
+          setAiError("The AI couldn't generate a draft. Please try again.");
+        }
+      } catch (e) {
+        console.error(e);
+        setAiError('An unexpected error occurred while generating the draft.');
+      }
+    });
+  }
 
   const onSubmit = async (values: AnnouncementFormValues) => {
     if (!user) {
@@ -91,12 +128,29 @@ export function AnnouncementForm({ initialData, onFormSubmit }: AnnouncementForm
             </FormItem>
             )}
         />
+        
+        <div className="space-y-2 rounded-lg border p-4">
+            <h3 className="text-sm font-medium">AI Content Assistant</h3>
+             <Textarea
+                placeholder="Enter key points or a topic for the AI to expand on. e.g., Mid-term break from Oct 28 to Nov 1. School resumes Nov 4."
+                value={aiKeyPoints}
+                onChange={(e) => setAiKeyPoints(e.target.value)}
+                rows={3}
+            />
+            {aiError && <Alert variant="destructive"><AlertTitle>Error</AlertTitle><AlertDescription>{aiError}</AlertDescription></Alert>}
+            <Button type="button" onClick={handleGenerateWithAi} disabled={isAiGenerating} variant="outline" size="sm">
+                {isAiGenerating ? <Loader2 className="mr-2 h-4 w-4 animate-spin"/> : <Sparkles className="mr-2 h-4 w-4" />}
+                {isAiGenerating ? 'Generating...' : 'Generate with AI'}
+            </Button>
+        </div>
+
+
         <FormField
             control={form.control}
             name="content"
             render={({ field }) => (
             <FormItem>
-                <FormLabel>Content</FormLabel>
+                <FormLabel>Full Announcement Content</FormLabel>
                 <FormControl>
                     <Textarea placeholder="Enter the full announcement details here..." {...field} rows={8} />
                 </FormControl>
