@@ -1,12 +1,17 @@
 
 'use client';
 
+import { useState, useTransition } from 'react';
 import type { ReportCard, SchoolInfo } from '@/lib/schema';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Separator } from '@/components/ui/separator';
 import Image from 'next/image';
 import { format } from 'date-fns';
-
+import { Button } from '@/components/ui/button';
+import { Loader2, Sparkles } from 'lucide-react';
+import { aiEngine } from '@/ai';
+import { useToast } from '@/hooks/use-toast';
+import { useRole } from '@/context/role-context';
 
 interface ReportCardTemplateProps {
   reportCard: ReportCard;
@@ -14,12 +19,45 @@ interface ReportCardTemplateProps {
 }
 
 export function ReportCardTemplate({ reportCard, schoolInfo }: ReportCardTemplateProps) {
+  const [teacherComment, setTeacherComment] = useState(reportCard.teacherComment || "Shows great potential and is encouraged to participate more in class discussions.");
+  const [isGenerating, startTransition] = useTransition();
+  const { toast } = useToast();
+  const { role } = useRole();
+  
+  const canEdit = role === 'Admin' || role === 'Teacher' || role === 'ExamOfficer';
+
   const gradeColor = (grade: string) => {
     if (['A'].includes(grade)) return 'text-green-600';
     if (['B'].includes(grade)) return 'text-blue-600';
     if (['C'].includes(grade)) return 'text-yellow-600';
     if (['D', 'E'].includes(grade)) return 'text-orange-600';
     return 'text-red-600';
+  };
+
+  const handleGenerateComment = () => {
+    startTransition(async () => {
+      try {
+        const gradeData = reportCard.subjects.map(s => ({
+          name: s.name,
+          score: s.totalScore,
+          grade: s.grade,
+        }));
+
+        const result = await aiEngine.academic.generateComment({
+          studentName: reportCard.studentName.split(' ')[0], // Use first name
+          grades: gradeData,
+        });
+        
+        if (result.comment) {
+          setTeacherComment(result.comment);
+          toast({ title: "AI Comment Generated", description: "The teacher's comment has been updated." });
+        } else {
+          throw new Error("AI failed to generate a comment.");
+        }
+      } catch (error: any) {
+        toast({ variant: 'destructive', title: "Error", description: error.message || "Could not generate AI comment." });
+      }
+    });
   };
 
   return (
@@ -109,8 +147,16 @@ export function ReportCardTemplate({ reportCard, schoolInfo }: ReportCardTemplat
                 
                 <div className="mt-8 space-y-4 text-black">
                     <div>
-                        <h4 className="font-semibold">Teacher's Comment:</h4>
-                        <p className="text-sm border-b border-gray-300 pb-2">{reportCard.teacherComment || "Shows great potential and is encouraged to participate more in class discussions."}</p>
+                        <div className="flex justify-between items-center mb-1">
+                             <h4 className="font-semibold">Teacher's Comment:</h4>
+                             {canEdit && (
+                                <Button onClick={handleGenerateComment} disabled={isGenerating} size="sm" variant="outline" className="text-black print:hidden">
+                                     {isGenerating ? <Loader2 className="mr-2 h-4 w-4 animate-spin"/> : <Sparkles className="mr-2 h-4 w-4" />}
+                                    Generate AI Comment
+                                </Button>
+                             )}
+                        </div>
+                        <p className="text-sm border-b border-gray-300 pb-2">{teacherComment}</p>
                     </div>
                     <div>
                         <h4 className="font-semibold">Principal's Comment:</h4>

@@ -7,6 +7,7 @@
 import { summarizeText } from './agents/text/summarizer';
 import { draftCommunication } from './agents/text/drafter';
 import { analyzeFinancials } from './agents/financial/analyst';
+import { generatePerformanceComment } from './agents/academic/performance-comment-generator';
 
 export const aiEngine = {
   text: {
@@ -15,6 +16,9 @@ export const aiEngine = {
   },
   financial: {
     analyze: analyzeFinancials,
+  },
+  academic: {
+    generateComment: generatePerformanceComment,
   },
   // Future AI categories will be added here.
 };
