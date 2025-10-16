@@ -1,3 +1,4 @@
+
 /**
  * @fileOverview The central export for the InsightConnect AI Engine.
  * This file consolidates all AI agents into a single, easy-to-use object,
@@ -7,7 +8,9 @@
 import { summarizeText } from './agents/text/summarizer';
 import { draftCommunication } from './agents/text/drafter';
 import { analyzeFinancials } from './agents/financial/analyst';
+import { categorizeExpense } from './agents/financial/categorizer';
 import { generatePerformanceComment } from './agents/academic/performance-comment-generator';
+import { narrateData } from './agents/academic/narrator';
 
 export const aiEngine = {
   text: {
@@ -16,9 +19,11 @@ export const aiEngine = {
   },
   financial: {
     analyze: analyzeFinancials,
+    categorize: categorizeExpense,
   },
   academic: {
     generateComment: generatePerformanceComment,
+    narrate: narrateData,
   },
   // Future AI categories will be added here.
 };
