@@ -3,7 +3,7 @@ import { getApp, getApps, initializeApp } from "firebase/app";
 import { getAuth } from "firebase/auth";
 import { getFirestore } from "firebase/firestore";
 import { getStorage } from "firebase/storage";
-import { getAnalytics, isSupported } from "firebase/analytics";
+// import { getAnalytics, isSupported } from "firebase/analytics";
 import { FirebaseDatabaseService, IDatabaseService } from "@/services/databaseService";
 import { FirebaseStorageService, IStorageService } from "@/services/storageService";
 import { FirebaseAuthService, IAuthService } from "@/services/authService";
@@ -28,7 +28,8 @@ const auth = getAuth(app);
 const storage = getStorage(app);
 
 // Conditionally initialize Analytics only on the client side
-const analytics = typeof window !== 'undefined' && isSupported().then(yes => yes ? getAnalytics(app) : null);
+// const analytics = typeof window !== 'undefined' && isSupported().then(yes => yes ? getAnalytics(app) : null);
+const analytics = null; // Disabled to prevent installation errors
 
 // Abstracted Service Instances
 const dbService: IDatabaseService = new FirebaseDatabaseService(db);
