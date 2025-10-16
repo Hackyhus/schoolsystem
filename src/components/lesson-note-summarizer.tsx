@@ -9,7 +9,7 @@ import {
 } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Sparkles, Loader2 } from 'lucide-react';
-import { summarizeLessonNotes } from '@/ai/flows/lesson-note-summarizer';
+import { aiEngine } from '@/ai';
 import { Alert, AlertDescription, AlertTitle } from './ui/alert';
 
 export function LessonNoteSummarizer({ lessonNotes }: { lessonNotes: string }) {
@@ -22,7 +22,7 @@ export function LessonNoteSummarizer({ lessonNotes }: { lessonNotes: string }) {
     setSummary('');
     startTransition(async () => {
       try {
-        const result = await summarizeLessonNotes({ lessonNotes });
+        const result = await aiEngine.text.summarize({ text: lessonNotes });
         if (result.summary) {
             setSummary(result.summary);
         } else {
