@@ -8,18 +8,9 @@
  * - CategorizeExpenseOutput - The return type for the categorizeExpense function.
  */
 
-import { z } from 'zod';
-import { categorizeExpenseFlow, EXPENSE_CATEGORIES } from './flows/categorizer-flow';
-
-export const CategorizeExpenseInputSchema = z.object({
-  description: z.string().describe('The description of the expense item.'),
-});
-export type CategorizeExpenseInput = z.infer<typeof CategorizeExpenseInputSchema>;
-
-export const CategorizeExpenseOutputSchema = z.object({
-  category: z.enum(EXPENSE_CATEGORIES).describe('The most likely category for this expense.'),
-});
-export type CategorizeExpenseOutput = z.infer<typeof CategorizeExpenseOutputSchema>;
+import { categorizeExpenseFlow } from './flows/categorizer-flow';
+import type { CategorizeExpenseInput, CategorizeExpenseOutput } from './schemas/categorizer.schemas';
+export type { CategorizeExpenseInput, CategorizeExpenseOutput };
 
 
 export async function categorizeExpense(input: CategorizeExpenseInput): Promise<CategorizeExpenseOutput> {

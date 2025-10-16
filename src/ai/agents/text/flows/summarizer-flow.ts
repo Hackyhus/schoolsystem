@@ -1,6 +1,6 @@
 
 import { defineFlow, generate } from '@/ai/genkit';
-import { SummarizeTextInputSchema, SummarizeTextOutputSchema } from '../summarizer';
+import { SummarizeTextInputSchema, SummarizeTextOutputSchema } from '../schemas/summarizer.schemas';
 
 export const summarizeTextFlow = defineFlow(
   {

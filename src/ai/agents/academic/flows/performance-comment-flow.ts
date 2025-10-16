@@ -1,6 +1,6 @@
 
 import { defineFlow, generate } from '@/ai/genkit';
-import { PerformanceCommentInputSchema, PerformanceCommentOutputSchema } from '../performance-comment-generator';
+import { PerformanceCommentInputSchema, PerformanceCommentOutputSchema } from '../schemas/performance-comment-generator.schemas';
 
 export const generateCommentFlow = defineFlow(
   {

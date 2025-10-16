@@ -1,8 +1,6 @@
 
 import { defineFlow, generate } from '@/ai/genkit';
-import { CategorizeExpenseInputSchema, CategorizeExpenseOutputSchema } from '../categorizer';
-
-export const EXPENSE_CATEGORIES = ['Utilities', 'Salaries', 'Maintenance', 'Supplies', 'Marketing', 'Capital Expenditure', 'Miscellaneous'] as const;
+import { CategorizeExpenseInputSchema, CategorizeExpenseOutputSchema, EXPENSE_CATEGORIES } from '../schemas/categorizer.schemas';
 
 export const categorizeExpenseFlow = defineFlow(
   {

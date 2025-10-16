@@ -1,6 +1,6 @@
 
 import { defineFlow, generate } from '@/ai/genkit';
-import { FinancialAnalysisInputSchema, FinancialAnalysisOutputSchema } from '../analyst';
+import { FinancialAnalysisInputSchema, FinancialAnalysisOutputSchema } from '../schemas/analyst.schemas';
 
 export const analyzeFinancialsFlow = defineFlow(
   {

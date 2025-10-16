@@ -1,6 +1,6 @@
 
 import { defineFlow, generate } from '@/ai/genkit';
-import { NarrateDataInputSchema, NarrateDataOutputSchema } from '../narrator';
+import { NarrateDataInputSchema, NarrateDataOutputSchema } from '../schemas/narrator.schemas';
 
 export const narrateDataFlow = defineFlow(
   {

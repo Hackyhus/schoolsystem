@@ -1,6 +1,6 @@
 
 import { defineFlow, generate } from '@/ai/genkit';
-import { DraftCommunicationInputSchema, DraftCommunicationOutputSchema } from '../drafter';
+import { DraftCommunicationInputSchema, DraftCommunicationOutputSchema } from '../schemas/drafter.schemas';
 
 export const draftCommunicationFlow = defineFlow(
   {
