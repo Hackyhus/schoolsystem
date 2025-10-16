@@ -5,10 +5,14 @@
  */
 
 import { summarizeText } from './agents/text/summarizer';
+import { analyzeFinancials } from './agents/financial/analyst';
 
 export const aiEngine = {
   text: {
     summarize: summarizeText,
   },
-  // Future AI categories (e.g., financial, generation) will be added here.
+  financial: {
+    analyze: analyzeFinancials,
+  },
+  // Future AI categories will be added here.
 };

@@ -1,7 +1,7 @@
 
 'use client';
 
-import { useState } from 'react';
+import { useState, useTransition } from 'react';
 import { DateRange } from 'react-day-picker';
 import { addDays, format, startOfMonth } from 'date-fns';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -10,11 +10,13 @@ import { DateRangePicker } from '@/components/ui/date-range-picker';
 import { useToast } from '@/hooks/use-toast';
 import { dbService } from '@/lib/firebase';
 import type { Payment, Expense } from '@/lib/schema';
-import { ArrowDown, ArrowUp, BarChart, FileText, Loader2, Minus, Plus, Printer } from 'lucide-react';
+import { ArrowDown, ArrowUp, BarChart, FileText, Loader2, Minus, Plus, Printer, Sparkles } from 'lucide-react';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { BarChart as RechartsBarChart, Bar, XAxis, YAxis, CartesianGrid, ResponsiveContainer } from 'recharts';
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from '@/components/ui/chart';
+import { aiEngine } from '@/ai';
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 
 type ReportData = {
     totalRevenue: number;
@@ -31,7 +33,10 @@ export function FinancialReportGenerator() {
         to: new Date(),
     });
     const [isLoading, setIsLoading] = useState(false);
+    const [isAiSummarizing, startAiTransition] = useTransition();
     const [reportData, setReportData] = useState<ReportData | null>(null);
+    const [aiSummary, setAiSummary] = useState<string | null>(null);
+    const [aiError, setAiError] = useState<string | null>(null);
     const { toast } = useToast();
     
     const chartConfig = {
@@ -46,6 +51,8 @@ export function FinancialReportGenerator() {
 
         setIsLoading(true);
         setReportData(null);
+        setAiSummary(null);
+        setAiError(null);
 
         try {
             const fromDate = date.from;
@@ -94,6 +101,30 @@ export function FinancialReportGenerator() {
         }
     };
     
+    const handleGenerateAiSummary = () => {
+        if (!reportData) return;
+        setAiSummary(null);
+        setAiError(null);
+        
+        startAiTransition(async () => {
+            try {
+                const result = await aiEngine.financial.analyze({
+                    totalRevenue: reportData.totalRevenue,
+                    totalExpenses: reportData.totalExpenses,
+                    netIncome: reportData.netIncome,
+                });
+                if (result.summary) {
+                    setAiSummary(result.summary);
+                } else {
+                    setAiError("The AI couldn't generate a summary. Please try again.");
+                }
+            } catch (e) {
+                 console.error(e);
+                 setAiError('An unexpected error occurred while generating the AI summary.');
+            }
+        });
+    }
+
     const handlePrintReport = () => {
         window.print();
     };
@@ -134,38 +165,64 @@ export function FinancialReportGenerator() {
                             <h2 className="text-xl font-semibold">{reportTitle}</h2>
                         </div>
                          <Card>
-                            <CardHeader>
-                                <CardTitle>Income Statement</CardTitle>
-                                <CardDescription className="print:hidden">
-                                    Financial summary for the period from {format(date?.from!, 'PPP')} to {format(date?.to!, 'PPP')}.
-                                </CardDescription>
+                            <CardHeader className="flex flex-row items-center justify-between">
+                                <div>
+                                    <CardTitle>Income Statement</CardTitle>
+                                    <CardDescription className="print:hidden">
+                                        Financial summary for the period from {format(date?.from!, 'PPP')} to {format(date?.to!, 'PPP')}.
+                                    </CardDescription>
+                                </div>
+                                <div className="print:hidden">
+                                     <Button onClick={handleGenerateAiSummary} disabled={isAiSummarizing} variant="outline" size="sm">
+                                        {isAiSummarizing ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Sparkles className="mr-2 h-4 w-4" />}
+                                        Generate AI Summary
+                                     </Button>
+                                </div>
                             </CardHeader>
-                            <CardContent className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                                 <div className="flex items-center gap-4 rounded-lg border p-4 bg-green-50 dark:bg-green-900/30">
-                                    <div className="flex h-12 w-12 items-center justify-center rounded-full bg-green-100 dark:bg-green-900/50">
-                                        <ArrowUp className="h-6 w-6 text-green-500" />
+                            <CardContent className="space-y-4">
+                                {aiSummary && (
+                                     <Alert className="bg-blue-50 dark:bg-blue-900/30 border-blue-200 dark:border-blue-800">
+                                        <Sparkles className="h-4 w-4" />
+                                        <AlertTitle>AI Financial Summary</AlertTitle>
+                                        <AlertDescription>
+                                            {aiSummary}
+                                        </AlertDescription>
+                                    </Alert>
+                                )}
+                                {aiError && (
+                                     <Alert variant="destructive">
+                                        <AlertTitle>AI Error</AlertTitle>
+                                        <AlertDescription>{aiError}</AlertDescription>
+                                    </Alert>
+                                )}
+
+                                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                                    <div className="flex items-center gap-4 rounded-lg border p-4 bg-green-50 dark:bg-green-900/30">
+                                        <div className="flex h-12 w-12 items-center justify-center rounded-full bg-green-100 dark:bg-green-900/50">
+                                            <ArrowUp className="h-6 w-6 text-green-500" />
+                                        </div>
+                                        <div>
+                                            <p className="text-sm text-muted-foreground">Total Revenue</p>
+                                            <p className="text-2xl font-bold">NGN {reportData.totalRevenue.toLocaleString()}</p>
+                                        </div>
                                     </div>
-                                    <div>
-                                        <p className="text-sm text-muted-foreground">Total Revenue</p>
-                                        <p className="text-2xl font-bold">NGN {reportData.totalRevenue.toLocaleString()}</p>
+                                    <div className="flex items-center gap-4 rounded-lg border p-4 bg-red-50 dark:bg-red-900/30">
+                                        <div className="flex h-12 w-12 items-center justify-center rounded-full bg-red-100 dark:bg-red-900/50">
+                                            <ArrowDown className="h-6 w-6 text-red-500" />
+                                        </div>
+                                        <div>
+                                            <p className="text-sm text-muted-foreground">Total Expenses</p>
+                                            <p className="text-2xl font-bold">NGN {reportData.totalExpenses.toLocaleString()}</p>
+                                        </div>
                                     </div>
-                                </div>
-                                 <div className="flex items-center gap-4 rounded-lg border p-4 bg-red-50 dark:bg-red-900/30">
-                                    <div className="flex h-12 w-12 items-center justify-center rounded-full bg-red-100 dark:bg-red-900/50">
-                                        <ArrowDown className="h-6 w-6 text-red-500" />
-                                    </div>
-                                    <div>
-                                        <p className="text-sm text-muted-foreground">Total Expenses</p>
-                                        <p className="text-2xl font-bold">NGN {reportData.totalExpenses.toLocaleString()}</p>
-                                    </div>
-                                </div>
-                                 <div className={`flex items-center gap-4 rounded-lg border p-4 ${reportData.netIncome >= 0 ? 'bg-blue-50 dark:bg-blue-900/30' : 'bg-orange-50 dark:bg-orange-900/30'}`}>
-                                     <div className={`flex h-12 w-12 items-center justify-center rounded-full ${reportData.netIncome >= 0 ? 'bg-blue-100 dark:bg-blue-900/50' : 'bg-orange-100 dark:bg-orange-900/50'}`}>
-                                        {reportData.netIncome >= 0 ? <Plus className="h-6 w-6 text-blue-500" /> : <Minus className="h-6 w-6 text-orange-500" />}
-                                     </div>
-                                    <div>
-                                        <p className="text-sm text-muted-foreground">Net Income</p>
-                                        <p className={`text-2xl font-bold ${netIncomeColor}`}>NGN {reportData.netIncome.toLocaleString()}</p>
+                                    <div className={`flex items-center gap-4 rounded-lg border p-4 ${reportData.netIncome >= 0 ? 'bg-blue-50 dark:bg-blue-900/30' : 'bg-orange-50 dark:bg-orange-900/30'}`}>
+                                        <div className={`flex h-12 w-12 items-center justify-center rounded-full ${reportData.netIncome >= 0 ? 'bg-blue-100 dark:bg-blue-900/50' : 'bg-orange-100 dark:bg-orange-900/50'}`}>
+                                            {reportData.netIncome >= 0 ? <Plus className="h-6 w-6 text-blue-500" /> : <Minus className="h-6 w-6 text-orange-500" />}
+                                        </div>
+                                        <div>
+                                            <p className="text-sm text-muted-foreground">Net Income</p>
+                                            <p className={`text-2xl font-bold ${netIncomeColor}`}>NGN {reportData.netIncome.toLocaleString()}</p>
+                                        </div>
                                     </div>
                                 </div>
                             </CardContent>
