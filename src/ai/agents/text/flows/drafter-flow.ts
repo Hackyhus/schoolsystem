@@ -2,7 +2,7 @@
 import { defineFlow, generate } from '@/ai/genkit';
 import { DraftCommunicationInputSchema, DraftCommunicationOutputSchema } from '../schemas/drafter.schemas';
 
-export const draftCommunicationFlow = defineFlow(
+export const draftCommunicationFlow = await defineFlow(
   {
     name: 'draftCommunicationFlow',
     inputSchema: DraftCommunicationInputSchema,
@@ -24,6 +24,9 @@ export const draftCommunicationFlow = defineFlow(
         schema: DraftCommunicationOutputSchema,
       },
     });
+    if (!output) {
+      throw new Error('No output generated');
+    }
     return output;
   }
 );

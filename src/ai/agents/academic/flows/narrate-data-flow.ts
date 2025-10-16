@@ -2,7 +2,7 @@
 import { defineFlow, generate } from '@/ai/genkit';
 import { NarrateDataInputSchema, NarrateDataOutputSchema } from '../schemas/narrator.schemas';
 
-export const narrateDataFlow = defineFlow(
+export const narrateDataFlow = await defineFlow(
   {
     name: 'narrateDataFlow',
     inputSchema: NarrateDataInputSchema,
@@ -28,6 +28,9 @@ export const narrateDataFlow = defineFlow(
         schema: NarrateDataOutputSchema,
       },
     });
+    if (!output) {
+      throw new Error('No output generated');
+    }
     return output;
   }
 );

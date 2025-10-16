@@ -2,7 +2,7 @@
 import { defineFlow, generate } from '@/ai/genkit';
 import { SummarizeTextInputSchema, SummarizeTextOutputSchema } from '../schemas/summarizer.schemas';
 
-export const summarizeTextFlow = defineFlow(
+export const summarizeTextFlow = await defineFlow(
   {
     name: 'summarizeTextFlow',
     inputSchema: SummarizeTextInputSchema,
@@ -22,6 +22,9 @@ export const summarizeTextFlow = defineFlow(
         schema: SummarizeTextOutputSchema,
       },
     });
+    if (!output) {
+      throw new Error('No output generated');
+    }
     return output;
   }
 );

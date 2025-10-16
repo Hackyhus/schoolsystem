@@ -2,7 +2,7 @@
 import { defineFlow, generate } from '@/ai/genkit';
 import { FinancialAnalysisInputSchema, FinancialAnalysisOutputSchema } from '../schemas/analyst.schemas';
 
-export const analyzeFinancialsFlow = defineFlow(
+export const analyzeFinancialsFlow = await defineFlow(
   {
     name: 'analyzeFinancialsFlow',
     inputSchema: FinancialAnalysisInputSchema,
@@ -23,6 +23,9 @@ export const analyzeFinancialsFlow = defineFlow(
         schema: FinancialAnalysisOutputSchema,
       },
     });
+    if (!output) {
+      throw new Error('No output generated');
+    }
     return output;
   }
 );

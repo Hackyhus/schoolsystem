@@ -2,7 +2,7 @@
 import { defineFlow, generate } from '@/ai/genkit';
 import { PerformanceCommentInputSchema, PerformanceCommentOutputSchema } from '../schemas/performance-comment-generator.schemas';
 
-export const generateCommentFlow = defineFlow(
+export const generateCommentFlow = await defineFlow(
   {
     name: 'generateCommentFlow',
     inputSchema: PerformanceCommentInputSchema,
@@ -29,6 +29,9 @@ export const generateCommentFlow = defineFlow(
         schema: PerformanceCommentOutputSchema,
       },
     });
+    if (!output) {
+      throw new Error('No output generated');
+    }
     return output;
   }
 );

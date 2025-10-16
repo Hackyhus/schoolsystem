@@ -1,8 +1,8 @@
 
 import { defineFlow, generate } from '@/ai/genkit';
-import { CategorizeExpenseInputSchema, CategorizeExpenseOutputSchema, EXPENSE_CATEGORIES } from '../schemas/categorizer.schemas';
+import { CategorizeExpenseInputSchema, CategorizeExpenseOutputSchema } from '../schemas/categorizer.schemas';
 
-export const categorizeExpenseFlow = defineFlow(
+export const categorizeExpenseFlow = await defineFlow(
   {
     name: 'categorizeExpenseFlow',
     inputSchema: CategorizeExpenseInputSchema,
@@ -29,6 +29,9 @@ export const categorizeExpenseFlow = defineFlow(
         schema: CategorizeExpenseOutputSchema,
       },
     });
+    if (!output) {
+      throw new Error('No output generated');
+    }
     return output;
   }
 );
