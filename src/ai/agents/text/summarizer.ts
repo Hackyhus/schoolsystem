@@ -27,19 +27,6 @@ export const SummarizeTextOutputSchema = z.object({
 });
 export type SummarizeTextOutput = z.infer<typeof SummarizeTextOutputSchema>;
 
-const prompt = ai.definePrompt({
-  name: 'summarizeTextPrompt',
-  inputSchema: SummarizeTextInputSchema,
-  outputSchema: SummarizeTextOutputSchema,
-  prompt: `You are an expert assistant tasked with summarizing text for professional review.
-  Your goal is to provide a concise and informative summary that captures the key points of the provided content.
-
-  Use the following context to tailor your summary.
-  Context: {{{context}}}
-
-  Text to summarize: {{{text}}}
-  \n  Summary:`,
-});
 
 const summarizeTextFlow = ai.defineFlow(
   {
