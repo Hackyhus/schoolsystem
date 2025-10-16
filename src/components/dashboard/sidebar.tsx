@@ -1,3 +1,4 @@
+
 'use client';
 
 import React from 'react';
@@ -181,7 +182,7 @@ export function DashboardSidebar() {
     
     return roleNav.map((section, index) => (
        <React.Fragment key={`${section.group}-${index}`}>
-          <p className="px-4 pt-4 text-xs font-semibold text-sidebar-foreground/50 group-data-[collapsible=icon]:hidden">{section.group}</p>
+          <p className="px-4 pt-4 text-xs font-semibold text-sidebar-foreground/50 group-data-[state=collapsed]:hidden">{section.group}</p>
           <SidebarMenu>
             {section.links.map((key) => {
               const item = allNavLinks[key];
@@ -193,7 +194,7 @@ export function DashboardSidebar() {
                     <Link href={item.path}>
                       <SidebarMenuButton isActive={pathname.startsWith(item.path) && (item.path !== '/dashboard' || pathname === '/dashboard')} tooltip={item.label}>
                         <Icon />
-                        <span className="group-data-[collapsible=icon]:hidden">{item.label}</span>
+                        <span className="group-data-[state=collapsed]:hidden">{item.label}</span>
                       </SidebarMenuButton>
                     </Link>
                   </SidebarMenuItem>
@@ -205,16 +206,23 @@ export function DashboardSidebar() {
   }
 
   return (
-    <Sidebar collapsible="icon">
+    <Sidebar>
        <SidebarHeader className="border-b border-sidebar-border">
-          <div className="bg-background/10 p-2 rounded-md group-data-[collapsible=icon]:p-1">
+          <div className="bg-background/10 p-2 rounded-md group-data-[state=collapsed]:p-1">
             <Link href="/dashboard" className="flex items-center justify-center">
               <Image
                 src="/school-logo.png"
                 alt="Great Insight International Academy Logo"
                 width={200}
                 height={48}
-                className="w-auto h-10 group-data-[collapsible=icon]:h-8"
+                className="w-auto h-10 group-data-[state=collapsed]:hidden"
+              />
+               <Image
+                src="/favicon.ico"
+                alt="Great Insight International Academy Logo"
+                width={32}
+                height={32}
+                className="w-auto h-8 hidden group-data-[state=collapsed]:block"
               />
             </Link>
           </div>
@@ -228,14 +236,14 @@ export function DashboardSidebar() {
             <Link href="/dashboard/settings">
               <SidebarMenuButton isActive={pathname === '/dashboard/settings'} tooltip="Settings">
                 <Settings />
-                <span className="group-data-[collapsible=icon]:hidden">Settings</span>
+                <span className="group-data-[state=collapsed]:hidden">Settings</span>
               </SidebarMenuButton>
             </Link>
           </SidebarMenuItem>
           <SidebarMenuItem>
             <SidebarMenuButton onClick={logout} tooltip="Log Out">
               <LogOut />
-              <span className="group-data-[collapsible=icon]:hidden">Log Out</span>
+              <span className="group-data-[state=collapsed]:hidden">Log Out</span>
             </SidebarMenuButton>
           </SidebarMenuItem>
         </SidebarMenu>
