@@ -10,7 +10,7 @@ This is a comprehensive, role-based school management portal built with a modern
 - **Automated Workflows**: A notification system keeps users informed about the status of their submissions.
 - **Data Analytics**: Visual dashboards provide analytics on school performance, submissions, and user activity.
 - **System Configuration**: Admins can manage system-wide settings for the academic year, grading, fees, and more.
-- **AI-Powered Summarization**: Utilizes Genkit to provide AI-driven summaries of lesson notes to speed up the review process.
+- **AI-Powered Assistance**: Utilizes Genkit to provide AI-driven summaries, content drafting, and data analysis to speed up common tasks.
 
 ## 🚀 Tech Stack
 
@@ -19,7 +19,7 @@ This is a comprehensive, role-based school management portal built with a modern
 - **Styling**: [Tailwind CSS](https://tailwindcss.com/)
 - **UI Components**: [ShadCN UI](https://ui.shadcn.com/)
 - **Database & Auth**: [Firebase](https://firebase.google.com/) (Firestore, Authentication, Storage)
-- **Generative AI**: [Firebase Genkit](https://firebase.google.com/docs/genkit)
+- **Generative AI**: [Firebase Genkit](https://firebase.google.com/docs/genkit) (with Google Gemini)
 - **Deployment**: [Firebase App Hosting](https://firebase.google.com/docs/app-hosting)
 
 ## 📦 Getting Started
@@ -28,6 +28,7 @@ This is a comprehensive, role-based school management portal built with a modern
 
 - Node.js
 - Firebase Account & Project
+- Google AI (Gemini) API Key
 
 ### Installation
 
@@ -42,8 +43,12 @@ This is a comprehensive, role-based school management portal built with a modern
     npm install
     ```
 
-3.  **Set up Firebase:**
+3.  **Set up Firebase & AI:**
     - Create a `.env` file in the root directory.
+    - **Add your Gemini API Key:** Get a key from [Google AI Studio](https://aistudio.google.com/app/apikey) and add it to your `.env` file:
+      ```
+      GEMINI_API_KEY=YOUR_API_KEY_HERE
+      ```
     - Add your Firebase project configuration to `src/lib/firebase.ts`.
 
 4.  **Run the development server:**

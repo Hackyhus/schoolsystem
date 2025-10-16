@@ -1,13 +1,13 @@
 
 'use server';
 
-import { genkit, type GenkitConfig, type GenkitOptions } from 'genkit';
+import { genkit, type GenkitOptions } from 'genkit';
 import { googleAI } from '@genkit-ai/googleai';
 import { dbService } from '@/lib/firebase';
 import type { SafetySetting } from 'genkit';
 
 const baseAi = genkit({
-  plugins: [googleAI()],
+  plugins: [googleAI({ apiKey: process.env.GEMINI_API_KEY })],
   model: 'googleai/gemini-pro',
 });
 
