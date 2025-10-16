@@ -8,8 +8,8 @@
  * - PerformanceCommentOutput - The return type for the generatePerformanceComment function.
  */
 
-import { defineFlow, generate } from '@/ai/genkit';
-import { z } from 'genkit';
+import { z } from 'zod';
+import { generateCommentFlow } from './flows/performance-comment-flow';
 
 const SubjectPerformanceSchema = z.object({
   name: z.string().describe('The name of the subject.'),
@@ -28,38 +28,6 @@ export const PerformanceCommentOutputSchema = z.object({
 });
 export type PerformanceCommentOutput = z.infer<typeof PerformanceCommentOutputSchema>;
 
-const generateCommentFlow = defineFlow(
-  {
-    name: 'generateCommentFlow',
-    inputSchema: PerformanceCommentInputSchema,
-    outputSchema: PerformanceCommentOutputSchema,
-  },
-  async input => {
-    const { output } = await generate({
-      prompt: `You are an experienced and insightful Nigerian teacher writing a comment for a student's report card.
-      Your name is not needed. The comment should be professional, encouraging, and constructive.
-
-      Student's Name: ${input.studentName}
-      
-      Academic Performance:
-      ${input.grades.map(g => `- Subject: ${g.name}, Score: ${g.score}/100, Grade: ${g.grade}`).join('\n')}
-
-      Based on the data above, please write a concise (2-3 sentences) end-of-term comment.
-      - Identify specific subjects where the student excels (high scores/grades like A, B).
-      - Identify specific subjects where there is room for improvement (lower scores/grades like D, E, F).
-      - Offer constructive advice or encouragement.
-      - Do not mention every single subject; focus on the highlights and key areas for growth.
-      - The comment should feel personal to ${input.studentName}.
-      \n  Comment:`,
-      output: {
-        schema: PerformanceCommentOutputSchema,
-      },
-    });
-    return output;
-  }
-);
-
 export async function generatePerformanceComment(input: PerformanceCommentInput): Promise<PerformanceCommentOutput> {
-  const flow = await generateCommentFlow;
-  return flow(input);
+  return generateCommentFlow(input);
 }

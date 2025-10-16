@@ -8,10 +8,8 @@
  * - CategorizeExpenseOutput - The return type for the categorizeExpense function.
  */
 
-import { defineFlow, generate } from '@/ai/genkit';
-import { z } from 'genkit';
-
-const EXPENSE_CATEGORIES = ['Utilities', 'Salaries', 'Maintenance', 'Supplies', 'Marketing', 'Capital Expenditure', 'Miscellaneous'] as const;
+import { z } from 'zod';
+import { categorizeExpenseFlow, EXPENSE_CATEGORIES } from './flows/categorizer-flow';
 
 export const CategorizeExpenseInputSchema = z.object({
   description: z.string().describe('The description of the expense item.'),
@@ -23,38 +21,7 @@ export const CategorizeExpenseOutputSchema = z.object({
 });
 export type CategorizeExpenseOutput = z.infer<typeof CategorizeExpenseOutputSchema>;
 
-const categorizeExpenseFlow = defineFlow(
-  {
-    name: 'categorizeExpenseFlow',
-    inputSchema: CategorizeExpenseInputSchema,
-    outputSchema: CategorizeExpenseOutputSchema,
-  },
-  async input => {
-    const { output } = await generate({
-      prompt: `You are an expert accountant for a school. Your task is to categorize an expense based on its description.
-
-      The available categories are:
-      - Utilities (e.g., electricity bills, water, internet)
-      - Salaries (e.g., staff monthly pay)
-      - Maintenance (e.g., repairs, cleaning supplies, plumbing)
-      - Supplies (e.g., stationery, chalk, teaching aids)
-      - Marketing (e.g., adverts, flyers)
-      - Capital Expenditure (e.g., buying new furniture, computers, building renovations)
-      - Miscellaneous (for items that do not fit other categories)
-
-      Expense Description: ${input.description}
-
-      Based on this description, select the single most appropriate category.
-      `,
-      output: {
-        schema: CategorizeExpenseOutputSchema,
-      },
-    });
-    return output;
-  }
-);
 
 export async function categorizeExpense(input: CategorizeExpenseInput): Promise<CategorizeExpenseOutput> {
-  const flow = await categorizeExpenseFlow;
-  return flow(input);
+  return categorizeExpenseFlow(input);
 }
