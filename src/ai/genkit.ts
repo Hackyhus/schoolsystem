@@ -7,8 +7,8 @@ import { dbService } from '@/lib/firebase';
 import type { SafetySetting } from 'genkit';
 
 const baseAi = genkit({
-  plugins: [googleAI({ apiKey: process.env.NEXT_PUBLIC_GEMINI_API_KEY })],
-  model: 'googleai/gemini-pro',
+  plugins: [googleAI({ apiKey: process.env.GEMINI_API_KEY })],
+  model: 'googleai/gemini-1.5-flash-latest',
 });
 
 async function getModelConfig() {
