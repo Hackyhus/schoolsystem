@@ -38,7 +38,8 @@ import {
   Grid,
   BookMarked,
   Wrench,
-  GraduationCap
+  GraduationCap,
+  Sparkles
 } from 'lucide-react';
 import Image from 'next/image';
 
@@ -59,7 +60,7 @@ const iconMap: { [key: string]: React.ElementType } = {
   FileText, BarChart2, BookOpen, Edit3, DollarSign, Calendar, Bell, MessageSquare,
   FileQuestion, BookCopy, CheckSquare, Award, Shield, Settings, LogOut,
   TrendingUp, Landmark, Wallet, Briefcase, Receipt, CreditCard, Ticket, Grid,
-  BookMarked, Wrench, GraduationCap
+  BookMarked, Wrench, GraduationCap, Sparkles
 };
 
 const allNavLinks = {
@@ -77,7 +78,7 @@ const allNavLinks = {
       { label: 'School Info', path: '/dashboard/system/school-info' },
       { label: 'Grading', path: '/dashboard/system/grading' },
       { label: 'Academic Year', path: '/dashboard/system/academic-year' },
-      { label: 'Fees', path: '/dashboard/system/fees' },
+      { label: 'AI Settings', path: '/dashboard/system/ai-settings' },
       { label: 'Roles', path: '/dashboard/system/roles' },
       { label: 'Classes & Subjects', path: '/dashboard/system/classes-subjects' },
       { label: 'Maintenance', path: '/dashboard/system/maintenance' },
@@ -108,7 +109,7 @@ const allNavLinks = {
   seatingPlans: { icon: 'Grid', label: 'Seating Plans', path: '/dashboard/seating-plan' },
 
   // Accountant
-  feeSystem: { icon: 'DollarSign', label: 'System Fee Structure', path: '/dashboard/system/fees' },
+  feeSystem: { icon: 'DollarSign', label: 'System Fee Structure', path: '/dashboard/accountant/fees' },
   invoices: { icon: 'FileText', label: 'Invoices', path: '/dashboard/accountant/invoices' },
   payments: { icon: 'CreditCard', label: 'Payments', path: '/dashboard/accountant/payments' },
   expenses: { icon: 'Wallet', label: 'Expenses', path: '/dashboard/accountant/expenses' },
@@ -124,6 +125,7 @@ const allNavLinks = {
   // Common Academic
   classesAndSubjects: { icon: 'BookMarked', label: 'Classes & Subjects', path: '/dashboard/system/classes-subjects' },
   gradingSystem: { icon: 'GraduationCap', label: 'Grading System', path: '/dashboard/system/grading' },
+  aiSettings: { icon: 'Sparkles', label: 'AI Settings', path: '/dashboard/system/ai-settings' },
 };
 
 const navConfig: Record<string, { group: string; links: (keyof typeof allNavLinks)[] }[]> = {
@@ -139,7 +141,7 @@ const navConfig: Record<string, { group: string; links: (keyof typeof allNavLink
     { group: 'Main', links: ['dashboard', 'profile', 'notifications'] },
     { group: 'Communication', links: ['announcements', 'messaging'] },
     { group: 'Oversight', links: ['reports', 'manageStaff', 'manageStudents'] },
-    { group: 'Academics', links: ['lessonApprovals', 'gradingSystem', 'classesAndSubjects'] },
+    { group: 'Academics', links: ['lessonApprovals', 'gradingSystem', 'classesAndSubjects', 'aiSettings'] },
     { group: 'Finance', links: ['financialReports'] },
   ],
   HeadOfDepartment: [

@@ -1,3 +1,4 @@
+
 'use server';
 /**
  * @fileOverview An AI agent for drafting communications like announcements.
@@ -7,8 +8,8 @@
  * - DraftCommunicationOutput - The return type for the draftCommunication function.
  */
 
-import {ai} from '@/ai/genkit';
-import {z} from 'genkit';
+import { ai } from '@/ai/genkit';
+import { z } from 'genkit';
 
 export const DraftCommunicationInputSchema = z.object({
   points: z
@@ -30,22 +31,6 @@ export const DraftCommunicationOutputSchema = z.object({
 });
 export type DraftCommunicationOutput = z.infer<typeof DraftCommunicationOutputSchema>;
 
-const prompt = ai.definePrompt({
-  name: 'draftCommunicationPrompt',
-  input: {schema: DraftCommunicationInputSchema},
-  output: {schema: DraftCommunicationOutputSchema},
-  prompt: `You are an expert school administrator's assistant. Your task is to draft a clear, professional, and well-structured announcement for a school portal based on the provided key points.
-
-  Target Audience: {{{audience}}}
-  Desired Tone: {{{tone}}}
-  
-  Key Points to include:
-  {{{points}}}
-
-  Expand on these points to create a full announcement. Ensure the language is appropriate for the target audience and tone. Do not add a title.
-  \n  Draft:`,
-});
-
 const draftCommunicationFlow = ai.defineFlow(
   {
     name: 'draftCommunicationFlow',
@@ -53,8 +38,22 @@ const draftCommunicationFlow = ai.defineFlow(
     outputSchema: DraftCommunicationOutputSchema,
   },
   async input => {
-    const {output} = await prompt(input);
-    return output!;
+    const { output } = await ai.generate({
+      prompt: `You are an expert school administrator's assistant. Your task is to draft a clear, professional, and well-structured announcement for a school portal based on the provided key points.
+
+      Target Audience: ${input.audience}
+      Desired Tone: ${input.tone}
+      
+      Key Points to include:
+      ${input.points}
+
+      Expand on these points to create a full announcement. Ensure the language is appropriate for the target audience and tone. Do not add a title.
+      \n  Draft:`,
+      output: {
+        schema: DraftCommunicationOutputSchema,
+      },
+    });
+    return output;
   }
 );
 

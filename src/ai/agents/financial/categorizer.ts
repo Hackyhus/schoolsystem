@@ -8,8 +8,8 @@
  * - CategorizeExpenseOutput - The return type for the categorizeExpense function.
  */
 
-import {ai} from '@/ai/genkit';
-import {z} from 'genkit';
+import { ai } from '@/ai/genkit';
+import { z } from 'genkit';
 
 const EXPENSE_CATEGORIES = ['Utilities', 'Salaries', 'Maintenance', 'Supplies', 'Marketing', 'Capital Expenditure', 'Miscellaneous'] as const;
 
@@ -23,27 +23,6 @@ export const CategorizeExpenseOutputSchema = z.object({
 });
 export type CategorizeExpenseOutput = z.infer<typeof CategorizeExpenseOutputSchema>;
 
-const prompt = ai.definePrompt({
-  name: 'categorizeExpensePrompt',
-  input: {schema: CategorizeExpenseInputSchema},
-  output: {schema: CategorizeExpenseOutputSchema},
-  prompt: `You are an expert accountant for a school. Your task is to categorize an expense based on its description.
-
-  The available categories are:
-  - Utilities (e.g., electricity bills, water, internet)
-  - Salaries (e.g., staff monthly pay)
-  - Maintenance (e.g., repairs, cleaning supplies, plumbing)
-  - Supplies (e.g., stationery, chalk, teaching aids)
-  - Marketing (e.g., adverts, flyers)
-  - Capital Expenditure (e.g., buying new furniture, computers, building renovations)
-  - Miscellaneous (for items that do not fit other categories)
-
-  Expense Description: {{{description}}}
-
-  Based on this description, select the single most appropriate category.
-  `,
-});
-
 const categorizeExpenseFlow = ai.defineFlow(
   {
     name: 'categorizeExpenseFlow',
@@ -51,8 +30,27 @@ const categorizeExpenseFlow = ai.defineFlow(
     outputSchema: CategorizeExpenseOutputSchema,
   },
   async input => {
-    const {output} = await prompt(input);
-    return output!;
+    const { output } = await ai.generate({
+      prompt: `You are an expert accountant for a school. Your task is to categorize an expense based on its description.
+
+      The available categories are:
+      - Utilities (e.g., electricity bills, water, internet)
+      - Salaries (e.g., staff monthly pay)
+      - Maintenance (e.g., repairs, cleaning supplies, plumbing)
+      - Supplies (e.g., stationery, chalk, teaching aids)
+      - Marketing (e.g., adverts, flyers)
+      - Capital Expenditure (e.g., buying new furniture, computers, building renovations)
+      - Miscellaneous (for items that do not fit other categories)
+
+      Expense Description: ${input.description}
+
+      Based on this description, select the single most appropriate category.
+      `,
+      output: {
+        schema: CategorizeExpenseOutputSchema,
+      },
+    });
+    return output;
   }
 );
 

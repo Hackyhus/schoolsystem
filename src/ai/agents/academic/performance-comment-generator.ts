@@ -1,3 +1,4 @@
+
 'use server';
 /**
  * @fileOverview An AI agent for generating student performance comments for report cards.
@@ -7,8 +8,8 @@
  * - PerformanceCommentOutput - The return type for the generatePerformanceComment function.
  */
 
-import {ai} from '@/ai/genkit';
-import {z} from 'genkit';
+import { ai } from '@/ai/genkit';
+import { z } from 'genkit';
 
 const SubjectPerformanceSchema = z.object({
   name: z.string().describe('The name of the subject.'),
@@ -27,29 +28,6 @@ export const PerformanceCommentOutputSchema = z.object({
 });
 export type PerformanceCommentOutput = z.infer<typeof PerformanceCommentOutputSchema>;
 
-const prompt = ai.definePrompt({
-  name: 'performanceCommentPrompt',
-  input: {schema: PerformanceCommentInputSchema},
-  output: {schema: PerformanceCommentOutputSchema},
-  prompt: `You are an experienced and insightful Nigerian teacher writing a comment for a student's report card.
-  Your name is not needed. The comment should be professional, encouraging, and constructive.
-
-  Student's Name: {{{studentName}}}
-  
-  Academic Performance:
-  {{#each grades}}
-  - Subject: {{this.name}}, Score: {{this.score}}/100, Grade: {{this.grade}}
-  {{/each}}
-
-  Based on the data above, please write a concise (2-3 sentences) end-of-term comment.
-  - Identify specific subjects where the student excels (high scores/grades like A, B).
-  - Identify specific subjects where there is room for improvement (lower scores/grades like D, E, F).
-  - Offer constructive advice or encouragement.
-  - Do not mention every single subject; focus on the highlights and key areas for growth.
-  - The comment should feel personal to {{{studentName}}}.
-  \n  Comment:`,
-});
-
 const generateCommentFlow = ai.defineFlow(
   {
     name: 'generateCommentFlow',
@@ -57,8 +35,27 @@ const generateCommentFlow = ai.defineFlow(
     outputSchema: PerformanceCommentOutputSchema,
   },
   async input => {
-    const {output} = await prompt(input);
-    return output!;
+    const { output } = await ai.generate({
+      prompt: `You are an experienced and insightful Nigerian teacher writing a comment for a student's report card.
+      Your name is not needed. The comment should be professional, encouraging, and constructive.
+
+      Student's Name: ${input.studentName}
+      
+      Academic Performance:
+      ${input.grades.map(g => `- Subject: ${g.name}, Score: ${g.score}/100, Grade: ${g.grade}`).join('\n')}
+
+      Based on the data above, please write a concise (2-3 sentences) end-of-term comment.
+      - Identify specific subjects where the student excels (high scores/grades like A, B).
+      - Identify specific subjects where there is room for improvement (lower scores/grades like D, E, F).
+      - Offer constructive advice or encouragement.
+      - Do not mention every single subject; focus on the highlights and key areas for growth.
+      - The comment should feel personal to ${input.studentName}.
+      \n  Comment:`,
+      output: {
+        schema: PerformanceCommentOutputSchema,
+      },
+    });
+    return output;
   }
 );
 

@@ -1,3 +1,4 @@
+
 'use server';
 /**
  * @fileOverview A generic text summarization AI agent.
@@ -7,8 +8,8 @@
  * - SummarizeTextOutput - The return type for the summarizeText function.
  */
 
-import {ai} from '@/ai/genkit';
-import {z} from 'genkit';
+import { ai } from '@/ai/genkit';
+import { z } from 'genkit';
 
 export const SummarizeTextInputSchema = z.object({
   text: z
@@ -28,8 +29,8 @@ export type SummarizeTextOutput = z.infer<typeof SummarizeTextOutputSchema>;
 
 const prompt = ai.definePrompt({
   name: 'summarizeTextPrompt',
-  input: {schema: SummarizeTextInputSchema},
-  output: {schema: SummarizeTextOutputSchema},
+  inputSchema: SummarizeTextInputSchema,
+  outputSchema: SummarizeTextOutputSchema,
   prompt: `You are an expert assistant tasked with summarizing text for professional review.
   Your goal is to provide a concise and informative summary that captures the key points of the provided content.
 
@@ -47,8 +48,20 @@ const summarizeTextFlow = ai.defineFlow(
     outputSchema: SummarizeTextOutputSchema,
   },
   async input => {
-    const {output} = await prompt(input);
-    return output!;
+    const { output } = await ai.generate({
+      prompt: `You are an expert assistant tasked with summarizing text for professional review.
+        Your goal is to provide a concise and informative summary that captures the key points of the provided content.
+
+        Use the following context to tailor your summary.
+        Context: ${input.context}
+
+        Text to summarize: ${input.text}
+        \n  Summary:`,
+      output: {
+        schema: SummarizeTextOutputSchema,
+      },
+    });
+    return output;
   }
 );
 

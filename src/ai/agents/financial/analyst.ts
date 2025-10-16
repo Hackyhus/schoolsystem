@@ -1,3 +1,4 @@
+
 'use server';
 /**
  * @fileOverview A financial analysis AI agent.
@@ -7,8 +8,8 @@
  * - FinancialAnalysisOutput - The return type for the analyzeFinancials function.
  */
 
-import {ai} from '@/ai/genkit';
-import {z} from 'genkit';
+import { ai } from '@/ai/genkit';
+import { z } from 'genkit';
 
 export const FinancialAnalysisInputSchema = z.object({
   totalRevenue: z.number().describe('The total revenue for the period.'),
@@ -23,21 +24,6 @@ export const FinancialAnalysisOutputSchema = z.object({
 });
 export type FinancialAnalysisOutput = z.infer<typeof FinancialAnalysisOutputSchema>;
 
-const prompt = ai.definePrompt({
-  name: 'financialAnalystPrompt',
-  input: {schema: FinancialAnalysisInputSchema},
-  output: {schema: FinancialAnalysisOutputSchema},
-  prompt: `You are an expert financial analyst for a school. Your task is to provide a clear and concise summary of the financial performance for a given period.
-
-  Use the following data:
-  - Total Revenue: {{{currency}}} {{{totalRevenue}}}
-  - Total Expenses: {{{currency}}} {{{totalExpenses}}}
-  - Net Income: {{{currency}}} {{{netIncome}}}
-
-  Based on this data, write a short, professional summary. Mention the key figures and the resulting net income.
-  \n  Summary:`,
-});
-
 const analyzeFinancialsFlow = ai.defineFlow(
   {
     name: 'analyzeFinancialsFlow',
@@ -45,8 +31,21 @@ const analyzeFinancialsFlow = ai.defineFlow(
     outputSchema: FinancialAnalysisOutputSchema,
   },
   async input => {
-    const {output} = await prompt(input);
-    return output!;
+    const { output } = await ai.generate({
+      prompt: `You are an expert financial analyst for a school. Your task is to provide a clear and concise summary of the financial performance for a given period.
+
+      Use the following data:
+      - Total Revenue: ${input.currency} ${input.totalRevenue}
+      - Total Expenses: ${input.currency} ${input.totalExpenses}
+      - Net Income: ${input.currency} ${input.netIncome}
+
+      Based on this data, write a short, professional summary. Mention the key figures and the resulting net income.
+      \n  Summary:`,
+      output: {
+        schema: FinancialAnalysisOutputSchema,
+      },
+    });
+    return output;
   }
 );
 

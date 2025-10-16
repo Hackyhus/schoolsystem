@@ -1,7 +1,8 @@
+
 'use client';
 
 import { Card, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { ArrowRight, Calendar, DollarSign, GraduationCap, School, ShieldCheck, BookMarked, Wrench } from "lucide-react";
+import { ArrowRight, Calendar, DollarSign, GraduationCap, School, ShieldCheck, BookMarked, Wrench, Sparkles } from "lucide-react";
 import Link from "next/link";
 
 
@@ -25,10 +26,10 @@ const settingsCards = [
         href: '/dashboard/system/academic-year'
     },
     {
-        title: 'Fee Structure',
-        description: 'Define tuition fees, payment deadlines, and other charges.',
-        icon: DollarSign,
-        href: '/dashboard/system/fees'
+        title: 'AI Engine',
+        description: 'Configure AI agents, safety settings, and other smart features.',
+        icon: Sparkles,
+        href: '/dashboard/system/ai-settings'
     },
     {
         title: 'Roles & Permissions',
