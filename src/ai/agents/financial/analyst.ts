@@ -8,7 +8,7 @@
  * - FinancialAnalysisOutput - The return type for the analyzeFinancials function.
  */
 
-import { ai } from '@/ai/genkit';
+import { defineFlow, generate } from '@/ai/genkit';
 import { z } from 'genkit';
 
 export const FinancialAnalysisInputSchema = z.object({
@@ -24,14 +24,14 @@ export const FinancialAnalysisOutputSchema = z.object({
 });
 export type FinancialAnalysisOutput = z.infer<typeof FinancialAnalysisOutputSchema>;
 
-const analyzeFinancialsFlow = ai.defineFlow(
+const analyzeFinancialsFlow = defineFlow(
   {
     name: 'analyzeFinancialsFlow',
     inputSchema: FinancialAnalysisInputSchema,
     outputSchema: FinancialAnalysisOutputSchema,
   },
   async input => {
-    const { output } = await ai.generate({
+    const { output } = await generate({
       prompt: `You are an expert financial analyst for a school. Your task is to provide a clear and concise summary of the financial performance for a given period.
 
       Use the following data:
@@ -50,5 +50,6 @@ const analyzeFinancialsFlow = ai.defineFlow(
 );
 
 export async function analyzeFinancials(input: FinancialAnalysisInput): Promise<FinancialAnalysisOutput> {
-  return analyzeFinancialsFlow(input);
+  const flow = await analyzeFinancialsFlow;
+  return flow(input);
 }

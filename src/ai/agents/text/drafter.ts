@@ -8,7 +8,7 @@
  * - DraftCommunicationOutput - The return type for the draftCommunication function.
  */
 
-import { ai } from '@/ai/genkit';
+import { defineFlow, generate } from '@/ai/genkit';
 import { z } from 'genkit';
 
 export const DraftCommunicationInputSchema = z.object({
@@ -31,14 +31,14 @@ export const DraftCommunicationOutputSchema = z.object({
 });
 export type DraftCommunicationOutput = z.infer<typeof DraftCommunicationOutputSchema>;
 
-const draftCommunicationFlow = ai.defineFlow(
+const draftCommunicationFlow = defineFlow(
   {
     name: 'draftCommunicationFlow',
     inputSchema: DraftCommunicationInputSchema,
     outputSchema: DraftCommunicationOutputSchema,
   },
   async input => {
-    const { output } = await ai.generate({
+    const { output } = await generate({
       prompt: `You are an expert school administrator's assistant. Your task is to draft a clear, professional, and well-structured announcement for a school portal based on the provided key points.
 
       Target Audience: ${input.audience}
@@ -58,5 +58,6 @@ const draftCommunicationFlow = ai.defineFlow(
 );
 
 export async function draftCommunication(input: DraftCommunicationInput): Promise<DraftCommunicationOutput> {
-  return draftCommunicationFlow(input);
+  const flow = await draftCommunicationFlow;
+  return flow(input);
 }

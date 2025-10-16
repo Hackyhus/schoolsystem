@@ -8,7 +8,7 @@
  * - PerformanceCommentOutput - The return type for the generatePerformanceComment function.
  */
 
-import { ai } from '@/ai/genkit';
+import { defineFlow, generate } from '@/ai/genkit';
 import { z } from 'genkit';
 
 const SubjectPerformanceSchema = z.object({
@@ -28,14 +28,14 @@ export const PerformanceCommentOutputSchema = z.object({
 });
 export type PerformanceCommentOutput = z.infer<typeof PerformanceCommentOutputSchema>;
 
-const generateCommentFlow = ai.defineFlow(
+const generateCommentFlow = defineFlow(
   {
     name: 'generateCommentFlow',
     inputSchema: PerformanceCommentInputSchema,
     outputSchema: PerformanceCommentOutputSchema,
   },
   async input => {
-    const { output } = await ai.generate({
+    const { output } = await generate({
       prompt: `You are an experienced and insightful Nigerian teacher writing a comment for a student's report card.
       Your name is not needed. The comment should be professional, encouraging, and constructive.
 
@@ -60,5 +60,6 @@ const generateCommentFlow = ai.defineFlow(
 );
 
 export async function generatePerformanceComment(input: PerformanceCommentInput): Promise<PerformanceCommentOutput> {
-  return generateCommentFlow(input);
+  const flow = await generateCommentFlow;
+  return flow(input);
 }

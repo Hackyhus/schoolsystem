@@ -8,7 +8,7 @@
  * - NarrateDataOutput - The return type for the narrateData function.
  */
 
-import { ai } from '@/ai/genkit';
+import { defineFlow, generate } from '@/ai/genkit';
 import { z } from 'genkit';
 
 export const NarrateDataInputSchema = z.object({
@@ -22,14 +22,14 @@ export const NarrateDataOutputSchema = z.object({
 });
 export type NarrateDataOutput = z.infer<typeof NarrateDataOutputSchema>;
 
-const narrateDataFlow = ai.defineFlow(
+const narrateDataFlow = defineFlow(
   {
     name: 'narrateDataFlow',
     inputSchema: NarrateDataInputSchema,
     outputSchema: NarrateDataOutputSchema,
   },
   async input => {
-    const { output } = await ai.generate({
+    const { output } = await generate({
       prompt: `You are an expert data analyst and report writer for a school. Your task is to analyze the provided JSON data and write a short, human-readable narrative summary of the key findings.
 
       Context: ${input.context}
@@ -53,5 +53,6 @@ const narrateDataFlow = ai.defineFlow(
 );
 
 export async function narrateData(input: NarrateDataInput): Promise<NarrateDataOutput> {
-  return narrateDataFlow(input);
+  const flow = await narrateDataFlow;
+  return flow(input);
 }

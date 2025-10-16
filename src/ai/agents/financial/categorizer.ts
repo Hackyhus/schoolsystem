@@ -8,7 +8,7 @@
  * - CategorizeExpenseOutput - The return type for the categorizeExpense function.
  */
 
-import { ai } from '@/ai/genkit';
+import { defineFlow, generate } from '@/ai/genkit';
 import { z } from 'genkit';
 
 const EXPENSE_CATEGORIES = ['Utilities', 'Salaries', 'Maintenance', 'Supplies', 'Marketing', 'Capital Expenditure', 'Miscellaneous'] as const;
@@ -23,14 +23,14 @@ export const CategorizeExpenseOutputSchema = z.object({
 });
 export type CategorizeExpenseOutput = z.infer<typeof CategorizeExpenseOutputSchema>;
 
-const categorizeExpenseFlow = ai.defineFlow(
+const categorizeExpenseFlow = defineFlow(
   {
     name: 'categorizeExpenseFlow',
     inputSchema: CategorizeExpenseInputSchema,
     outputSchema: CategorizeExpenseOutputSchema,
   },
   async input => {
-    const { output } = await ai.generate({
+    const { output } = await generate({
       prompt: `You are an expert accountant for a school. Your task is to categorize an expense based on its description.
 
       The available categories are:
@@ -55,5 +55,6 @@ const categorizeExpenseFlow = ai.defineFlow(
 );
 
 export async function categorizeExpense(input: CategorizeExpenseInput): Promise<CategorizeExpenseOutput> {
-  return categorizeExpenseFlow(input);
+  const flow = await categorizeExpenseFlow;
+  return flow(input);
 }

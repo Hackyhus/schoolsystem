@@ -8,7 +8,7 @@
  * - SummarizeTextOutput - The return type for the summarizeText function.
  */
 
-import { ai } from '@/ai/genkit';
+import { defineFlow, generate } from '@/ai/genkit';
 import { z } from 'genkit';
 
 export const SummarizeTextInputSchema = z.object({
@@ -28,14 +28,14 @@ export const SummarizeTextOutputSchema = z.object({
 export type SummarizeTextOutput = z.infer<typeof SummarizeTextOutputSchema>;
 
 
-const summarizeTextFlow = ai.defineFlow(
+const summarizeTextFlow = defineFlow(
   {
     name: 'summarizeTextFlow',
     inputSchema: SummarizeTextInputSchema,
     outputSchema: SummarizeTextOutputSchema,
   },
   async input => {
-    const { output } = await ai.generate({
+    const { output } = await generate({
       prompt: `You are an expert assistant tasked with summarizing text for professional review.
         Your goal is to provide a concise and informative summary that captures the key points of the provided content.
 
@@ -53,5 +53,6 @@ const summarizeTextFlow = ai.defineFlow(
 );
 
 export async function summarizeText(input: SummarizeTextInput): Promise<SummarizeTextOutput> {
-  return summarizeTextFlow(input);
+  const flow = await summarizeTextFlow;
+  return flow(input);
 }
