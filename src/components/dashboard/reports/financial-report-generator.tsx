@@ -244,17 +244,17 @@ export function FinancialReportGenerator() {
             )}
             <style jsx global>{`
                 @media print {
-                  body > *:not(#print-area) {
-                    display: none;
-                  }
-                  #print-area, #print-area * {
-                    visibility: visible;
+                  body {
+                    -webkit-print-color-adjust: exact;
+                    print-color-adjust: exact;
                   }
                   #print-area {
-                    position: absolute;
-                    left: 0;
-                    top: 0;
-                    width: 100%;
+                    color: black;
+                    background-color: white;
+                  }
+                  #print-area * {
+                     color: black !important;
+                     background-color: white !important;
                   }
                   .print\\:hidden {
                       display: none;
@@ -268,10 +268,6 @@ export function FinancialReportGenerator() {
                    .print\\:space-y-0 {
                         row-gap: 0;
                    }
-                  body {
-                    -webkit-print-color-adjust: exact;
-                    print-color-adjust: exact;
-                  }
                 }
             `}</style>
         </div>
