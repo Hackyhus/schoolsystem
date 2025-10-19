@@ -39,7 +39,8 @@ import {
   BookMarked,
   Wrench,
   GraduationCap,
-  Sparkles
+  Sparkles,
+  UploadCloud,
 } from 'lucide-react';
 import Image from 'next/image';
 
@@ -60,7 +61,7 @@ const iconMap: { [key: string]: React.ElementType } = {
   FileText, BarChart2, BookOpen, Edit3, DollarSign, Calendar, Bell, MessageSquare,
   FileQuestion, BookCopy, CheckSquare, Award, Shield, Settings, LogOut,
   TrendingUp, Landmark, Wallet, Briefcase, Receipt, CreditCard, Ticket, Grid,
-  BookMarked, Wrench, GraduationCap, Sparkles
+  BookMarked, Wrench, GraduationCap, Sparkles, UploadCloud
 };
 
 const allNavLinks = {
@@ -97,6 +98,7 @@ const allNavLinks = {
   // Teacher
   lessonPlans: { icon: 'BookCopy', label: 'Lesson Plans', path: '/dashboard/lesson-notes' },
   examQuestions: { icon: 'FileQuestion', label: 'Exam Questions', path: '/dashboard/exam-questions' },
+  bulkUpload: { icon: 'UploadCloud', label: 'Bulk Upload', path: '/dashboard/teacher/bulk-upload' },
   enterScores: { icon: 'Edit3', label: 'Enter Scores', path: '/dashboard/scores' },
   myStudents: { icon: 'UsersRound', label: 'My Students', path: '/dashboard/performance' },
 
@@ -163,7 +165,7 @@ const navConfig: Record<string, { group: string; links: (keyof typeof allNavLink
   Teacher: [
     { group: 'Main', links: ['dashboard', 'profile', 'notifications'] },
     { group: 'Communication', links: ['announcements', 'messaging'] },
-    { group: 'My Work', links: ['lessonPlans', 'examQuestions', 'enterScores', 'myStudents'] },
+    { group: 'My Work', links: ['lessonPlans', 'examQuestions', 'bulkUpload', 'enterScores', 'myStudents'] },
   ],
   Parent: [
     { group: 'Main', links: ['dashboard', 'profile', 'notifications'] },
