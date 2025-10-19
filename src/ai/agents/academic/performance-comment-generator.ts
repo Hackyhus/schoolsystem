@@ -11,7 +11,6 @@ import { generateCommentFlow } from './flows/performance-comment-flow';
 import type { PerformanceCommentInput, PerformanceCommentOutput } from './schemas/performance-comment-generator.schemas';
 export type { PerformanceCommentInput, PerformanceCommentOutput };
 
-
 export async function generatePerformanceComment(input: PerformanceCommentInput): Promise<PerformanceCommentOutput> {
   const flow = await generateCommentFlow;
   return flow(input);

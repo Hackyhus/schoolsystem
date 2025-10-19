@@ -11,7 +11,6 @@ import { categorizeExpenseFlow } from './flows/categorizer-flow';
 import type { CategorizeExpenseInput, CategorizeExpenseOutput } from './schemas/categorizer.schemas';
 export type { CategorizeExpenseInput, CategorizeExpenseOutput };
 
-
 export async function categorizeExpense(input: CategorizeExpenseInput): Promise<CategorizeExpenseOutput> {
   const flow = await categorizeExpenseFlow;
   return flow(input);

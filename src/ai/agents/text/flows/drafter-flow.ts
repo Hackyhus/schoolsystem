@@ -1,15 +1,16 @@
 
-import { defineFlow, generate } from '@/ai/genkit';
+import { ai } from '@/ai/genkit';
 import { DraftCommunicationInputSchema, DraftCommunicationOutputSchema } from '../schemas/drafter.schemas';
 
-export const draftCommunicationFlow = await defineFlow(
+export const draftCommunicationFlow = ai.defineFlow(
   {
     name: 'draftCommunicationFlow',
     inputSchema: DraftCommunicationInputSchema,
     outputSchema: DraftCommunicationOutputSchema,
   },
   async (input) => {
-    const { output } = await generate({
+    const { output } = await ai.generate({
+      model: 'gemini-1.5-flash',
       prompt: `You are an expert school administrator's assistant. Your task is to draft a clear, professional, and well-structured announcement for a school portal based on the provided key points.
 
       Target Audience: ${input.audience}

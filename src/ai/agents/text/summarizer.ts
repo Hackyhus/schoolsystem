@@ -11,7 +11,6 @@ import { summarizeTextFlow } from './flows/summarizer-flow';
 import type { SummarizeTextInput, SummarizeTextOutput } from './schemas/summarizer.schemas';
 export type { SummarizeTextInput, SummarizeTextOutput };
 
-
 export async function summarizeText(input: SummarizeTextInput): Promise<SummarizeTextOutput> {
   const flow = await summarizeTextFlow;
   return flow(input);

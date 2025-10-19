@@ -1,15 +1,16 @@
 
-import { defineFlow, generate } from '@/ai/genkit';
+import { ai } from '@/ai/genkit';
 import { SummarizeTextInputSchema, SummarizeTextOutputSchema } from '../schemas/summarizer.schemas';
 
-export const summarizeTextFlow = await defineFlow(
+export const summarizeTextFlow = ai.defineFlow(
   {
     name: 'summarizeTextFlow',
     inputSchema: SummarizeTextInputSchema,
     outputSchema: SummarizeTextOutputSchema,
   },
   async (input) => {
-    const { output } = await generate({
+    const { output } = await ai.generate({
+      model: 'gemini-1.5-flash',
       prompt: `You are an expert assistant tasked with summarizing text for professional review.
         Your goal is to provide a concise and informative summary that captures the key points of the provided content.
 

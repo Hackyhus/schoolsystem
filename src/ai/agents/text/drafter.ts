@@ -11,7 +11,6 @@ import { draftCommunicationFlow } from './flows/drafter-flow';
 import type { DraftCommunicationInput, DraftCommunicationOutput } from './schemas/drafter.schemas';
 export type { DraftCommunicationInput, DraftCommunicationOutput };
 
-
 export async function draftCommunication(input: DraftCommunicationInput): Promise<DraftCommunicationOutput> {
   const flow = await draftCommunicationFlow;
   return flow(input);

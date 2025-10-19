@@ -11,7 +11,6 @@ import { analyzeFinancialsFlow } from './flows/analyst-flow';
 import type { FinancialAnalysisInput, FinancialAnalysisOutput } from './schemas/analyst.schemas';
 export type { FinancialAnalysisInput, FinancialAnalysisOutput };
 
-
 export async function analyzeFinancials(input: FinancialAnalysisInput): Promise<FinancialAnalysisOutput> {
   const flow = await analyzeFinancialsFlow;
   return flow(input);
