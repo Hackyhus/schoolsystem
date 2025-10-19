@@ -1,5 +1,5 @@
 
-import { ai } from '@/ai/genkit';
+import { ai } from '@/lib/genkit';
 import { PerformanceCommentInputSchema, PerformanceCommentOutputSchema } from '../schemas/performance-comment-generator.schemas';
 
 export const generateCommentFlow = ai.defineFlow(

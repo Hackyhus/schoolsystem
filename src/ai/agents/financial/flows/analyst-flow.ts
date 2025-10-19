@@ -1,5 +1,5 @@
 
-import { ai } from '@/ai/genkit';
+import { ai } from '@/lib/genkit';
 import { FinancialAnalysisInputSchema, FinancialAnalysisOutputSchema } from '../schemas/analyst.schemas';
 
 export const analyzeFinancialsFlow = ai.defineFlow(

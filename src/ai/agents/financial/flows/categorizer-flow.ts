@@ -1,5 +1,5 @@
 
-import { ai } from '@/ai/genkit';
+import { ai } from '@/lib/genkit';
 import { CategorizeExpenseInputSchema, CategorizeExpenseOutputSchema } from '../schemas/categorizer.schemas';
 
 export const categorizeExpenseFlow = ai.defineFlow(
