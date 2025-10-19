@@ -22,6 +22,7 @@ import { Input } from '@/components/ui/input';
 import { useRole } from '@/context/role-context';
 import { useToast } from '@/hooks/use-toast';
 import { auth, db } from '@/lib/firebase';
+import type { MockUser } from '@/lib/schema';
 
 const formSchema = z.object({
   identifier: z.string().min(1, { message: 'ID or Email is required.' }),
@@ -46,7 +47,7 @@ export function LoginForm() {
       // 1. Determine if the identifier is an email or a Staff/Student ID
       const isEmail = values.identifier.includes('@');
       let userEmail = '';
-      let userData: any = null;
+      let userData: MockUser | null = null;
 
       const usersRef = collection(db, 'users');
       
@@ -58,7 +59,7 @@ export function LoginForm() {
         if (querySnapshot.empty) {
             throw new Error("auth/user-not-found");
         }
-        userData = querySnapshot.docs[0].data();
+        userData = querySnapshot.docs[0].data() as MockUser;
 
       } else {
         // If it's a Staff/Student ID, find the user doc to get the email.
@@ -68,7 +69,7 @@ export function LoginForm() {
         if (querySnapshot.empty) {
            throw new Error("auth/user-not-found");
         }
-        userData = querySnapshot.docs[0].data();
+        userData = querySnapshot.docs[0].data() as MockUser;
         userEmail = userData.email;
       }
       
@@ -109,7 +110,7 @@ export function LoginForm() {
       }
     } catch (error: any) {
         let description = 'An unexpected error occurred.';
-        if (error.message === 'auth/user-not-found' || error.code === 'auth/user-not-found') {
+        if (error.code === 'auth/user-not-found') {
             description = 'No user found with that ID or Email.';
         } else if (error.code === 'auth/wrong-password') {
             description = 'Incorrect password. Please try again.';

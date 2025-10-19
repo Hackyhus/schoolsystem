@@ -4,6 +4,8 @@ import { useRouter } from 'next/navigation';
 import { onAuthStateChanged, signOut, User } from 'firebase/auth';
 import { doc, getDoc } from 'firebase/firestore';
 import { auth, db } from '@/lib/firebase';
+import { useToast } from '@/hooks/use-toast';
+import { useInactivityTimeout } from '@/hooks/useInactivityTimeout';
 
 type RoleContextType = {
   user: User | null;
@@ -20,27 +22,34 @@ export const RoleProvider = ({ children }: { children: React.ReactNode }) => {
   const [role, setRoleState] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const router = useRouter();
+  const { toast } = useToast();
+
+  const logout = useCallback(async (options?: { silent?: boolean }) => {
+    try {
+      await signOut(auth);
+      localStorage.removeItem('user-role');
+      setUser(null);
+      setRoleState(null);
+      if (!options?.silent) {
+        router.push('/');
+      }
+    } catch (error) {
+      console.error('Failed to log out', error);
+    }
+  }, [router]);
+
+  useInactivityTimeout(() => {
+    toast({
+      title: 'Session Expired',
+      description: 'You have been logged out due to inactivity.',
+    });
+    logout({ silent: true });
+    router.push('/'); // Force redirect after silent logout
+  }, 3600000); // 1 hour
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (currentUser) => {
-      // If the current user in the context is already the authenticated user, do nothing.
-      // This prevents re-fetching and state changes when an admin creates a new user,
-      // which can briefly change auth state before being reverted.
-      if (user && currentUser && user.uid === currentUser.uid) {
-        setIsLoading(false);
-        return;
-      }
-      
-      setIsLoading(true);
       if (currentUser) {
-        // This is the key change: if we already have a logged-in user (i.e., the admin)
-        // and the new auth state is for a *different* user, we ignore it.
-        // This prevents the admin's session from being replaced by the newly created user.
-        if (user && user.uid !== currentUser.uid) {
-            setIsLoading(false);
-            return;
-        }
-        
         setUser(currentUser);
         const userDocRef = doc(db, 'users', currentUser.uid);
         const userDoc = await getDoc(userDocRef);
@@ -50,14 +59,13 @@ export const RoleProvider = ({ children }: { children: React.ReactNode }) => {
           const userRole = userData.role;
           setRoleState(userRole);
           try {
-            localStorage.setItem('user-role', JSON.stringify(userRole));
+            localStorage.setItem('user-role', userRole);
           } catch (error) {
-            console.error('Failed to write to localStorage', error);
+            console.error('Failed to write role to localStorage', error);
           }
         } else {
-          // If a user exists in auth but not in Firestore, it's an invalid state.
-          // Log them out to prevent access.
-          await signOut(auth);
+          // If a user is in auth but not Firestore, something is wrong. Log them out.
+          await logout({ silent: true });
         }
       } else {
         setUser(null);
@@ -65,52 +73,24 @@ export const RoleProvider = ({ children }: { children: React.ReactNode }) => {
         try {
           localStorage.removeItem('user-role');
         } catch (error) {
-          console.error('Failed to remove from localStorage', error);
+          console.error('Failed to remove role from localStorage', error);
         }
       }
       setIsLoading(false);
     });
 
     return () => unsubscribe();
-  }, [user]);
-
-   useEffect(() => {
-    // Fallback to localStorage to reduce loading flashes on page reload.
-    if (isLoading && !user) {
-        try {
-            const storedRole = localStorage.getItem('user-role');
-            if (storedRole) {
-                setRoleState(JSON.parse(storedRole));
-            }
-        } catch (error) {
-            console.error('Failed to read from localStorage', error);
-        } finally {
-            setIsLoading(false);
-        }
-    }
-  }, [isLoading, user]);
+  }, [logout]);
 
 
   const setRole = useCallback((newRole: string) => {
     try {
-      localStorage.setItem('user-role', JSON.stringify(newRole));
+      localStorage.setItem('user-role', newRole);
       setRoleState(newRole);
     } catch (error) {
       console.error('Failed to write to localStorage', error);
     }
   }, []);
-
-  const logout = useCallback(async () => {
-    try {
-      await signOut(auth);
-      localStorage.removeItem('user-role');
-      setUser(null);
-      setRoleState(null);
-      router.push('/');
-    } catch (error) {
-      console.error('Failed to log out', error);
-    }
-  }, [router]);
 
   return (
     <RoleContext.Provider value={{ user, role, setRole, logout, isLoading }}>
