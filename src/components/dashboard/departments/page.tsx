@@ -36,8 +36,7 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { AddDepartmentForm } from '@/components/dashboard/departments/add-department-form';
-import { dbService } from '@/lib/firebase';
-import type { QueryConstraint } from '@/services/types';
+import { dbService } from '@/lib/dbService';
 import usePersistentState from '@/hooks/use-persistent-state';
 
 type Department = {

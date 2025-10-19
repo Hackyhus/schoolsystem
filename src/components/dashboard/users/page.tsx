@@ -20,7 +20,7 @@ import { AddUserForm } from '@/components/dashboard/users/add-user-form';
 import { Button } from '@/components/ui/button';
 import { PlusCircle, Trash2, Edit, Upload } from 'lucide-react';
 import { useEffect, useState, useCallback } from 'react';
-import { dbService } from '@/lib/firebase';
+import { dbService } from '@/lib/dbService';
 import type { MockUser } from '@/lib/schema';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useToast } from '@/hooks/use-toast';
