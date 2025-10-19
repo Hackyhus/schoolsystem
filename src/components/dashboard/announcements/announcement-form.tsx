@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useForm } from 'react-hook-form';
@@ -42,7 +43,7 @@ export function AnnouncementForm({ initialData, onFormSubmit }: AnnouncementForm
   const { user } = useRole();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isAiGenerating, startAiTransition] = useTransition();
-  const [aiKeyPoints, setAiKeyPoints] = useState('');
+  const [aiTopic, setAiTopic] = useState('');
   const [aiError, setAiError] = useState('');
 
 
@@ -56,11 +57,11 @@ export function AnnouncementForm({ initialData, onFormSubmit }: AnnouncementForm
   });
 
   const handleGenerateWithAi = () => {
-    if (!aiKeyPoints) {
+    if (!aiTopic) {
       toast({
         variant: 'destructive',
-        title: 'Key Points Required',
-        description: 'Please enter some points for the AI to draft from.',
+        title: 'Topic Required',
+        description: 'Please enter a topic for the AI to draft from.',
       });
       return;
     }
@@ -69,7 +70,7 @@ export function AnnouncementForm({ initialData, onFormSubmit }: AnnouncementForm
     startAiTransition(async () => {
       try {
         const result = await aiEngine.text.draft({
-          points: aiKeyPoints,
+          topic: aiTopic,
           audience: 'All Users',
           tone: 'Formal',
         });
@@ -132,9 +133,9 @@ export function AnnouncementForm({ initialData, onFormSubmit }: AnnouncementForm
         <div className="space-y-2 rounded-lg border p-4">
             <h3 className="text-sm font-medium">AI Content Assistant</h3>
              <Textarea
-                placeholder="Enter key points or a topic for the AI to expand on. e.g., Mid-term break from Oct 28 to Nov 1. School resumes Nov 4."
-                value={aiKeyPoints}
-                onChange={(e) => setAiKeyPoints(e.target.value)}
+                placeholder="Enter a topic for the AI to expand on. e.g., Announce a 3-day mid-term break starting next Monday."
+                value={aiTopic}
+                onChange={(e) => setAiTopic(e.target.value)}
                 rows={3}
             />
             {aiError && <Alert variant="destructive"><AlertTitle>Error</AlertTitle><AlertDescription>{aiError}</AlertDescription></Alert>}

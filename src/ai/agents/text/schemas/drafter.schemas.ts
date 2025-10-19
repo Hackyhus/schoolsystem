@@ -2,9 +2,9 @@
 import { z } from 'zod';
 
 export const DraftCommunicationInputSchema = z.object({
-  points: z
+  topic: z
     .string()
-    .describe('A list of bullet points or a short topic for the announcement.'),
+    .describe('The topic for the announcement.'),
   audience: z
     .enum(['Parents', 'Staff', 'All Users'])
     .default('All Users')

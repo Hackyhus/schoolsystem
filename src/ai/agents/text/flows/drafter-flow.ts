@@ -1,25 +1,23 @@
 
-import { ai } from '@/lib/genkit';
-import { DraftCommunicationInputSchema, DraftCommunicationOutputSchema } from '../schemas/drafter.schemas';
+'use server';
 
-export const draftCommunicationFlow = ai.defineFlow(
+import { generate } from '@/lib/genkit';
+import { DraftCommunicationInputSchema, DraftCommunicationOutputSchema } from '../schemas/drafter.schemas';
+import { defineFlow } from '@/lib/genkit';
+
+export const draftCommunicationFlow = defineFlow(
   {
     name: 'draftCommunicationFlow',
     inputSchema: DraftCommunicationInputSchema,
     outputSchema: DraftCommunicationOutputSchema,
   },
   async (input) => {
-    const { output } = await ai.generate({
-      model: 'gemini-1.5-flash',
-      prompt: `You are an expert school administrator's assistant. Your task is to draft a clear, professional, and well-structured announcement for a school portal based on the provided key points.
+    const { output } = await generate({
+      prompt: `You are an expert school administrator's assistant. Your task is to draft a clear, professional, and well-structured announcement for a school portal based on the provided topic.
 
-      Target Audience: ${input.audience}
-      Desired Tone: ${input.tone}
-      
-      Key Points to include:
-      ${input.points}
+      Topic: ${input.topic}
 
-      Expand on these points to create a full announcement. Ensure the language is appropriate for the target audience and tone. Do not add a title.
+      Expand on this topic to create a full announcement. Ensure the language is appropriate for a formal announcement to all users. Do not add a title.
       \n  Draft:`,
       output: {
         schema: DraftCommunicationOutputSchema,
