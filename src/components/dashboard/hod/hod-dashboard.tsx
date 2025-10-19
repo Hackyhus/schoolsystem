@@ -90,12 +90,15 @@ export function HodDashboard() {
       }
 
       // Firestore 'in' query has a limit of 30 values. If there are more teachers, we'd need multiple queries.
-      const notesQuery = query(collection(db, 'lessonNotes'), where('teacherId', 'in', teacherIds), orderBy('submittedOn', 'desc'));
+      const notesQuery = query(collection(db, 'lessonNotes'), where('teacherId', 'in', teacherIds));
       const notesSnapshot = await getDocs(notesQuery);
       
       const notesList = notesSnapshot.docs.map(doc => {
         return { id: doc.id, ...doc.data() } as MockLessonNote;
       });
+
+      // Sort client-side to avoid composite index
+      notesList.sort((a, b) => (b.submittedOn?.seconds || 0) - (a.submittedOn?.seconds || 0));
 
       setNotes(notesList.slice(0, 5)); // Show recent 5
 

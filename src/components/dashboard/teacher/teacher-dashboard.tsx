@@ -75,7 +75,7 @@ export function TeacherDashboard() {
       const allNotesList = allNotesSnapshot.docs.map(doc => ({id: doc.id, ...doc.data() as MockLessonNote}));
       
       // Sort client-side to avoid needing a composite index
-      allNotesList.sort((a, b) => new Date(b.submissionDate).getTime() - new Date(a.submissionDate).getTime());
+      allNotesList.sort((a, b) => (b.submittedOn?.seconds || 0) - (a.submittedOn?.seconds || 0));
 
       setRecentNotes(allNotesList.slice(0, 3));
       
@@ -317,4 +317,3 @@ export function TeacherDashboard() {
     </div>
   );
 }
-
