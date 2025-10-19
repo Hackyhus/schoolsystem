@@ -37,7 +37,7 @@ export async function runPayroll(month: string, year: number, userId: string) {
         }
 
         // 4. Start a batch write
-        const batch = writeBatch(db);
+        const batch = dbService.createBatch();
         let totalPayrollAmount = 0;
         const payPeriod = `${month} ${year}`;
         

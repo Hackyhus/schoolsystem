@@ -18,10 +18,9 @@ import {
 } from '@/components/ui/table';
 import { AddUserForm } from '@/components/dashboard/users/add-user-form';
 import { Button } from '@/components/ui/button';
-import { PlusCircle, Trash2, Edit } from 'lucide-react';
+import { PlusCircle, Trash2, Edit, Upload } from 'lucide-react';
 import { useEffect, useState, useCallback } from 'react';
-import { collection, getDocs, deleteDoc, doc, query, where, updateDoc } from 'firebase/firestore';
-import { auth, db } from '@/lib/firebase';
+import { dbService } from '@/lib/firebase';
 import type { MockUser } from '@/lib/schema';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useToast } from '@/hooks/use-toast';
@@ -36,22 +35,19 @@ import {
 import Link from 'next/link';
 import { Badge } from '@/components/ui/badge';
 import Image from 'next/image';
+import { BulkStaffUploadDialog } from '@/components/dashboard/users/bulk-staff-upload-dialog';
 
 export default function UsersPage() {
   const [users, setUsers] = useState<MockUser[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isAddModalOpen, setIsAddModalOpen] = useState(false);
+  const [isBulkModalOpen, setIsBulkModalOpen] = useState(false);
   const { toast } = useToast();
 
   const fetchUsers = useCallback(async () => {
     setIsLoading(true);
     try {
-      const usersRef = collection(db, 'users');
-      // Query for users that have a staffId field to ensure they are staff
-      const q = query(usersRef, where('staffId', '!=', null));
-      const querySnapshot = await getDocs(q);
-      const usersList = querySnapshot.docs
-        .map((doc) => ({ id: doc.id, ...doc.data() } as MockUser))
+      const usersList = await dbService.getDocs<MockUser>('users', [{ type: 'where', fieldPath: 'staffId', opStr: '!=', value: null }]);
       setUsers(usersList);
     } catch (error) {
       console.error('Error fetching users:', error);
@@ -79,7 +75,7 @@ export default function UsersPage() {
     try {
       // Note: This does not delete the user from Firebase Auth, only Firestore.
       // A more robust solution would use a Cloud Function to delete the Auth user.
-      await deleteDoc(doc(db, 'users', userId));
+      await dbService.deleteDoc('users', userId);
       toast({
         title: 'Staff Member Removed',
         description: 'The staff member has been successfully deleted.',
@@ -97,7 +93,8 @@ export default function UsersPage() {
 
   const handleUserAdded = () => {
     fetchUsers();
-    setIsModalOpen(false); // Close the modal
+    setIsAddModalOpen(false);
+    setIsBulkModalOpen(false);
   };
 
   return (
@@ -116,7 +113,16 @@ export default function UsersPage() {
               A list of all staff members in the system.
             </CardDescription>
           </div>
-           <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
+          <div className="flex flex-wrap gap-2">
+            <Dialog open={isBulkModalOpen} onOpenChange={setIsBulkModalOpen}>
+              <DialogTrigger asChild>
+                <Button variant="outline">
+                  <Upload className="mr-2 h-4 w-4" /> Bulk Upload
+                </Button>
+              </DialogTrigger>
+              <BulkStaffUploadDialog onUploadComplete={handleUserAdded} />
+            </Dialog>
+           <Dialog open={isAddModalOpen} onOpenChange={setIsAddModalOpen}>
             <DialogTrigger asChild>
                 <Button>
                     <PlusCircle className="mr-2 h-4 w-4" /> Add New Staff
@@ -140,6 +146,7 @@ export default function UsersPage() {
                 <AddUserForm onUserAdded={handleUserAdded} />
             </DialogContent>
           </Dialog>
+          </div>
         </CardHeader>
         <CardContent>
           <Table>

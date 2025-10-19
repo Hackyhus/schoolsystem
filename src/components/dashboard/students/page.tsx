@@ -20,8 +20,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { PlusCircle, Trash2, Eye, Upload } from 'lucide-react';
 import { useEffect, useState, useCallback } from 'react';
-import { collection, getDocs, deleteDoc, doc, query, orderBy, where } from 'firebase/firestore';
-import { db } from '@/lib/firebase';
+import { dbService } from '@/lib/firebase';
 import type { Student } from '@/lib/schema';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useToast } from '@/hooks/use-toast';
@@ -54,11 +53,7 @@ export default function StudentsPage() {
   const fetchStudents = useCallback(async () => {
     setIsLoading(true);
     try {
-      const studentsRef = collection(db, 'students');
-      const q = query(studentsRef, orderBy('createdAt', 'desc'));
-      const querySnapshot = await getDocs(q);
-      const studentsList = querySnapshot.docs
-        .map((doc) => ({ id: doc.id, ...doc.data() } as Student));
+      const studentsList = await dbService.getDocs<Student>('students', [{ type: 'orderBy', fieldPath: 'createdAt', direction: 'desc' }]);
       setStudents(studentsList);
       setFilteredStudents(studentsList);
     } catch (error) {
@@ -96,7 +91,7 @@ export default function StudentsPage() {
     )
       return;
     try {
-      await deleteDoc(doc(db, 'students', student.id));
+      await dbService.deleteDoc('students', student.id);
       toast({
         title: 'Student Removed',
         description: 'The student has been successfully deleted.',
