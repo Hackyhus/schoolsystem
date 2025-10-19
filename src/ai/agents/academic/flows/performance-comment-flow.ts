@@ -1,17 +1,20 @@
 
 'use server';
 
-import { defineFlow, generate } from '@/lib/genkit';
-import { PerformanceCommentInputSchema, PerformanceCommentOutputSchema } from '../schemas/performance-comment-generator.schemas';
+import {ai} from '@/lib/genkit';
+import {
+  PerformanceCommentInputSchema,
+  PerformanceCommentOutputSchema,
+} from '../schemas/performance-comment-generator.schemas';
 
-export const generateCommentFlow = defineFlow(
+export const generateCommentFlow = ai.defineFlow(
   {
     name: 'generateCommentFlow',
     inputSchema: PerformanceCommentInputSchema,
     outputSchema: PerformanceCommentOutputSchema,
   },
   async (input) => {
-    const { output } = await generate({
+    const {output} = await ai.generate({
       model: 'gemini-1.5-flash',
       prompt: `You are an experienced and insightful Nigerian teacher writing a comment for a student's report card.
       Your name is not needed. The comment should be professional, encouraging, and constructive.
@@ -19,7 +22,9 @@ export const generateCommentFlow = defineFlow(
       Student's Name: ${input.studentName}
       
       Academic Performance:
-      ${input.grades.map(g => `- Subject: ${g.name}, Score: ${g.score}/100, Grade: ${g.grade}`).join('\n')}
+      ${input.grades
+        .map((g) => `- Subject: ${g.name}, Score: ${g.score}/100, Grade: ${g.grade}`)
+        .join('\n')}
 
       Based on the data above, please write a concise (2-3 sentences) end-of-term comment.
       - Identify specific subjects where the student excels (high scores/grades like A, B).
