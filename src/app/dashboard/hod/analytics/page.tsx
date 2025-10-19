@@ -50,9 +50,6 @@ export default function HodAnalyticsPage() {
   const [departmentName, setDepartmentName] = useState<string>('');
   const [submissionStats, setSubmissionStats] = useState<SubmissionStats[]>([]);
   const [teacherStats, setTeacherStats] = useState<TeacherStats[]>([]);
-  const [isAiSummarizing, startAiTransition] = useTransition();
-  const [aiSummary, setAiSummary] = useState<string | null>(null);
-  const [aiError, setAiError] = useState<string | null>(null);
 
   
   const chartConfig = {
@@ -143,30 +140,6 @@ export default function HodAnalyticsPage() {
     }
   }, [userIsLoading, fetchData]);
 
-  const handleGenerateSummary = () => {
-    if (teacherStats.length === 0) return;
-    setAiSummary(null);
-    setAiError(null);
-
-    startAiTransition(async () => {
-      try {
-        const result = await aiEngine.academic.narrate({
-          context: `An analysis of document submissions for the ${departmentName} department.`,
-          data: teacherStats,
-        });
-
-        if (result.narrative) {
-          setAiSummary(result.narrative);
-        } else {
-          setAiError("The AI failed to generate an analysis. Please try again.");
-        }
-      } catch (e: any) {
-        console.error(e);
-        setAiError("An unexpected error occurred while generating the AI analysis.");
-      }
-    });
-  };
-
   return (
     <div className="space-y-8">
       <div>
@@ -183,29 +156,12 @@ export default function HodAnalyticsPage() {
                       <CardTitle className="flex items-center gap-2"><Sparkles className="text-accent" /> AI-Powered Analysis</CardTitle>
                       <CardDescription>Get a quick narrative summary of your department's performance.</CardDescription>
                   </div>
-                  <Button onClick={handleGenerateSummary} disabled={isAiSummarizing || isLoading || teacherStats.length === 0}>
-                      {isAiSummarizing ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Sparkles className="mr-2 h-4 w-4" />}
-                      {isAiSummarizing ? 'Analyzing...' : 'Generate Analysis'}
+                   <Button disabled>
+                      <Sparkles className="mr-2 h-4 w-4" />
+                       Generate Analysis (Coming Soon)
                   </Button>
               </div>
           </CardHeader>
-          {(aiSummary || aiError) && (
-              <CardContent>
-                  {aiSummary && (
-                      <Alert className="bg-blue-50 dark:bg-blue-900/30 border-blue-200 dark:border-blue-800">
-                          <AlertTitle>AI Narrative</AlertTitle>
-                          <AlertDescription>{aiSummary}</AlertDescription>
-                      </Alert>
-                  )}
-                  {aiError && (
-                      <Alert variant="destructive">
-                          <AlertTriangle className="h-4 w-4" />
-                          <AlertTitle>Error</AlertTitle>
-                          <AlertDescription>{aiError}</AlertDescription>
-                      </Alert>
-                  )}
-              </CardContent>
-          )}
       </Card>
 
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
@@ -274,3 +230,5 @@ export default function HodAnalyticsPage() {
     </div>
   )
 }
+
+    

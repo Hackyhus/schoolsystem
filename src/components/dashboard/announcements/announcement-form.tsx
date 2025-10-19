@@ -56,36 +56,6 @@ export function AnnouncementForm({ initialData, onFormSubmit }: AnnouncementForm
     },
   });
 
-  const handleGenerateWithAi = () => {
-    if (!aiTopic) {
-      toast({
-        variant: 'destructive',
-        title: 'Topic Required',
-        description: 'Please enter a topic for the AI to draft from.',
-      });
-      return;
-    }
-
-    setAiError('');
-    startAiTransition(async () => {
-      try {
-        const result = await aiEngine.text.draft({
-          topic: aiTopic,
-          audience: 'All Users',
-          tone: 'Formal',
-        });
-        if (result.draft) {
-          form.setValue('content', result.draft);
-        } else {
-          setAiError("The AI couldn't generate a draft. Please try again.");
-        }
-      } catch (e) {
-        console.error(e);
-        setAiError('An unexpected error occurred while generating the draft.');
-      }
-    });
-  }
-
   const onSubmit = async (values: AnnouncementFormValues) => {
     if (!user) {
         toast({ variant: 'destructive', title: 'Error', description: 'You must be logged in.' });
@@ -131,17 +101,18 @@ export function AnnouncementForm({ initialData, onFormSubmit }: AnnouncementForm
         />
         
         <div className="space-y-2 rounded-lg border p-4">
-            <h3 className="text-sm font-medium">AI Content Assistant</h3>
+            <h3 className="text-sm font-medium">AI Content Assistant (Coming Soon)</h3>
+            <p className="text-xs text-muted-foreground">This feature is currently in development and will be available soon.</p>
              <Textarea
                 placeholder="Enter a topic for the AI to expand on. e.g., Announce a 3-day mid-term break starting next Monday."
                 value={aiTopic}
                 onChange={(e) => setAiTopic(e.target.value)}
-                rows={3}
+                rows={2}
+                disabled
             />
-            {aiError && <Alert variant="destructive"><AlertTitle>Error</AlertTitle><AlertDescription>{aiError}</AlertDescription></Alert>}
-            <Button type="button" onClick={handleGenerateWithAi} disabled={isAiGenerating} variant="outline" size="sm">
-                {isAiGenerating ? <Loader2 className="mr-2 h-4 w-4 animate-spin"/> : <Sparkles className="mr-2 h-4 w-4" />}
-                {isAiGenerating ? 'Generating...' : 'Generate with AI'}
+            <Button type="button" disabled variant="outline" size="sm">
+                <Sparkles className="mr-2 h-4 w-4" />
+                Generate with AI
             </Button>
         </div>
 
@@ -170,3 +141,5 @@ export function AnnouncementForm({ initialData, onFormSubmit }: AnnouncementForm
     </Form>
   );
 }
+
+    

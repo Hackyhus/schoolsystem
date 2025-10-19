@@ -33,10 +33,7 @@ export function FinancialReportGenerator() {
         to: new Date(),
     });
     const [isLoading, setIsLoading] = useState(false);
-    const [isAiSummarizing, startAiTransition] = useTransition();
     const [reportData, setReportData] = useState<ReportData | null>(null);
-    const [aiSummary, setAiSummary] = useState<string | null>(null);
-    const [aiError, setAiError] = useState<string | null>(null);
     const { toast } = useToast();
     
     const chartConfig = {
@@ -51,8 +48,6 @@ export function FinancialReportGenerator() {
 
         setIsLoading(true);
         setReportData(null);
-        setAiSummary(null);
-        setAiError(null);
 
         try {
             const fromDate = date.from;
@@ -101,30 +96,6 @@ export function FinancialReportGenerator() {
         }
     };
     
-    const handleGenerateAiSummary = () => {
-        if (!reportData) return;
-        setAiSummary(null);
-        setAiError(null);
-        
-        startAiTransition(async () => {
-            try {
-                const result = await aiEngine.financial.analyze({
-                    totalRevenue: reportData.totalRevenue,
-                    totalExpenses: reportData.totalExpenses,
-                    netIncome: reportData.netIncome,
-                });
-                if (result.summary) {
-                    setAiSummary(result.summary);
-                } else {
-                    setAiError("The AI couldn't generate a summary. Please try again.");
-                }
-            } catch (e) {
-                 console.error(e);
-                 setAiError('An unexpected error occurred while generating the AI summary.');
-            }
-        });
-    }
-
     const handlePrintReport = () => {
         window.print();
     };
@@ -173,29 +144,13 @@ export function FinancialReportGenerator() {
                                     </CardDescription>
                                 </div>
                                 <div className="print:hidden">
-                                     <Button onClick={handleGenerateAiSummary} disabled={isAiSummarizing} variant="outline" size="sm">
-                                        {isAiSummarizing ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Sparkles className="mr-2 h-4 w-4" />}
-                                        Generate AI Summary
+                                     <Button disabled variant="outline" size="sm">
+                                        <Sparkles className="mr-2 h-4 w-4" />
+                                        AI Summary (Coming Soon)
                                      </Button>
                                 </div>
                             </CardHeader>
                             <CardContent className="space-y-4">
-                                {aiSummary && (
-                                     <Alert className="bg-blue-50 dark:bg-blue-900/30 border-blue-200 dark:border-blue-800">
-                                        <Sparkles className="h-4 w-4" />
-                                        <AlertTitle>AI Financial Summary</AlertTitle>
-                                        <AlertDescription>
-                                            {aiSummary}
-                                        </AlertDescription>
-                                    </Alert>
-                                )}
-                                {aiError && (
-                                     <Alert variant="destructive">
-                                        <AlertTitle>AI Error</AlertTitle>
-                                        <AlertDescription>{aiError}</AlertDescription>
-                                    </Alert>
-                                )}
-
                                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                                     <div className="flex items-center gap-4 rounded-lg border p-4 bg-green-50 dark:bg-green-900/30">
                                         <div className="flex h-12 w-12 items-center justify-center rounded-full bg-green-100 dark:bg-green-900/50">
