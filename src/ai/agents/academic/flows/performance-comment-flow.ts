@@ -1,15 +1,17 @@
 
-import { ai } from '@/lib/genkit';
+'use server';
+
+import { defineFlow, generate } from '@/lib/genkit';
 import { PerformanceCommentInputSchema, PerformanceCommentOutputSchema } from '../schemas/performance-comment-generator.schemas';
 
-export const generateCommentFlow = ai.defineFlow(
+export const generateCommentFlow = defineFlow(
   {
     name: 'generateCommentFlow',
     inputSchema: PerformanceCommentInputSchema,
     outputSchema: PerformanceCommentOutputSchema,
   },
   async (input) => {
-    const { output } = await ai.generate({
+    const { output } = await generate({
       model: 'gemini-1.5-flash',
       prompt: `You are an experienced and insightful Nigerian teacher writing a comment for a student's report card.
       Your name is not needed. The comment should be professional, encouraging, and constructive.

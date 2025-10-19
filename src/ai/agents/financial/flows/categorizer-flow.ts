@@ -1,15 +1,17 @@
 
-import { ai } from '@/lib/genkit';
+'use server';
+
+import { defineFlow, generate } from '@/lib/genkit';
 import { CategorizeExpenseInputSchema, CategorizeExpenseOutputSchema } from '../schemas/categorizer.schemas';
 
-export const categorizeExpenseFlow = ai.defineFlow(
+export const categorizeExpenseFlow = defineFlow(
   {
     name: 'categorizeExpenseFlow',
     inputSchema: CategorizeExpenseInputSchema,
     outputSchema: CategorizeExpenseOutputSchema,
   },
   async (input) => {
-    const { output } = await ai.generate({
+    const { output } = await generate({
       model: 'gemini-1.5-flash',
       prompt: `You are an expert accountant for a school. Your task is to categorize an expense based on its description.
 

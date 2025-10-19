@@ -1,15 +1,17 @@
 
-import { ai } from '@/lib/genkit';
+'use server';
+
+import { defineFlow, generate } from '@/lib/genkit';
 import { NarrateDataInputSchema, NarrateDataOutputSchema } from '../schemas/narrator.schemas';
 
-export const narrateDataFlow = ai.defineFlow(
+export const narrateDataFlow = defineFlow(
   {
     name: 'narrateDataFlow',
     inputSchema: NarrateDataInputSchema,
     outputSchema: NarrateDataOutputSchema,
   },
   async (input) => {
-    const { output } = await ai.generate({
+    const { output } = await generate({
       model: 'gemini-1.5-flash',
       prompt: `You are an expert data analyst and report writer for a school. Your task is to analyze the provided JSON data and write a short, human-readable narrative summary of the key findings.
 

@@ -1,15 +1,17 @@
 
-import { ai } from '@/lib/genkit';
+'use server';
+
+import { defineFlow, generate } from '@/lib/genkit';
 import { FinancialAnalysisInputSchema, FinancialAnalysisOutputSchema } from '../schemas/analyst.schemas';
 
-export const analyzeFinancialsFlow = ai.defineFlow(
+export const analyzeFinancialsFlow = defineFlow(
   {
     name: 'analyzeFinancialsFlow',
     inputSchema: FinancialAnalysisInputSchema,
     outputSchema: FinancialAnalysisOutputSchema,
   },
   async (input) => {
-    const { output } = await ai.generate({
+    const { output } = await generate({
       model: 'gemini-1.5-flash',
       prompt: `You are an expert financial analyst for a school. Your task is to provide a clear and concise summary of the financial performance for a given period.
 
