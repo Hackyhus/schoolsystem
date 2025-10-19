@@ -1,7 +1,8 @@
 
 'use server';
 
-import { dbService, storageService } from '@/lib/firebase';
+import { dbService } from '@/lib/dbService';
+import { storageService } from '@/lib/storageService';
 import { serverTimestamp } from 'firebase/firestore';
 import type { MockUser } from '@/lib/schema';
 

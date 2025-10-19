@@ -2,7 +2,7 @@
 'use server';
 
 import { z } from 'zod';
-import { dbService } from '@/lib/firebase';
+import { dbService } from '@/lib/dbService';
 import { serverTimestamp, Timestamp } from 'firebase/firestore';
 import type { Invoice, Payment, MockUser } from '@/lib/schema';
 import { revalidatePath } from 'next/cache';

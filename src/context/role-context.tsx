@@ -1,11 +1,12 @@
+
 'use client';
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
-import { onAuthStateChanged, signOut, User } from 'firebase/auth';
-import { doc, getDoc } from 'firebase/firestore';
-import { auth, db } from '@/lib/firebase';
+import { User } from 'firebase/auth';
 import { useToast } from '@/hooks/use-toast';
 import { useInactivityTimeout } from '@/hooks/useInactivityTimeout';
+import { authService } from '@/lib/authService';
+import { dbService } from '@/lib/dbService';
 
 type RoleContextType = {
   user: User | null;
@@ -26,7 +27,7 @@ export const RoleProvider = ({ children }: { children: React.ReactNode }) => {
 
   const logout = useCallback(async (options?: { silent?: boolean }) => {
     try {
-      await signOut(auth);
+      await authService.signOut();
       localStorage.removeItem('user-role');
       setUser(null);
       setRoleState(null);
@@ -48,21 +49,17 @@ export const RoleProvider = ({ children }: { children: React.ReactNode }) => {
   }, 3600000); // 1 hour
 
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, async (currentUser) => {
+    const unsubscribe = authService.onAuthStateChanged(async (currentUser) => {
       if (currentUser) {
         setUser(currentUser);
-        const userDocRef = doc(db, 'users', currentUser.uid);
-        const userDoc = await getDoc(userDocRef);
+        // Fetch user document from Firestore to get the role
+        const userDoc = await dbService.getDoc('users', currentUser.uid);
 
-        if (userDoc.exists()) {
-          const userData = userDoc.data();
+        if (userDoc) {
+          const userData = userDoc as { role: string };
           const userRole = userData.role;
           setRoleState(userRole);
-          try {
-            localStorage.setItem('user-role', userRole);
-          } catch (error) {
-            console.error('Failed to write role to localStorage', error);
-          }
+          localStorage.setItem('user-role', userRole);
         } else {
           // If a user is in auth but not Firestore, something is wrong. Log them out.
           await logout({ silent: true });
@@ -70,11 +67,7 @@ export const RoleProvider = ({ children }: { children: React.ReactNode }) => {
       } else {
         setUser(null);
         setRoleState(null);
-        try {
-          localStorage.removeItem('user-role');
-        } catch (error) {
-          console.error('Failed to remove role from localStorage', error);
-        }
+        localStorage.removeItem('user-role');
       }
       setIsLoading(false);
     });
@@ -84,12 +77,8 @@ export const RoleProvider = ({ children }: { children: React.ReactNode }) => {
 
 
   const setRole = useCallback((newRole: string) => {
-    try {
-      localStorage.setItem('user-role', newRole);
-      setRoleState(newRole);
-    } catch (error) {
-      console.error('Failed to write to localStorage', error);
-    }
+    localStorage.setItem('user-role', newRole);
+    setRoleState(newRole);
   }, []);
 
   return (

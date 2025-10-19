@@ -2,7 +2,9 @@
 'use server';
 
 import { z } from 'zod';
-import { dbService, storageService, authService } from '@/lib/firebase';
+import { dbService } from '@/lib/dbService';
+import { storageService } from '@/lib/storageService';
+import { authService } from '@/lib/authService';
 import { Student } from '@/lib/schema';
 import { serverTimestamp } from 'firebase/firestore';
 
@@ -51,15 +53,11 @@ export async function createStudent(formData: FormData) {
 
     const { profilePicture, documents: studentDocs, ...studentData } = parsed.data;
 
-    // --- Guardian Account Creation ---
-    // Create a user account for the guardian in Firebase Auth
-    // The default password is the guardian's phone number
     const guardianAuthUser = await authService.createUser({
         email: studentData.guardianEmail,
         password: studentData.guardianContact, 
     });
 
-    // Create a corresponding user document in Firestore for the guardian
     const guardianUserDoc = {
         uid: guardianAuthUser.uid,
         name: studentData.guardianName,
@@ -71,9 +69,7 @@ export async function createStudent(formData: FormData) {
         createdAt: serverTimestamp(),
     };
     await dbService.setDoc('users', guardianAuthUser.uid, guardianUserDoc);
-    // --- End Guardian Account Creation ---
-
-    // 1. Generate Student ID
+    
     const studentId = await generateStudentId();
 
     let profilePictureUrl = '';
@@ -115,7 +111,7 @@ export async function createStudent(formData: FormData) {
             email: studentData.guardianEmail,
             address: studentData.address,
             isPrimary: true,
-            userId: guardianAuthUser.uid, // Link to the guardian's user account
+            userId: guardianAuthUser.uid,
         }],
         contacts: [{
              emergencyContactName: studentData.guardianName,
@@ -171,11 +167,11 @@ export async function bulkCreateStudents(students: any[]) {
         for (let i = 0; i < validStudents.length; i++) {
             const student = validStudents[i];
             
-            // --- Guardian Account Creation ---
             const guardianAuthUser = await authService.createUser({
                 email: student.guardianEmail,
                 password: String(student.guardianContact),
             });
+
             const guardianUserDoc = {
                 uid: guardianAuthUser.uid,
                 name: student.guardianName,
@@ -187,8 +183,7 @@ export async function bulkCreateStudents(students: any[]) {
                 createdAt: serverTimestamp(),
             };
             batch.set('users', guardianAuthUser.uid, guardianUserDoc);
-            // --- End Guardian Account Creation ---
-
+            
             const studentId = await generateStudentId(i);
             
             const newStudent: Omit<Student, 'id' | 'createdAt' | 'status'> & { createdAt: any; status: string } = {
@@ -208,7 +203,7 @@ export async function bulkCreateStudents(students: any[]) {
                     email: student.guardianEmail,
                     address: student.address || '',
                     isPrimary: true,
-                    userId: guardianAuthUser.uid, // Link to guardian's auth account
+                    userId: guardianAuthUser.uid,
                 }],
                 contacts: [{
                     emergencyContactName: student.guardianName,

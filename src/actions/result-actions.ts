@@ -1,8 +1,8 @@
 
 'use server';
 
-import { db, dbService } from '@/lib/firebase';
-import { collection, query, where, getDocs, getDoc, doc, writeBatch, serverTimestamp } from 'firebase/firestore';
+import { dbService } from '@/lib/dbService';
+import { serverTimestamp } from 'firebase/firestore';
 import type { Student, Score, ReportCard } from '@/lib/schema';
 
 type Grade = {
@@ -21,21 +21,16 @@ export async function generateResultsForClass(className: string, session: string
         const studentIds = students.map(s => s.studentId);
         
         // 2. Fetch all subjects offered in the school
-        // In a more complex system, this would fetch subjects by class.
         const subjects = await dbService.getDocs<{name: string}>('subjects');
         if (subjects.length === 0) {
             return { error: 'No subjects found in the system. Please configure subjects first.' };
         }
 
         // 3. Fetch all scores for these students for the given term and session
-        const scoresQuery = query(
-            collection(db, 'scores'),
-            where('class', '==', className),
-            where('studentId', 'in', studentIds)
-            // Add term/session filters if they exist in your 'scores' documents
-        );
-        const scoresSnapshot = await getDocs(scoresQuery);
-        const allScores = scoresSnapshot.docs.map(d => d.data() as Score);
+        const allScores = await dbService.getDocs<Score>('scores', [
+            { type: 'where', fieldPath: 'class', opStr: '==', value: className },
+            { type: 'where', fieldPath: 'studentId', opStr: 'in', value: studentIds }
+        ]);
 
         // 4. Validate that all scores are 'Approved'
         const scoresByStudent: Record<string, Score[]> = {};
@@ -58,11 +53,11 @@ export async function generateResultsForClass(className: string, session: string
         }
 
         // 5. Fetch grading scale
-        const gradingScaleDoc = await getDoc(doc(db, 'system', 'gradingScale'));
-        if (!gradingScaleDoc.exists()) {
+        const gradingScaleDoc = await dbService.getDoc<{ scale: Grade[] }>('system', 'gradingScale');
+        if (!gradingScaleDoc) {
              return { error: 'Grading scale is not configured. Please set it up in System > Grading.' };
         }
-        const gradingScale: Grade[] = gradingScaleDoc.data().scale;
+        const gradingScale: Grade[] = gradingScaleDoc.scale;
 
         const getGrade = (score: number): string => {
             const grade = gradingScale.find(g => score >= g.minScore && score <= g.maxScore);
@@ -112,10 +107,9 @@ export async function generateResultsForClass(className: string, session: string
         });
 
         // 8. Save report cards to Firestore using a batch write
-        const batch = writeBatch(db);
+        const batch = dbService.createBatch();
         finalReportCards.forEach(rc => {
-            const reportCardRef = doc(collection(db, 'reportCards'));
-            batch.set(reportCardRef, rc);
+            batch.set('reportCards', null, rc);
         });
         
         await batch.commit();

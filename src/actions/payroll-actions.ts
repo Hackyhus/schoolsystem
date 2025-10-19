@@ -1,8 +1,8 @@
 
 'use server';
 
-import { dbService, db } from '@/lib/firebase';
-import { serverTimestamp, writeBatch, doc, collection } from 'firebase/firestore';
+import { dbService } from '@/lib/dbService';
+import { serverTimestamp } from 'firebase/firestore';
 import type { MockUser, PayrollRun, Payslip } from '@/lib/schema';
 import { revalidatePath } from 'next/cache';
 
@@ -41,16 +41,14 @@ export async function runPayroll(month: string, year: number, userId: string) {
         let totalPayrollAmount = 0;
         const payPeriod = `${month} ${year}`;
         
-        // 5. Create the main PayrollRun document reference
-        const payrollRunRef = doc(collection(db, 'payrollRuns'));
-        
-        // 6. Loop through eligible staff and create a payslip for each
+        const payrollRunId = (await dbService.addDoc('payrollRuns', {})).toString();
+
         for (const employee of staff) {
             if (employee.salary && employee.salary.amount > 0 && employee.salary.bankName && employee.salary.accountNumber) {
                 totalPayrollAmount += employee.salary.amount;
 
                 const newPayslip: Omit<Payslip, 'id'> = {
-                    payrollRunId: payrollRunRef.id,
+                    payrollRunId: payrollRunId,
                     staffId: employee.staffId,
                     employeeName: employee.name,
                     payPeriod,
@@ -60,12 +58,10 @@ export async function runPayroll(month: string, year: number, userId: string) {
                     status: 'Generated',
                     generatedAt: serverTimestamp(),
                 };
-                const payslipRef = doc(collection(db, 'payslips'));
-                batch.set(payslipRef, newPayslip);
+                batch.set('payslips', null, newPayslip);
             }
         }
         
-        // 7. Set the PayrollRun document with final details
          const payrollRunData: Omit<PayrollRun, 'id'> = {
             month,
             year,
@@ -75,7 +71,8 @@ export async function runPayroll(month: string, year: number, userId: string) {
             employeeCount: staff.length,
             executedAt: serverTimestamp(),
         };
-        batch.set(payrollRunRef, payrollRunData);
+
+        batch.set('payrollRuns', payrollRunId, payrollRunData);
         
         await batch.commit();
         

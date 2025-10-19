@@ -1,3 +1,4 @@
+
 import {
   getFirestore,
   collection,
@@ -22,7 +23,7 @@ import {
 } from 'firebase/firestore';
 import { db } from './firebase'; // Import the initialized db instance
 
-type QueryConstraint = {
+export type QueryConstraint = {
   type: 'where' | 'orderBy' | 'limit';
   fieldPath: string;
   opStr?: WhereFilterOp;
@@ -32,25 +33,21 @@ type QueryConstraint = {
 };
 
 const applyQueryConstraints = (collectionRef: CollectionReference, constraints?: QueryConstraint[]) => {
-    if (!constraints) return query(collectionRef);
-    
-    const queryArgs: any[] = [collectionRef];
-    constraints.forEach(c => {
-       switch(c.type) {
-           case 'where':
-               if(c.opStr && c.value !== undefined) queryArgs.push(where(c.fieldPath, c.opStr, c.value));
-               break;
-           case 'orderBy':
-                queryArgs.push(orderBy(c.fieldPath, c.direction));
-                break;
-           case 'limit':
-               if(c.limitCount) queryArgs.push(limit(c.limitCount));
-               break;
-       }
-    });
-
-    return query.apply(null, queryArgs);
+    let q = query(collectionRef);
+    if (constraints) {
+        constraints.forEach(c => {
+            if (c.type === 'where' && c.opStr) {
+                q = query(q, where(c.fieldPath, c.opStr, c.value));
+            } else if (c.type === 'orderBy' && c.direction) {
+                q = query(q, orderBy(c.fieldPath, c.direction));
+            } else if (c.type === 'limit' && c.limitCount) {
+                q = query(q, limit(c.limitCount));
+            }
+        });
+    }
+    return q;
 };
+
 
 const getDocData = async <T>(collectionName: string, id: string): Promise<T | null> => {
     const docRef = doc(db, collectionName, id);
@@ -71,7 +68,7 @@ const addDocData = async (collectionName: string, data: any): Promise<string> =>
 };
 
 const setDocData = async (collectionName: string, id: string, data: any): Promise<void> => {
-    await setDoc(doc(db, collectionName, id), data);
+    await setDoc(doc(db, collectionName, id), data, { merge: true });
 };
 
 const updateDocData = async (collectionName: string, id: string, data: any): Promise<void> => {
@@ -97,15 +94,12 @@ const createBatch = () => {
             const collectionRef = collection(db, collectionName);
             const docRef = id ? doc(collectionRef, id) : doc(collectionRef);
             batch.set(docRef, data);
-            return this;
         },
         update: (collectionName: string, id: string, data: any) => {
             batch.update(doc(db, collectionName, id), data);
-            return this;
         },
         delete: (collectionName: string, id: string) => {
             batch.delete(doc(db, collectionName, id));
-            return this;
         },
         commit: () => batch.commit(),
     };

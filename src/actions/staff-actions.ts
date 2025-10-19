@@ -2,7 +2,9 @@
 'use server';
 
 import { z } from 'zod';
-import { authService, dbService, storageService } from '@/lib/firebase';
+import { authService } from '@/lib/authService';
+import { dbService } from '@/lib/dbService';
+import { storageService } from '@/lib/storageService';
 import { serverTimestamp } from 'firebase/firestore';
 
 const staffSchema = z.object({
@@ -42,7 +44,6 @@ async function generateStaffId(role: string, offset = 0): Promise<string> {
     const roleCode = ROLE_CODES[role] || 'GEN';
     const year = new Date().getFullYear().toString().slice(-2);
 
-    // Get the count of existing staff *for the specific role* to determine the next sequential number.
     const staffCountForRole = await dbService.getCountFromServer('users', [
         { type: 'where', fieldPath: 'role', opStr: '==', value: role }
     ]);
@@ -71,17 +72,13 @@ export async function createStaff(formData: FormData) {
     
     const { profilePicture, documents: staffDocs, ...staffData } = parsed.data;
 
-    // 1. Generate Staff ID
     const staffId = await generateStaffId(staffData.role);
 
-    // 2. Create user in Firebase Auth
-    // Use state of origin as default password, regardless of length.
     const authUser = await authService.createUser({
         email: staffData.email,
         password: staffData.stateOfOrigin, 
     });
 
-    // 3. Upload profile picture if it exists
     let profilePictureUrl = '';
     if (profilePicture) {
       const { downloadURL } = await storageService.uploadFile(
@@ -91,7 +88,6 @@ export async function createStaff(formData: FormData) {
       profilePictureUrl = downloadURL;
     }
 
-    // 4. Create user document in Firestore
     const newStaffData = {
         uid: authUser.uid,
         staffId: staffId,
@@ -125,7 +121,6 @@ export async function createStaff(formData: FormData) {
 
   } catch (error: any) {
     console.error('Error creating staff:', error);
-    // Handle specific Firebase auth errors
     if (error.code === 'auth/email-already-in-use') {
       return { error: 'This email is already registered.' };
     }

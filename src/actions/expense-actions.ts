@@ -2,10 +2,11 @@
 'use server';
 
 import { z } from 'zod';
-import { authService, dbService } from '@/lib/firebase';
+import { dbService } from '@/lib/dbService';
 import { serverTimestamp, Timestamp } from 'firebase/firestore';
 import type { Expense, MockUser } from '@/lib/schema';
 import { revalidatePath } from 'next/cache';
+import { authService } from '@/lib/authService';
 
 const EXPENSE_CATEGORIES = ['Utilities', 'Salaries', 'Maintenance', 'Supplies', 'Marketing', 'Capital Expenditure', 'Miscellaneous'] as const;
 
