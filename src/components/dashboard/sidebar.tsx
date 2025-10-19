@@ -152,10 +152,12 @@ const navConfig: Record<string, { group: string; links: (keyof typeof allNavLink
   ],
   Accountant: [
     { group: 'Main', links: ['dashboard', 'profile', 'notifications'] },
+    { group: 'Communication', links: ['announcements', 'messaging'] },
     { group: 'Finance', links: ['feeSystem', 'invoices', 'payments', 'expenses', 'payroll', 'reconciliation', 'financialReports'] },
   ],
   ExamOfficer: [
     { group: 'Main', links: ['dashboard', 'profile', 'notifications'] },
+    { group: 'Communication', links: ['announcements', 'messaging'] },
     { group: 'Examinations', links: ['reviewQuestions', 'enterScores', 'generateResults', 'viewResults', 'timetable', 'examRegistration', 'seatingPlans'] },
   ],
   Teacher: [
