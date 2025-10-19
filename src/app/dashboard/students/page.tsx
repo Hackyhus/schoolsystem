@@ -18,7 +18,7 @@ import {
 } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { PlusCircle, Trash2, Eye, Upload } from 'lucide-react';
+import { PlusCircle, Trash2, Eye, Upload, User, Users, Users2 } from 'lucide-react';
 import { useEffect, useState, useCallback, useMemo } from 'react';
 import { collection, getDocs, deleteDoc, doc, query, orderBy, where } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
@@ -186,21 +186,64 @@ export default function StudentsPage() {
     return filteredStudents.length > 0 && selectedStudents.length === filteredStudents.length;
   }, [selectedStudents, filteredStudents]);
 
+  const studentStats = useMemo(() => {
+    if (isLoading) return { total: 0, male: 0, female: 0, other: 0 };
+    return students.reduce((acc, student) => {
+      acc.total++;
+      if (student.gender === 'Male') acc.male++;
+      else if (student.gender === 'Female') acc.female++;
+      else acc.other++;
+      return acc;
+    }, { total: 0, male: 0, female: 0, other: 0 });
+  }, [students, isLoading]);
+
 
   return (
     <div className="space-y-8">
       <div>
-        <h1 className="font-headline text-3xl font-bold">Student Management</h1>
+        <h1 className="font-headline text-3xl font-bold">Student Demographics</h1>
         <p className="text-muted-foreground">
-          {role === 'Admin' ? 'Add, view, and manage student accounts and records.' : 'View student records.'}
+          View, manage, and analyze student enrollment data.
         </p>
       </div>
+
+       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Total Students</CardTitle>
+            <Users className="h-5 w-5 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            {isLoading ? <Skeleton className="h-8 w-16" /> : <div className="text-2xl font-bold">{studentStats.total}</div>}
+          </CardContent>
+        </Card>
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Male Students</CardTitle>
+            <User className="h-5 w-5 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            {isLoading ? <Skeleton className="h-8 w-16" /> : <div className="text-2xl font-bold">{studentStats.male}</div>}
+          </CardContent>
+        </Card>
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Female Students</CardTitle>
+            <User className="h-5 w-5 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            {isLoading ? <Skeleton className="h-8 w-16" /> : <div className="text-2xl font-bold">{studentStats.female}</div>}
+          </CardContent>
+        </Card>
+      </div>
+
+
       <Card>
         <CardHeader className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
           <div>
-            <CardTitle>All Students ({filteredStudents.length})</CardTitle>
+            <CardTitle>Student Directory</CardTitle>
             <CardDescription>
-              A list of all students in the system.
+              A searchable list of all students in the school. Found: {filteredStudents.length}
             </CardDescription>
           </div>
           <div className="flex gap-2 w-full flex-wrap sm:w-auto">

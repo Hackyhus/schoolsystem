@@ -18,8 +18,8 @@ import {
 } from '@/components/ui/table';
 import { AddUserForm } from '@/components/dashboard/users/add-user-form';
 import { Button } from '@/components/ui/button';
-import { PlusCircle, Trash2, Edit, Upload } from 'lucide-react';
-import { useEffect, useState, useCallback } from 'react';
+import { PlusCircle, Trash2, Edit, Upload, Users, Briefcase } from 'lucide-react';
+import { useEffect, useState, useCallback, useMemo } from 'react';
 import { collection, getDocs, deleteDoc, doc, query, where, updateDoc } from 'firebase/firestore';
 import { auth, db } from '@/lib/firebase';
 import type { MockUser } from '@/lib/schema';
@@ -104,18 +104,55 @@ export default function UsersPage() {
     setIsBulkModalOpen(false);
   };
 
+  const staffStats = useMemo(() => {
+    if (isLoading) return { total: 0, roles: {} };
+    const roles: Record<string, number> = {};
+    users.forEach(user => {
+        roles[user.role] = (roles[user.role] || 0) + 1;
+    });
+    return {
+        total: users.length,
+        roles,
+    };
+  }, [users, isLoading]);
+
   return (
     <div className="space-y-8">
       <div>
-        <h1 className="font-headline text-3xl font-bold">Staff Management</h1>
+        <h1 className="font-headline text-3xl font-bold">Staff Directory</h1>
         <p className="text-muted-foreground">
-          Manage staff accounts and profiles.
+          View, manage, and analyze all staff records.
         </p>
       </div>
+
+       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Total Staff</CardTitle>
+            <Users className="h-5 w-5 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            {isLoading ? <Skeleton className="h-8 w-16" /> : <div className="text-2xl font-bold">{staffStats.total}</div>}
+          </CardContent>
+        </Card>
+         {Object.entries(staffStats.roles).map(([role, count]) => (
+             <Card key={role}>
+                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                    <CardTitle className="text-sm font-medium">{role}</CardTitle>
+                    <Briefcase className="h-5 w-5 text-muted-foreground" />
+                </CardHeader>
+                <CardContent>
+                    {isLoading ? <Skeleton className="h-8 w-16" /> : <div className="text-2xl font-bold">{count}</div>}
+                </CardContent>
+            </Card>
+         ))}
+      </div>
+
+
       <Card>
         <CardHeader className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
           <div>
-            <CardTitle>All Staff</CardTitle>
+            <CardTitle>All Staff ({users.length})</CardTitle>
             <CardDescription>
               A list of all staff members in the system.
             </CardDescription>
