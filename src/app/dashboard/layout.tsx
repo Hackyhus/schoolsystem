@@ -42,6 +42,9 @@ export default function DashboardLayout({
       <div className="font-body h-screen flex flex-col">
         <style jsx global>{`
           @media print {
+            body, html {
+              height: auto;
+            }
             .print-hidden {
               display: none !important;
             }
@@ -50,15 +53,15 @@ export default function DashboardLayout({
               margin: 0;
               padding: 0 !important;
               min-height: auto;
+              overflow: visible !important;
             }
-            body > div, body > .font-body {
+            body > div, 
+            body > div > div, 
+            body > div > div > div {
               display: block !important;
               height: auto !important;
+              overflow: visible !important;
             }
-             body > .font-body > .flex.h-screen {
-               display: block !important;
-               height: auto !important;
-             }
           }
         `}</style>
          <div className="flex flex-1 overflow-hidden">
