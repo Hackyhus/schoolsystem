@@ -50,15 +50,18 @@ export default function LessonNotesPage() {
     try {
       let notesQuery;
       if (role === 'Teacher') {
-        notesQuery = query(collection(db, 'lessonNotes'), where("teacherId", "==", user.uid), orderBy('submittedOn', 'desc'));
+        notesQuery = query(collection(db, 'lessonNotes'), where("teacherId", "==", user.uid));
       } else {
-        notesQuery = query(collection(db, 'lessonNotes'), orderBy('submittedOn', 'desc'));
+        notesQuery = query(collection(db, 'lessonNotes'));
       }
       
       const querySnapshot = await getDocs(notesQuery);
       const notesList = querySnapshot.docs.map(
         (doc) => ({ id: doc.id, ...doc.data() } as MockLessonNote)
       );
+
+      // Sort client-side to avoid composite index requirement
+      notesList.sort((a, b) => (b.submittedOn?.seconds || 0) - (a.submittedOn?.seconds || 0));
 
       setNotes(notesList);
     } catch (error) {
