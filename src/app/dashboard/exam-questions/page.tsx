@@ -78,13 +78,17 @@ export default function ExamQuestionsPage() {
     if (!user) return;
     setIsLoading(true);
     try {
-        let constraints: QueryConstraint[] = [{ type: 'orderBy', fieldPath: 'submittedOn', direction: 'desc' }];
+        let constraints: QueryConstraint[] = [];
         
         if (role === 'Teacher') {
             constraints.push({ type: 'where', fieldPath: 'teacherId', opStr: '==', value: user.uid });
         }
         
         const questionList = await dbService.getDocs<ExamQuestion>('examQuestions', constraints);
+        
+        // Sort client-side to avoid composite index requirement
+        questionList.sort((a, b) => (b.submittedOn?.seconds || 0) - (a.submittedOn?.seconds || 0));
+
         setQuestions(questionList);
     } catch (error) {
         console.error("Error fetching exam questions:", error);
@@ -212,7 +216,7 @@ export default function ExamQuestionsPage() {
                       {role !== 'Teacher' && <TableCell className="hidden md:table-cell"><Skeleton className="h-5 w-24" /></TableCell>}
                       <TableCell className="hidden md:table-cell"><Skeleton className="h-5 w-24" /></TableCell>
                       <TableCell><Skeleton className="h-6 w-28" /></TableCell>
-                      <TableCell className="text-right"><Skeleton className="h-8 w-40" /></TableCell>
+                      <TableCell className="text-right"><Skeleton className="h-8 w-40 ml-auto" /></TableCell>
                     </TableRow>
                   ))
               ) : questions.map((q) => (
@@ -220,7 +224,7 @@ export default function ExamQuestionsPage() {
                   <TableCell className="font-medium">{q.subject}</TableCell>
                   <TableCell>{q.class}</TableCell>
                    {role !== 'Teacher' && <TableCell className="hidden md:table-cell">{q.teacherName}</TableCell>}
-                  <TableCell className="hidden md:table-cell">{format(new Date(q.submittedOn.seconds * 1000), 'PPP')}</TableCell>
+                  <TableCell className="hidden md:table-cell">{q.submittedOn ? format(new Date(q.submittedOn.seconds * 1000), 'PPP') : 'N/A'}</TableCell>
                   <TableCell>
                     <Badge variant={statusVariant(q.status)}>{q.status}</Badge>
                   </TableCell>
