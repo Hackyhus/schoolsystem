@@ -43,7 +43,7 @@ export function AnnouncementForm({ initialData, onFormSubmit }: AnnouncementForm
   const { user } = useRole();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isAiGenerating, startAiTransition] = useTransition();
-  const [aiTopic, setAiTopic] = useState('');
+  const [aiTopic, setAiTopic] = useState('Announce a 3-day mid-term break starting next Monday.');
   const [aiError, setAiError] = useState('');
 
 
