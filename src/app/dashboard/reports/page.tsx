@@ -24,14 +24,14 @@ const reportCards = [
         title: 'Student Demographics',
         description: 'View reports on student enrollment, gender distribution, and more.',
         icon: Users,
-        href: '/dashboard/students', // Link to student list for now
+        href: '/dashboard/reports/student-demographics',
         roles: ['Admin', 'SLT']
     },
      {
         title: 'Staff Directory & Roles',
         description: 'Export lists of all staff members, their roles, and departments.',
         icon: BookUser,
-        href: '/dashboard/users',
+        href: '/dashboard/reports/staff-directory',
         roles: ['Admin', 'SLT']
     }
 ]
@@ -39,7 +39,7 @@ const reportCards = [
 export default function ReportsPage() {
   const { role } = useRole();
 
-  const availableReports = reportCards.filter(card => role && card.roles.includes(role));
+  const availableReports = reportCards.filter(card => role && card.roles.includes(card.role));
 
   return (
     <div className="space-y-8">
