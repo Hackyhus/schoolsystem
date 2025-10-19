@@ -20,7 +20,7 @@ export type Department = {
   createdAt: Date;
 };
 
-export type Class = {
+export type ClassData = {
   id:string;
   name: string;
   teacherId?: string; // Class teacher
@@ -249,6 +249,20 @@ export type Payslip = {
   generatedAt: any; // Firestore Timestamp
 }
 
+export type AttendanceRecord = {
+    studentId: string;
+    studentName: string;
+    status: 'Present' | 'Absent' | 'Late';
+};
+
+export type AttendanceSheet = {
+    id: string; // Format: CLASSNAME-YYYY-MM-DD
+    date: any; // Firestore Timestamp
+    className: string;
+    records: AttendanceRecord[];
+    lastUpdated: any; // Firestore Timestamp
+};
+
 
 export type MockUser = {
   id: string;
@@ -261,7 +275,7 @@ export type MockUser = {
   phone: string;
   stateOfOrigin: string;
   department: string;
-  className?: string; // Optional for students
+  className?: string; // Optional for class teachers
   classLevel?: string;
   role: string;
   employmentDate: any; // Can be a Firestore Timestamp
