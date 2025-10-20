@@ -1,4 +1,5 @@
 
+
 'use client';
 import { Bell, ChevronDown, User as UserIcon, LogOut, Moon, Sun } from 'lucide-react';
 import {
@@ -30,7 +31,7 @@ const PAGE_TITLES: { [key: string]: string } = {
     '/dashboard/logs': 'Logs & Security',
     '/dashboard/reports': 'Reports & Analytics',
     '/dashboard/lesson-notes': 'Lesson Plans',
-    '/dashboard/exam-questions': 'Test & Exam Questions',
+    '/dashboard/exam-questions': 'Question Bank',
     '/dashboard/scores': 'Enter Scores',
     '/dashboard/performance': 'Student Performance',
     '/dashboard/accountant/fees': 'Fee Structures',

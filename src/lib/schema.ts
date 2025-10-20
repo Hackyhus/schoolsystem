@@ -319,6 +319,7 @@ export type MockLessonNote = {
     hod_review: string | null;
     admin_review: string | null;
     submittedOn?: any;
+    type?: 'Lesson Plan' | 'Exam Question' | 'Test Question';
 };
 
 export type SchoolInfo = {

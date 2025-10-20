@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import React, { useState, useTransition } from 'react';
@@ -19,7 +20,7 @@ import { useRole } from '@/context/role-context';
 const fileSchema = z.object({
   file: z.instanceof(File),
   title: z.string().min(1, 'Title is required.'),
-  type: z.enum(['Lesson Plan', 'Exam Question']),
+  type: z.enum(['Lesson Plan', 'Exam Question', 'Test Question']),
   class: z.string().min(1, 'Class is required.'),
   subject: z.string().min(1, 'Subject is required.'),
 });
@@ -163,6 +164,7 @@ export function BulkUploadForm() {
                                         <SelectContent>
                                             <SelectItem value="Lesson Plan">Lesson Plan</SelectItem>
                                             <SelectItem value="Exam Question">Exam Question</SelectItem>
+                                            <SelectItem value="Test Question">Test Question (CA)</SelectItem>
                                         </SelectContent>
                                     </Select>
                                     <FormMessage />
