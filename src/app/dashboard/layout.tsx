@@ -11,7 +11,7 @@ import { useRole } from '@/context/role-context';
 import { Loader2, ShieldAlert } from 'lucide-react';
 import { MaintenanceBanner } from '@/components/maintenance-banner';
 import { isPathAuthorized, navConfig } from '@/lib/auth-guard';
-import { Card, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 
 function AccessDenied() {
