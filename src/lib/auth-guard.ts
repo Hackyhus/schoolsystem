@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import {
@@ -161,51 +162,21 @@ export function isPathAuthorized(pathname: string, role: string): boolean {
         return true;
     }
 
-    const matchedRoute = Object.keys(routePermissions).find(route => {
-        // Exact match
-        if (route === pathname) return true;
-        // Match for dynamic routes (e.g., /dashboard/users/[id])
-        const routeWithWildcard = route.replace(/\[\w+\]/g, '(.+)');
-        const regex = new RegExp(`^${routeWithWildcard}$`);
-        return regex.test(pathname);
+    // Exact match
+    if (routePermissions[pathname]?.includes(role)) {
+        return true;
+    }
+    
+    // Dynamic route matching
+    const dynamicRoute = Object.keys(routePermissions).find(route => {
+        if (!route.includes('[')) return false;
+        const routeRegex = new RegExp(`^${route.replace(/\[\.\.\.\w+\]/g, '.+').replace(/\[\w+\]/g, '[^/]+')}$`);
+        return routeRegex.test(pathname);
     });
 
-    // Check parent routes as well (e.g., /dashboard/results/view/[classId] should check /dashboard/results/view)
-    const segments = pathname.split('/').filter(Boolean);
-    let currentPath = '';
-    let isAuthorized = false;
-
-    for (const segment of segments) {
-        currentPath += `/${segment}`;
-        const permissions = routePermissions[currentPath];
-        if (permissions) {
-             if (permissions.includes(role)) {
-                 isAuthorized = true;
-             } else {
-                 isAuthorized = false; // If a segment is not allowed, the full path is not.
-             }
-        }
-    }
-    
-    // For dynamic routes like /dashboard/users/USER_ID, check against /dashboard/users
-    if (!routePermissions[pathname]) {
-        const basePath = '/' + segments.slice(0, 2).join('/');
-        if (routePermissions[basePath] && routePermissions[basePath].includes(role)) {
-            return true;
-        }
-    }
-
-
-    const permissions = routePermissions[pathname];
-    if (permissions && permissions.includes(role)) {
-        return true;
-    }
-    
-    // Final fallback check on the most specific match found
-    if(matchedRoute && routePermissions[matchedRoute] && routePermissions[matchedRoute].includes(role)) {
+    if (dynamicRoute && routePermissions[dynamicRoute]?.includes(role)) {
         return true;
     }
 
-
-    return isAuthorized;
+    return false;
 }

@@ -14,7 +14,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import Link from 'next/link';
 import { useRole } from '@/context/role-context';
-import { Upload, ThumbsUp, ThumbsDown } from 'lucide-react';
+import { Upload } from 'lucide-react';
 import { useState, useEffect, useCallback } from 'react';
 import {
   Dialog,
@@ -32,7 +32,6 @@ import { dbService } from '@/lib/dbService';
 import usePersistentState from '@/hooks/use-persistent-state';
 import type { MockLessonNote } from '@/lib/schema';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { createActionNotification } from '@/lib/notifications';
 
 
 type Question = MockLessonNote & { type: 'Exam Question' | 'Test Question' };
@@ -87,37 +86,6 @@ export default function ExamQuestionsPage() {
     setIsModalOpen(false);
   }
 
-  const handleReview = async (question: Question, newStatus: 'Approved' | 'Rejected') => {
-    const collectionName = question.type === 'Exam Question' ? 'examQuestions' : 'testQuestions';
-    try {
-        await dbService.updateDoc(collectionName, question.id, { status: newStatus });
-        
-        await createActionNotification({
-            userId: question.teacherId,
-            title: `Question ${newStatus}`,
-            body: `Your ${question.type} submission "${question.title}" has been ${newStatus.toLowerCase()}.`,
-            ref: {
-                collection: collectionName,
-                id: question.id,
-            },
-            type: newStatus === 'Approved' ? 'APPROVAL' : 'REJECTION',
-        });
-        
-        toast({
-            title: `Question ${newStatus}`,
-            description: "The submission has been updated and the teacher notified.",
-        });
-        fetchQuestions(); // Refresh list
-    } catch (error) {
-        console.error("Error updating question status:", error);
-        toast({
-            variant: "destructive",
-            title: "Error",
-            description: "Could not update the submission.",
-        });
-    }
-  };
-
   const statusVariant = (status: string) => {
     if (status.includes('Approved')) return 'default';
     if (status.includes('Pending')) return 'secondary';
@@ -126,22 +94,20 @@ export default function ExamQuestionsPage() {
   };
 
   const getActionButtons = (q: Question) => {
+     const collectionName = q.type === 'Exam Question' ? 'examQuestions' : 'testQuestions';
+     const reviewPath = `/dashboard/exam-questions/${collectionName}/${q.id}`;
+     
      if (role === 'Teacher') {
          return (
              <Button asChild variant="outline" size="sm">
-                <Link href={`/dashboard/exam-questions/${q.id}`}>View</Link>
+                <Link href={reviewPath}>View</Link>
              </Button>
          )
      }
      return (
-        <div className="flex gap-2">
-            <Button size="sm" variant="outline" onClick={() => handleReview(q, 'Approved')} disabled={q.status !== 'Pending Review'}>
-                <ThumbsUp className="mr-2 h-4 w-4" /> Approve
-            </Button>
-            <Button size="sm" variant="destructive" onClick={() => handleReview(q, 'Rejected')} disabled={q.status !== 'Pending Review'}>
-                <ThumbsDown className="mr-2 h-4 w-4" /> Reject
-            </Button>
-        </div>
+        <Button asChild variant="outline" size="sm">
+            <Link href={reviewPath}>Review</Link>
+        </Button>
      );
   }
   
@@ -171,7 +137,7 @@ export default function ExamQuestionsPage() {
                 {role !== 'Teacher' && <TableCell className="hidden md:table-cell"><Skeleton className="h-5 w-24" /></TableCell>}
                 <TableCell className="hidden md:table-cell"><Skeleton className="h-5 w-24" /></TableCell>
                 <TableCell><Skeleton className="h-6 w-28" /></TableCell>
-                <TableCell className="text-right"><Skeleton className="h-8 w-40 ml-auto" /></TableCell>
+                <TableCell className="text-right"><Skeleton className="h-8 w-24 ml-auto" /></TableCell>
               </TableRow>
             ))
         ) : questions.map((q) => (
