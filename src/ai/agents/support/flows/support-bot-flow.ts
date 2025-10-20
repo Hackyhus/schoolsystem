@@ -18,7 +18,7 @@ export const supportBotFlow = ai.defineFlow(
   },
   async (input) => {
     const { output } = await ai.generate({
-      model: googleAI.model('gemini-1.5-flash'),
+      model: googleAI.model('gemini-2.5-flash'),
       prompt: `You are an expert AI assistant for the "InsightConnect Portal", a school management application. Your goal is to answer user questions based ONLY on the provided knowledge base. Do not invent features or routes.
 
       Current User's Role: ${input.role}
@@ -42,6 +42,9 @@ export const supportBotFlow = ai.defineFlow(
         schema: SupportBotOutputSchema,
       },
     });
-    return output!;
+    if (!output) {
+        throw new Error('No output generated');
+    }
+    return output;
   }
 );
