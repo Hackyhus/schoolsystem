@@ -2,6 +2,7 @@
 'use server';
 
 import {ai} from '@/lib/genkit';
+import {googleAI} from '@genkit-ai/google-genai';
 import {
   DraftCommunicationInputSchema,
   DraftCommunicationOutputSchema,
@@ -15,7 +16,7 @@ export const draftCommunicationFlow = ai.defineFlow(
   },
   async (input) => {
     const {output} = await ai.generate({
-      model: 'gemini-2.5-flash',
+      model: googleAI.model('gemini-2.5-flash'),
       prompt: `You are an expert school administrator's assistant. Your task is to draft a clear, professional, and well-structured announcement for a school portal based on the provided topic.
 
       Topic: ${input.topic}

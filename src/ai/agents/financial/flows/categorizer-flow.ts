@@ -2,6 +2,7 @@
 'use server';
 
 import {ai} from '@/lib/genkit';
+import {googleAI} from '@genkit-ai/google-genai';
 import {
   CategorizeExpenseInputSchema,
   CategorizeExpenseOutputSchema,
@@ -15,7 +16,7 @@ export const categorizeExpenseFlow = ai.defineFlow(
   },
   async (input) => {
     const {output} = await ai.generate({
-      model: 'gemini-2.5-flash',
+      model: googleAI.model('gemini-2.5-flash'),
       prompt: `You are an expert accountant for a school. Your task is to categorize an expense based on its description.
 
       The available categories are:

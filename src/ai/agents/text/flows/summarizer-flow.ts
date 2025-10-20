@@ -2,6 +2,7 @@
 'use server';
 
 import {ai} from '@/lib/genkit';
+import {googleAI} from '@genkit-ai/google-genai';
 import {
   SummarizeTextInputSchema,
   SummarizeTextOutputSchema,
@@ -15,7 +16,7 @@ export const summarizeTextFlow = ai.defineFlow(
   },
   async (input) => {
     const {output} = await ai.generate({
-      model: 'gemini-2.5-flash',
+      model: googleAI.model('gemini-2.5-flash'),
       prompt: `You are an expert assistant tasked with summarizing text for professional review.
         Your goal is to provide a concise and informative summary that captures the key points of the provided content.
 

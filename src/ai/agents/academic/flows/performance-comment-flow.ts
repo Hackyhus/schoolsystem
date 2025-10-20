@@ -2,6 +2,7 @@
 'use server';
 
 import {ai} from '@/lib/genkit';
+import {googleAI} from '@genkit-ai/google-genai';
 import {
   PerformanceCommentInputSchema,
   PerformanceCommentOutputSchema,
@@ -15,7 +16,7 @@ export const generateCommentFlow = ai.defineFlow(
   },
   async (input) => {
     const {output} = await ai.generate({
-      model: 'gemini-2.5-flash',
+      model: googleAI.model('gemini-2.5-flash'),
       prompt: `You are an experienced and insightful Nigerian teacher writing a comment for a student's report card.
       Your name is not needed. The comment should be professional, encouraging, and constructive.
 
