@@ -56,6 +56,26 @@ export function AnnouncementForm({ initialData, onFormSubmit }: AnnouncementForm
     },
   });
 
+  const handleGenerateContent = () => {
+    if (!aiTopic) {
+      setAiError('Please enter a topic for the AI to write about.');
+      return;
+    }
+    setAiError('');
+    startAiTransition(async () => {
+      try {
+        const result = await aiEngine.text.draft({ topic: aiTopic, audience: 'All Users' });
+        if (result.draft) {
+          form.setValue('content', result.draft, { shouldValidate: true });
+        }
+      } catch (e) {
+        console.error(e);
+        setAiError('Failed to generate content. Please try again.');
+      }
+    });
+  };
+
+
   const onSubmit = async (values: AnnouncementFormValues) => {
     if (!user) {
         toast({ variant: 'destructive', title: 'Error', description: 'You must be logged in.' });
@@ -101,18 +121,18 @@ export function AnnouncementForm({ initialData, onFormSubmit }: AnnouncementForm
         />
         
         <div className="space-y-2 rounded-lg border p-4">
-            <h3 className="text-sm font-medium">AI Content Assistant (Coming Soon)</h3>
-            <p className="text-xs text-muted-foreground">This feature is currently in development and will be available soon.</p>
+            <h3 className="text-sm font-medium">AI Content Assistant</h3>
+            <p className="text-xs text-muted-foreground">Give the AI a topic and let it draft the announcement content for you.</p>
              <Textarea
                 placeholder="Enter a topic for the AI to expand on. e.g., Announce a 3-day mid-term break starting next Monday."
                 value={aiTopic}
                 onChange={(e) => setAiTopic(e.target.value)}
                 rows={2}
-                disabled
             />
-            <Button type="button" disabled variant="outline" size="sm">
-                <Sparkles className="mr-2 h-4 w-4" />
-                Generate with AI
+            {aiError && <p className="text-xs text-destructive">{aiError}</p>}
+            <Button type="button" onClick={handleGenerateContent} disabled={isAiGenerating} variant="outline" size="sm">
+                {isAiGenerating ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Sparkles className="mr-2 h-4 w-4" />}
+                Generate Content
             </Button>
         </div>
 
@@ -141,5 +161,3 @@ export function AnnouncementForm({ initialData, onFormSubmit }: AnnouncementForm
     </Form>
   );
 }
-
-    

@@ -54,6 +54,8 @@ export function ExpenseForm({ initialData, onFormSubmit }: ExpenseFormProps) {
   const { departments } = useAcademicData();
   const { user } = useRole();
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isAiCategorizing, startAiTransition] = useTransition();
+
 
   const form = useForm<ExpenseFormValues>({
     resolver: zodResolver(formSchema),
@@ -66,6 +68,27 @@ export function ExpenseForm({ initialData, onFormSubmit }: ExpenseFormProps) {
         department: initialData?.department || '',
     },
   });
+
+  const descriptionValue = useWatch({ control: form.control, name: 'description' });
+
+  const handleAiCategorize = () => {
+    if (!descriptionValue) {
+        toast({ variant: 'destructive', title: 'Error', description: 'Please enter a description first.' });
+        return;
+    }
+    startAiTransition(async () => {
+        try {
+            const result = await aiEngine.financial.categorize({ description: descriptionValue });
+            if (result.category) {
+                form.setValue('category', result.category, { shouldValidate: true });
+                toast({ title: 'AI Suggestion', description: `Category set to "${result.category}".` });
+            }
+        } catch (e) {
+            console.error(e);
+            toast({ variant: 'destructive', title: 'Error', description: 'AI categorization failed.' });
+        }
+    });
+  };
 
   const onSubmit = async (values: ExpenseFormValues) => {
     if (!user) {
@@ -141,11 +164,11 @@ export function ExpenseForm({ initialData, onFormSubmit }: ExpenseFormProps) {
                     <FormControl>
                         <Input placeholder="e.g., Monthly electricity bill" {...field} />
                     </FormControl>
-                    <Button type="button" variant="outline" size="icon" disabled>
-                         <Sparkles className="h-4 w-4" />
+                    <Button type="button" variant="outline" size="icon" onClick={handleAiCategorize} disabled={isAiCategorizing || !descriptionValue}>
+                         {isAiCategorizing ? <Loader2 className="h-4 w-4 animate-spin" /> : <Sparkles className="h-4 w-4" />}
                     </Button>
                 </div>
-                 <p className="text-xs text-muted-foreground">AI category suggestion is coming soon.</p>
+                 <p className="text-xs text-muted-foreground">Enter a description and click the ✨ button to get an AI category suggestion.</p>
                 <FormMessage />
             </FormItem>
             )}
@@ -190,5 +213,3 @@ export function ExpenseForm({ initialData, onFormSubmit }: ExpenseFormProps) {
     </Form>
   );
 }
-
-    

@@ -14,28 +14,60 @@ import { aiEngine } from '@/ai';
 import { Alert, AlertDescription, AlertTitle } from './ui/alert';
 
 export function LessonNoteSummarizer({ lessonNotes, subject, className }: { lessonNotes: string, subject: string, className: string }) {
+  const [summary, setSummary] = useState('');
+  const [isGenerating, startTransition] = useTransition();
+
+  const handleGenerateSummary = () => {
+    startTransition(async () => {
+      setSummary('');
+      try {
+        const result = await aiEngine.text.summarize({
+          text: lessonNotes,
+          context: `A lesson note about ${subject} for ${className} students.`,
+        });
+        if (result.summary) {
+          setSummary(result.summary);
+        }
+      } catch (e) {
+        console.error(e);
+        setSummary('Failed to generate summary.');
+      }
+    });
+  };
 
   return (
     <Card>
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
           <Sparkles className="h-5 w-5 text-accent" />
-          <span>AI Summary (Coming Soon)</span>
+          <span>AI Summary</span>
         </CardTitle>
         <CardDescription>
-          This feature is in development and will be available shortly.
+          Get a quick, AI-generated summary of the lesson note content.
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
-        <div className="flex items-center justify-center rounded-md border border-dashed p-8 text-center text-muted-foreground">
-          <p>A summary of this lesson note will be generated here.</p>
-        </div>
-        <Button disabled className="w-full bg-accent text-accent-foreground hover:bg-accent/90">
-            <Sparkles className="mr-2 h-4 w-4" /> Generate Summary
+        {summary && (
+          <Alert>
+            <AlertTitle>Generated Summary</AlertTitle>
+            <AlertDescription>
+              {summary}
+            </AlertDescription>
+          </Alert>
+        )}
+        <Button onClick={handleGenerateSummary} disabled={isGenerating} className="w-full bg-accent text-accent-foreground hover:bg-accent/90">
+          {isGenerating ? (
+            <>
+              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              Generating...
+            </>
+          ) : (
+            <>
+              <Sparkles className="mr-2 h-4 w-4" /> Generate Summary
+            </>
+          )}
         </Button>
       </CardContent>
     </Card>
   );
 }
-
-    

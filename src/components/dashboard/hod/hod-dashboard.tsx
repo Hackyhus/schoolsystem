@@ -40,7 +40,7 @@ import {
   ChartLegend,
   ChartLegendContent,
 } from '@/components/ui/chart';
-import { Pie, PieChart, Cell } from 'recharts';
+import { Pie, PieChart, Cell, Bar as BarRechart, BarChart as BarChartRecharts, XAxis, YAxis, CartesianGrid, ResponsiveContainer } from 'recharts';
 import { format } from 'date-fns';
 
 
@@ -50,10 +50,20 @@ type SubmissionStatusData = {
   fill: string;
 };
 
+// Placeholder data until backend is ready
+const subjectPerformanceData = [
+  { subject: 'Math', average: 0, color: 'hsl(var(--chart-1))' },
+  { subject: 'English', average: 0, color: 'hsl(var(--chart-2))' },
+  { subject: 'Science', average: 0, color: 'hsl(var(--chart-3))' },
+  { subject: 'History', average: 0, color: 'hsl(var(--chart-4))' },
+  { subject: 'Art', average: 0, color: 'hsl(var(--chart-5))' },
+];
+
 export function HodDashboard() {
   const { user } = useRole();
   const { toast } = useToast();
   const [notes, setNotes] = useState<MockLessonNote[]>([]);
+  const [staff, setStaff] = useState<MockUser[]>([]);
   const [stats, setStats] = useState({
     pending: 0,
     approved: 0,
@@ -98,7 +108,7 @@ export function HodDashboard() {
       });
 
       // Sort client-side to avoid composite index
-      notesList.sort((a, b) => (b.submittedOn?.seconds || 0) - (a.submittedOn?.seconds || 0));
+      notesList.sort((a, b) => (b.createdAt?.seconds || 0) - (a.createdAt?.seconds || 0));
 
       setNotes(notesList.slice(0, 5)); // Show recent 5
 
@@ -112,11 +122,18 @@ export function HodDashboard() {
         { name: 'Rejected', value: rejected, fill: 'hsl(var(--destructive))' },
       ]);
 
+
+      // In a real app, this should filter by the HOD's department
+      const staffQuery = query(collection(db, 'users'), where('role', '==', 'Teacher'), where('department', '==', hodUser.department));
+      const staffSnapshot = await getDocs(staffQuery);
+      const staffList = staffSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as unknown as MockUser));
+      setStaff(staffList.slice(0, 5));
+      
       setStats({
         pending,
         approved,
         rejected,
-        staffCount: departmentTeachers.length,
+        staffCount: staffList.length,
       });
 
     } catch (error) {
@@ -124,7 +141,7 @@ export function HodDashboard() {
        toast({
         variant: "destructive",
         title: "Error",
-        description: "Could not fetch dashboard data. Firestore indexes may be required.",
+        description: "Could not fetch dashboard data.",
       });
     } finally {
       setIsLoading(false);
@@ -147,6 +164,9 @@ export function HodDashboard() {
     approved: { label: 'Approved', color: 'hsl(var(--chart-2))' },
     pending: { label: 'Pending', color: 'hsl(var(--chart-4))' },
     rejected: { label: 'Rejected', color: 'hsl(var(--destructive))' },
+    average: { label: 'Average Score', color: 'hsl(var(--chart-1))' },
+    graded: { label: 'Graded', color: 'hsl(var(--chart-2))' },
+    pendingGrade: { label: 'Pending', color: 'hsl(var(--chart-4))' },
   };
 
   const totalNotes = stats.approved + stats.pending + stats.rejected;
@@ -204,7 +224,7 @@ export function HodDashboard() {
       </div>
 
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
-        <div className="lg:col-span-2">
+        <div className="lg:col-span-2 space-y-6">
             <Card>
                 <CardHeader>
                     <CardTitle>Lesson Plan Approval Queue</CardTitle>
@@ -226,7 +246,7 @@ export function HodDashboard() {
                                 <TableCell><Skeleton className="h-5 w-24" /></TableCell>
                                 <TableCell className="hidden sm:table-cell"><Skeleton className="h-5 w-20" /></TableCell>
                                 <TableCell><Skeleton className="h-6 w-28" /></TableCell>
-                                <TableCell className="text-right"><Skeleton className="h-8 w-20" /></TableCell>
+                                <TableCell className="text-right"><Skeleton className="h-8 w-20 ml-auto" /></TableCell>
                            </TableRow>
                         )) : notes.length > 0 ? notes.map((note) => (
                         <TableRow key={note.id}>
@@ -253,9 +273,30 @@ export function HodDashboard() {
                     </Table>
                 </CardContent>
             </Card>
+            <Card>
+                <CardHeader>
+                    <CardTitle>Class Averages by Subject</CardTitle>
+                    <CardDescription>Average performance in subjects across your department. (Placeholder)</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <ChartContainer config={chartConfig} className="w-full h-[250px]">
+                    <ResponsiveContainer width="100%" height="100%">
+                         <BarChartRecharts data={subjectPerformanceData}>
+                            <CartesianGrid vertical={false} />
+                            <XAxis dataKey="subject" tickLine={false} axisLine={false} tickMargin={8} fontSize={12} />
+                            <YAxis domain={[0, 100]} />
+                             <ChartTooltip content={<ChartTooltipContent indicator="dot" />} />
+                             <BarRechart dataKey="average" radius={4}>
+                                {subjectPerformanceData.map(entry => <Cell key={entry.subject} fill={entry.color} />)}
+                            </BarRechart>
+                         </BarChartRecharts>
+                    </ResponsiveContainer>
+                   </ChartContainer>
+                </CardContent>
+            </Card>
         </div>
         
-        <div className="lg:col-span-1">
+        <div className="lg:col-span-1 space-y-6">
              <Card>
                 <CardHeader>
                     <CardTitle>Department Submission Status</CardTitle>
@@ -281,8 +322,16 @@ export function HodDashboard() {
                     )}
                 </CardContent>
             </Card>
+            <Card>
+                <CardHeader>
+                    <CardTitle>Grading Progress</CardTitle>
+                    <CardDescription>Status of score entry for the current term. (Placeholder)</CardDescription>
+                </CardHeader>
+                <CardContent className="flex items-center justify-center h-[250px]">
+                    <p className="text-sm text-muted-foreground">Chart coming soon</p>
+                </CardContent>
+            </Card>
         </div>
       </div>
-    </div>
   );
 }

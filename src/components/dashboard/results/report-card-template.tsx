@@ -20,6 +20,8 @@ interface ReportCardTemplateProps {
 
 export function ReportCardTemplate({ reportCard, schoolInfo }: ReportCardTemplateProps) {
   const [teacherComment, setTeacherComment] = useState(reportCard.teacherComment || "Shows great potential and is encouraged to participate more in class discussions.");
+  const [isGeneratingComment, startCommentGeneration] = useTransition();
+  const { toast } = useToast();
   const { role } = useRole();
   
   const canEdit = role === 'Admin' || role === 'Teacher' || role === 'ExamOfficer';
@@ -31,6 +33,32 @@ export function ReportCardTemplate({ reportCard, schoolInfo }: ReportCardTemplat
     if (['D', 'E'].includes(grade)) return 'text-orange-600';
     return 'text-red-600';
   };
+
+  const handleGenerateComment = () => {
+    startCommentGeneration(async () => {
+        try {
+            const grades = reportCard.subjects.map(s => ({
+                name: s.name,
+                score: s.totalScore,
+                grade: s.grade,
+            }));
+            const result = await aiEngine.academic.generateComment({
+                studentName: reportCard.studentName.split(' ')[0],
+                grades,
+            });
+            if (result.comment) {
+                setTeacherComment(result.comment);
+            }
+        } catch (error) {
+            console.error(error);
+            toast({
+                variant: 'destructive',
+                title: 'Error',
+                description: 'Failed to generate AI comment.',
+            });
+        }
+    });
+  }
 
   return (
         <div className="bg-white text-black font-serif">
@@ -122,9 +150,9 @@ export function ReportCardTemplate({ reportCard, schoolInfo }: ReportCardTemplat
                         <div className="flex justify-between items-center mb-1">
                              <h4 className="font-semibold">Teacher's Comment:</h4>
                              {canEdit && (
-                                <Button disabled size="sm" variant="outline" className="text-black print:hidden">
-                                     <Sparkles className="mr-2 h-4 w-4" />
-                                    AI Comment (Coming Soon)
+                                <Button onClick={handleGenerateComment} disabled={isGeneratingComment} size="sm" variant="outline" className="text-black print:hidden">
+                                     {isGeneratingComment ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Sparkles className="mr-2 h-4 w-4" />}
+                                    Generate with AI
                                 </Button>
                              )}
                         </div>
@@ -153,5 +181,3 @@ export function ReportCardTemplate({ reportCard, schoolInfo }: ReportCardTemplat
         </div>
   );
 }
-
-    
