@@ -39,7 +39,7 @@ const reportCards = [
 export default function ReportsPage() {
   const { role } = useRole();
 
-  const availableReports = reportCards.filter(card => role && card.roles.includes(card.role));
+  const availableReports = reportCards.filter(card => role && card.roles.includes(role));
 
   return (
     <div className="space-y-8">
