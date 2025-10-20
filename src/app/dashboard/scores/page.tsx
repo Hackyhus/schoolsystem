@@ -17,7 +17,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { Badge } from '@/components/ui/badge';
 import { ThumbsDown, ThumbsUp, Save, Loader2, Send, Upload } from 'lucide-react';
 import { BulkScoresUploadDialog } from '@/components/dashboard/scores/bulk-scores-upload-dialog';
-import { createScoreNotification } from '@/lib/notifications';
+import { createActionNotification } from '@/lib/notifications';
 import usePersistentState from '@/hooks/use-persistent-state';
 
 
@@ -192,13 +192,16 @@ export default function ScoresPage() {
         const scoreRef = doc(db, 'scores', score.id);
         await updateDoc(scoreRef, { status: newStatus });
         
-        await createScoreNotification(
-            score.teacherId,
-            score.id,
-            `${student.firstName} ${student.lastName}`,
-            score.subject,
-            newStatus
-        );
+        await createActionNotification({
+            userId: score.teacherId,
+            title: `Score ${newStatus}`,
+            body: `Your score for ${student.firstName} ${student.lastName} in ${score.subject} has been ${newStatus.toLowerCase()}.`,
+            ref: {
+                collection: 'scores',
+                id: score.id,
+            },
+            type: newStatus === 'Approved' ? 'APPROVAL' : 'REJECTION'
+        });
 
         setScores(prev => ({ 
             ...prev, 
@@ -228,13 +231,16 @@ export default function ScoresPage() {
         updatedScores[studentId].status = 'Approved';
         updatedCount++;
         
-        notificationPromises.push(createScoreNotification(
-            score.teacherId,
-            score.id,
-            `${student.firstName} ${student.lastName}`,
-            score.subject,
-            'Approved'
-        ));
+        notificationPromises.push(createActionNotification({
+            userId: score.teacherId,
+            title: 'Score Approved',
+            body: `Your score for ${student.firstName} ${student.lastName} in ${score.subject} has been approved.`,
+            ref: {
+                collection: 'scores',
+                id: score.id,
+            },
+            type: 'APPROVAL'
+        }));
       }
     });
 

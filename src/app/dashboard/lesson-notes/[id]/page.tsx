@@ -5,7 +5,7 @@
 import { useEffect, useState, useCallback } from 'react';
 import { notFound, useParams } from 'next/navigation';
 import { doc, getDoc, updateDoc, collection, addDoc, serverTimestamp } from 'firebase/firestore';
-import { db, dbService } from '@/lib/dbService';
+import { dbService } from '@/lib/dbService';
 import type { MockLessonNote } from '@/lib/schema';
 import {
   Card,
@@ -27,34 +27,8 @@ import { Dialog, DialogTrigger, DialogContent, DialogHeader, DialogTitle, Dialog
 import { DocumentSubmissionForm } from '@/components/dashboard/lesson-notes/add-lesson-note-form';
 import { format } from 'date-fns';
 import { LessonNoteSummarizer } from '@/components/lesson-note-summarizer';
+import { createActionNotification } from '@/lib/notifications';
 
-
-async function createLessonNoteNotification(teacherId: string, noteId: string, noteTitle: string, action: 'Approved' | 'Needs Revision', comment?: string) {
-  try {
-    let type: 'APPROVAL' | 'REJECTION' = action === 'Approved' ? 'APPROVAL' : 'REJECTION';
-    let body = `Your lesson note "${noteTitle}" has been ${action === 'Approved' ? 'approved' : 'marked for revision'}.`;
-    
-    if (action === 'Needs Revision' && comment) {
-      body += ` Feedback: ${comment}`;
-    }
-    
-    await addDoc(collection(db, "notifications"), {
-      toUserId: teacherId,
-      type: type,
-      title: `Lesson Note: ${action}`,
-      body: body,
-      ref: {
-        collection: 'lessonNotes',
-        id: noteId,
-      },
-      read: false,
-      createdAt: serverTimestamp(),
-    });
-
-  } catch (error) {
-    console.error("Error creating notification:", error);
-  }
-}
 
 export default function LessonNoteDetailPage() {
   const params = useParams();
@@ -115,7 +89,16 @@ export default function LessonNoteDetailPage() {
     try {
         await dbService.updateDoc('lessonNotes', id, reviewData);
         
-        await createLessonNoteNotification(note.teacherId, note.id, note.title, newStatus, comment);
+        await createActionNotification({
+            userId: note.teacherId,
+            title: `Lesson Note: ${newStatus}`,
+            body: `Your lesson note "${note.title}" has been marked for revision. Feedback: ${comment}`,
+            ref: {
+                collection: 'lessonNotes',
+                id: note.id,
+            },
+            type: 'REJECTION'
+        });
 
         toast({
             title: `Lesson Note ${newStatus}`,
@@ -151,7 +134,16 @@ export default function LessonNoteDetailPage() {
     try {
         await dbService.updateDoc('lessonNotes', id, reviewData);
         
-        await createLessonNoteNotification(note.teacherId, note.id, note.title, 'Approved');
+        await createActionNotification({
+            userId: note.teacherId,
+            title: `Lesson Note: Approved`,
+            body: `Your lesson note "${note.title}" has been approved.`,
+            ref: {
+                collection: 'lessonNotes',
+                id: note.id,
+            },
+            type: 'APPROVAL'
+        });
 
         toast({
             title: `Lesson Note Approved`,

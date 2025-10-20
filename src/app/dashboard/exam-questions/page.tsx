@@ -29,37 +29,14 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { DocumentSubmissionForm } from '@/components/dashboard/lesson-notes/add-lesson-note-form';
 import { format } from 'date-fns';
 import { dbService } from '@/lib/dbService';
-import { collection, addDoc, serverTimestamp } from 'firebase/firestore';
 import usePersistentState from '@/hooks/use-persistent-state';
-import { db } from '@/lib/firebase';
-import { MockLessonNote } from '@/lib/schema';
+import type { MockLessonNote } from '@/lib/schema';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { createActionNotification } from '@/lib/notifications';
 
 
 type Question = MockLessonNote & { type: 'Exam Question' | 'Test Question' };
 
-async function createQuestionNotification(teacherId: string, questionId: string, questionTitle: string, type: string, action: 'Approved' | 'Rejected') {
-  try {
-    const notificationType = action === 'Approved' ? 'APPROVAL' : 'REJECTION';
-    const body = `Your ${type} submission "${questionTitle}" has been ${action.toLowerCase()}.`;
-    
-    await addDoc(collection(db, "notifications"), {
-      toUserId: teacherId,
-      type: notificationType,
-      title: `${type} ${action}`,
-      body: body,
-      ref: {
-        collection: type === 'Exam Question' ? 'examQuestions' : 'testQuestions',
-        id: questionId,
-      },
-      read: false,
-      createdAt: serverTimestamp(),
-    });
-
-  } catch (error) {
-    console.error("Error creating question notification:", error);
-  }
-}
 
 export default function ExamQuestionsPage() {
   const { role, user } = useRole();
@@ -115,7 +92,16 @@ export default function ExamQuestionsPage() {
     try {
         await dbService.updateDoc(collectionName, question.id, { status: newStatus });
         
-        await createQuestionNotification(question.teacherId, question.id, question.title, question.type, newStatus);
+        await createActionNotification({
+            userId: question.teacherId,
+            title: `Question ${newStatus}`,
+            body: `Your ${question.type} submission "${question.title}" has been ${newStatus.toLowerCase()}.`,
+            ref: {
+                collection: collectionName,
+                id: question.id,
+            },
+            type: newStatus === 'Approved' ? 'APPROVAL' : 'REJECTION',
+        });
         
         toast({
             title: `Question ${newStatus}`,
