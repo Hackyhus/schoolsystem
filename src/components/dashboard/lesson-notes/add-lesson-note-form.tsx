@@ -36,7 +36,8 @@ import type { MockLessonNote } from '@/lib/schema';
 
 const formSchema = z.object({
   title: z.string().min(1, { message: 'Title is required.' }),
-  type: z.enum(['Lesson Plan', 'Exam Question']),
+  type: z.enum(['Lesson Plan', 'Exam Question', 'Test Question']),
+  paperType: z.string().optional(),
   class: z.string().min(1, { message: 'Please select a class.' }),
   subject: z.string().min(1, { message: 'Please select a subject.' }),
   file: z
@@ -44,21 +45,19 @@ const formSchema = z.object({
     .refine((files) => files?.length >= 1, 'File is required.'),
 });
 
-// Update the schema for resubmissions, where the file is optional initially
-// but we will still require it in the logic. This is for the form state.
 const resubmissionSchema = formSchema.extend({
   file: z.instanceof(FileList).optional(),
 });
 
 
-export function AddLessonNoteForm({
+export function DocumentSubmissionForm({
   onNoteAdded,
   documentType,
   existingNoteData,
   isResubmission = false,
 }: {
   onNoteAdded: () => void;
-  documentType?: 'Lesson Plan' | 'Exam Question';
+  documentType?: 'Lesson Plan' | 'Exam Question' | 'Test Question';
   existingNoteData?: MockLessonNote | null;
   isResubmission?: boolean;
 }) {
@@ -75,10 +74,13 @@ export function AddLessonNoteForm({
     defaultValues: {
       title: existingNoteData?.title || '',
       type: documentType || 'Lesson Plan',
+      paperType: '',
       class: existingNoteData?.class || '',
       subject: existingNoteData?.subject || '',
     },
   });
+
+  const documentTypeValue = form.watch('type');
 
   useEffect(() => {
     if (documentType) {
@@ -128,6 +130,10 @@ export function AddLessonNoteForm({
         collectionName = 'examQuestions';
         status = 'Pending Review';
         reviewer = 'Exam Officer';
+      } else if (type === 'Test Question') {
+        collectionName = 'testQuestions';
+        status = 'Pending Review';
+        reviewer = 'Exam Officer';
       }
 
       const storageRef = ref(
@@ -138,20 +144,36 @@ export function AddLessonNoteForm({
       const uploadResult = await uploadBytes(storageRef, file);
       const downloadURL = await getDownloadURL(uploadResult.ref);
       
-      // Fetch the user's profile from Firestore to get their full name
       const userDoc = await dbService.getDoc<{ name: string }>('users', user.uid);
       const teacherName = userDoc?.name || user.displayName || 'Unknown Teacher';
 
+      const submissionData: any = {
+        title: values.title,
+        class: values.class,
+        subject: values.subject,
+        fileUrl: downloadURL,
+        storagePath: uploadResult.ref.fullPath,
+        teacherId: user.uid,
+        teacherName: teacherName,
+        status: status,
+        submissionDate: new Date().toLocaleDateString('en-CA'),
+        submittedOn: new Date(),
+        reviewer: reviewer,
+      };
+
+      if (values.paperType) {
+        submissionData.paperType = values.paperType;
+      }
+
 
       if (isResubmission && existingNoteData) {
-        // Update the existing document
         const docRef = doc(db, collectionName, existingNoteData.id);
         await updateDoc(docRef, {
           fileUrl: downloadURL,
           storagePath: uploadResult.ref.fullPath,
-          status: status, // Reset status for re-review
-          submittedOn: new Date(), // Update submission date
-          admin_review: null, // Clear previous reviews
+          status: status, 
+          submittedOn: new Date(), 
+          admin_review: null, 
           hod_review: null,
         });
         toast({
@@ -159,21 +181,10 @@ export function AddLessonNoteForm({
           description: `Your corrected ${type} has been sent for review.`,
         });
       } else {
-        // Create a new document
          const newDocRef = doc(collection(db, collectionName));
         await setDoc(newDocRef, {
+          ...submissionData,
           id: newDocRef.id,
-          title: values.title,
-          class: values.class,
-          subject: values.subject,
-          fileUrl: downloadURL,
-          storagePath: uploadResult.ref.fullPath,
-          teacherId: user.uid,
-          teacherName: teacherName,
-          status: status,
-          submissionDate: new Date().toLocaleDateString('en-CA'), // YYYY-MM-DD
-          submittedOn: new Date(),
-          reviewer: reviewer,
         });
 
         toast({
@@ -222,7 +233,7 @@ export function AddLessonNoteForm({
             render={({ field }) => (
               <FormItem>
                 <FormLabel>Document Type</FormLabel>
-                 <Select onValueChange={field.onChange} defaultValue={field.value} disabled={!!documentType || isResubmission}>
+                 <Select onValueChange={field.onChange} value={field.value} defaultValue={field.value} disabled={!!documentType || isResubmission}>
                     <FormControl>
                       <SelectTrigger>
                         <SelectValue placeholder="Select document type" />
@@ -231,65 +242,92 @@ export function AddLessonNoteForm({
                     <SelectContent>
                         <SelectItem value="Lesson Plan">Lesson Plan</SelectItem>
                         <SelectItem value="Exam Question">Exam Question</SelectItem>
+                        <SelectItem value="Test Question">Test Question (CA)</SelectItem>
                     </SelectContent>
                   </Select>
                 <FormMessage />
               </FormItem>
             )}
           />
-           <FormField
-            control={form.control}
-            name="subject"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Subject</FormLabel>
-                <Select
-                  onValueChange={field.onChange}
-                  defaultValue={field.value}
-                  disabled={isAcademicDataLoading || isResubmission}
-                >
-                  <FormControl>
-                    <SelectTrigger>
-                      <SelectValue placeholder={isAcademicDataLoading ? "Loading..." : "Select Subject"} />
-                    </SelectTrigger>
-                  </FormControl>
-                  <SelectContent>
-                    {subjects.map(subject => (
-                        <SelectItem key={subject.id} value={subject.name}>{subject.name}</SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
+           {(documentTypeValue === 'Test Question' || documentTypeValue === 'Exam Question') && (
+            <FormField
+              control={form.control}
+              name="paperType"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Paper Type</FormLabel>
+                  <Select onValueChange={field.onChange} defaultValue={field.value}>
+                    <FormControl>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select paper type" />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      <SelectItem value="1st CA">1st CA</SelectItem>
+                      <SelectItem value="2nd CA">2nd CA</SelectItem>
+                      <SelectItem value="Exam">Exam</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+          )}
         </div>
-         <FormField
-            control={form.control}
-            name="class"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Class Level</FormLabel>
-                <Select
-                  onValueChange={field.onChange}
-                  defaultValue={field.value}
-                   disabled={isAcademicDataLoading || isResubmission}
-                >
-                  <FormControl>
-                    <SelectTrigger>
-                       <SelectValue placeholder={isAcademicDataLoading ? "Loading..." : "Select Class"} />
-                    </SelectTrigger>
-                  </FormControl>
-                  <SelectContent>
-                     {classes.map(c => (
-                        <SelectItem key={c.id} value={c.name}>{c.name}</SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
+         <div className="grid grid-cols-2 gap-4">
+            <FormField
+              control={form.control}
+              name="subject"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Subject</FormLabel>
+                  <Select
+                    onValueChange={field.onChange}
+                    defaultValue={field.value}
+                    disabled={isAcademicDataLoading || isResubmission}
+                  >
+                    <FormControl>
+                      <SelectTrigger>
+                        <SelectValue placeholder={isAcademicDataLoading ? "Loading..." : "Select Subject"} />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      {subjects.map(subject => (
+                          <SelectItem key={subject.id} value={subject.name}>{subject.name}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+             <FormField
+              control={form.control}
+              name="class"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Class Level</FormLabel>
+                  <Select
+                    onValueChange={field.onChange}
+                    defaultValue={field.value}
+                    disabled={isAcademicDataLoading || isResubmission}
+                  >
+                    <FormControl>
+                      <SelectTrigger>
+                        <SelectValue placeholder={isAcademicDataLoading ? "Loading..." : "Select Class"} />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      {classes.map(c => (
+                          <SelectItem key={c.id} value={c.name}>{c.name}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+         </div>
         <FormField
           control={form.control}
           name="file"

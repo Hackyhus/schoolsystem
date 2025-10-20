@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import { useEffect, useState, useCallback } from 'react';
@@ -23,7 +24,7 @@ import { useRole } from '@/context/role-context';
 import { Button } from '@/components/ui/button';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Dialog, DialogTrigger, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
-import { AddLessonNoteForm } from '@/components/dashboard/lesson-notes/add-lesson-note-form';
+import { DocumentSubmissionForm } from '@/components/dashboard/lesson-notes/add-lesson-note-form';
 import { format } from 'date-fns';
 import { LessonNoteSummarizer } from '@/components/lesson-note-summarizer';
 
@@ -300,7 +301,7 @@ export default function LessonNoteDetailPage() {
                               Upload the new version of your file. This will replace the previous one and restart the review process.
                             </DialogDescription>
                           </DialogHeader>
-                          <AddLessonNoteForm
+                          <DocumentSubmissionForm
                             onNoteAdded={handleResubmission}
                             existingNoteData={note}
                             isResubmission={true}

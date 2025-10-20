@@ -27,7 +27,7 @@ import {
   DialogTitle,
   DialogTrigger,
 } from '@/components/ui/dialog';
-import { AddLessonNoteForm } from '@/components/dashboard/lesson-notes/add-lesson-note-form';
+import { DocumentSubmissionForm } from '@/components/dashboard/lesson-notes/add-lesson-note-form';
 import usePersistentState from '@/hooks/use-persistent-state';
 import { format } from 'date-fns';
 
@@ -127,7 +127,7 @@ export default function LessonNotesPage() {
                       Select the class, subject, document type, and upload your file. It will be routed to the correct reviewer.
                     </DialogDescription>
                  </DialogHeader>
-                 <AddLessonNoteForm onNoteAdded={handleNoteAdded} documentType="Lesson Plan" />
+                 <DocumentSubmissionForm onNoteAdded={handleNoteAdded} documentType="Lesson Plan" />
               </DialogContent>
             </Dialog>
             

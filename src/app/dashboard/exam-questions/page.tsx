@@ -26,7 +26,7 @@ import {
 } from '@/components/ui/dialog';
 import { useToast } from '@/hooks/use-toast';
 import { Skeleton } from '@/components/ui/skeleton';
-import { AddLessonNoteForm } from '@/components/dashboard/lesson-notes/add-lesson-note-form'; // Re-using the unified form
+import { DocumentSubmissionForm } from '@/components/dashboard/lesson-notes/add-lesson-note-form';
 import { format } from 'date-fns';
 import { dbService } from '@/lib/dbService';
 import { collection, addDoc, serverTimestamp } from 'firebase/firestore';
@@ -267,7 +267,7 @@ export default function ExamQuestionsPage() {
                 Select the class, subject, and upload your file. It will be routed to the correct reviewer.
               </DialogDescription>
            </DialogHeader>
-           <AddLessonNoteForm onNoteAdded={handleSubmissionAdded} documentType={modalType} />
+           <DocumentSubmissionForm onNoteAdded={handleSubmissionAdded} documentType={modalType} />
         </DialogContent>
       </Dialog>
     </div>
