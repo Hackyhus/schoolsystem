@@ -64,7 +64,11 @@ export function AnnouncementForm({ initialData, onFormSubmit }: AnnouncementForm
     setAiError('');
     startAiTransition(async () => {
       try {
-        const result = await aiEngine.text.draft({ topic: aiTopic, audience: 'All Users' });
+        const result = await aiEngine.text.draft({
+          topic: aiTopic,
+          audience: 'All Users',
+          tone: 'Formal',
+        });
         if (result.draft) {
           form.setValue('content', result.draft, { shouldValidate: true });
         }

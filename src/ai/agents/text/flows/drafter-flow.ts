@@ -19,13 +19,15 @@ export const draftCommunicationFlow = ai.defineFlow(
     const {output} = await ai.generate({
       model: googleAI.model('gemini-2.5-flash'),
       tools: [getDateTool],
-      prompt: `You are an expert school administrator's assistant. Your task is to draft a clear, professional, and well-structured announcement for a school portal based on the provided topic.
+      prompt: `You are an expert school administrator's assistant. Your task is to draft a clear, professional, and well-structured announcement for a school portal based on the provided topic, audience, and tone.
 
       Topic: ${input.topic}
+      Audience: ${input.audience}
+      Tone: ${input.tone}
 
       - If the topic mentions any dates (e.g., "next Monday", "in three days"), you MUST use the provided getDate tool to calculate the exact date.
-      - Expand on the topic to create a full announcement. Ensure the language is appropriate for a formal announcement to all users.
-      - Structure the announcement with a clear salutation (e.g., "Dear Students, Parents, and Staff,"), a body with separate paragraphs for clarity, and a closing (e.g., "Sincerely, The School Administration").
+      - Expand on the topic to create a full announcement. Ensure the language is appropriate for the specified audience and tone.
+      - Structure the announcement with a clear salutation (e.g., "Dear Parents," or "Dear Students, Parents, and Staff,"), a body with separate paragraphs for clarity, and a closing (e.g., "Sincerely, The School Administration").
       - Do not add a title. The output should be only the body of the announcement.
       \n  Draft:`,
       output: {
