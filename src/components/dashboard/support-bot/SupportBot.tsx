@@ -1,7 +1,7 @@
 
 'use client';
 
-import { useState, useTransition } from 'react';
+import { useState, useTransition, useRef, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { MessageSquare, Send, Sparkles, User, X, Bot } from 'lucide-react';
@@ -23,12 +23,20 @@ export function SupportBot() {
   const [messages, setMessages] = useState<Message[]>([
     {
         role: 'bot',
-        content: "Hello! I'm your AI assistant for the InsightConnect Portal. How can I help you today?",
+        content: "Hello! I'm your AI assistant, the GIIA Support Bot. How can I help you today?",
     }
   ]);
   const [input, setInput] = useState('');
   const [isAiThinking, startAiTransition] = useTransition();
   const { user, role } = useRole();
+  const scrollAreaRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (scrollAreaRef.current) {
+        scrollAreaRef.current.scrollTo({ top: scrollAreaRef.current.scrollHeight, behavior: 'smooth' });
+    }
+  }, [messages]);
+
 
   const handleSendMessage = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -78,15 +86,15 @@ export function SupportBot() {
           <CardHeader className="border-b">
             <CardTitle className="flex items-center gap-2">
               <Sparkles className="text-primary" />
-              Support Assistant
+              GIIA Support Bot
             </CardTitle>
              <CardDescription>
               Your AI-powered guide to the portal.
             </CardDescription>
           </CardHeader>
           
-          <CardContent className="flex-1 p-4 overflow-hidden">
-            <ScrollArea className="h-full">
+          <CardContent className="flex-1 p-0 overflow-hidden">
+            <ScrollArea className="h-full p-4" ref={scrollAreaRef}>
                 <div className="space-y-6">
                     {messages.map((message, index) => (
                         <div
