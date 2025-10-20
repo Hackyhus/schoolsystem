@@ -15,8 +15,7 @@ import Link from 'next/link';
 import { useRole } from '@/context/role-context';
 import { Upload } from 'lucide-react';
 import { useEffect, useState, useCallback } from 'react';
-import { collection, query, where, getDocs, orderBy } from 'firebase/firestore';
-import { db } from '@/lib/firebase';
+import { dbService } from '@/lib/dbService';
 import type { MockLessonNote } from '@/lib/schema';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useToast } from '@/hooks/use-toast';
@@ -48,17 +47,12 @@ export default function LessonNotesPage() {
     
     setIsLoading(true);
     try {
-      let notesQuery;
+      let constraints: Parameters<typeof dbService.getDocs>[1] = [];
       if (role === 'Teacher') {
-        notesQuery = query(collection(db, 'lessonNotes'), where("teacherId", "==", user.uid));
-      } else {
-        notesQuery = query(collection(db, 'lessonNotes'));
+        constraints.push({ type: 'where', fieldPath: 'teacherId', opStr: '==', value: user.uid });
       }
       
-      const querySnapshot = await getDocs(notesQuery);
-      const notesList = querySnapshot.docs.map(
-        (doc) => ({ id: doc.id, ...doc.data() } as MockLessonNote)
-      );
+      const notesList = await dbService.getDocs<MockLessonNote>('lessonNotes', constraints);
 
       // Sort client-side to avoid composite index requirement
       notesList.sort((a, b) => (b.submittedOn?.seconds || 0) - (a.submittedOn?.seconds || 0));

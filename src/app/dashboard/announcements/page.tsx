@@ -6,7 +6,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button";
 import { PlusCircle, Rss, MoreHorizontal, Edit, Trash2 } from "lucide-react";
 import { useRole } from '@/context/role-context';
-import { dbService } from '@/lib/firebase';
+import { dbService } from '@/lib/dbService';
 import { Skeleton } from '@/components/ui/skeleton';
 import { format } from 'date-fns';
 import { Dialog, DialogTrigger, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
@@ -32,14 +32,8 @@ import {
 } from "@/components/ui/alert-dialog";
 import { useToast } from '@/hooks/use-toast';
 import { deleteAnnouncement } from '@/actions/announcement-actions';
+import type { Announcement } from '@/lib/schema';
 
-type Announcement = {
-    id: string;
-    title: string;
-    content: string;
-    authorName: string;
-    createdAt: { seconds: number, nanoseconds: number };
-}
 
 export default function AnnouncementsPage() {
     const { role } = useRole();

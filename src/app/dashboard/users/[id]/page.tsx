@@ -3,8 +3,8 @@
 
 import { useEffect, useState, useCallback } from 'react';
 import { notFound, useParams, useRouter } from 'next/navigation';
-import { doc, onSnapshot, collection, query, where, getDocs } from 'firebase/firestore';
-import { db, auth } from '@/lib/firebase';
+import { dbService } from '@/lib/dbService';
+import { auth } from '@/lib/firebase';
 import type { MockUser } from '@/lib/schema';
 import { useRole } from '@/context/role-context';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -40,15 +40,11 @@ export default function UserProfilePage() {
     setIsLoading(true);
     if (!staffId) return;
 
-    const usersRef = collection(db, 'users');
-    const q = query(usersRef, where('staffId', '==', staffId));
-
     try {
-        const querySnapshot = await getDocs(q);
-        if (!querySnapshot.empty) {
-            const userDoc = querySnapshot.docs[0];
-            const userData = { id: userDoc.id, ...userDoc.data() } as MockUser;
-            setUser(userData);
+        const userList = await dbService.getDocs<MockUser>('users', [{type: 'where', fieldPath: 'staffId', opStr: '==', value: staffId}]);
+
+        if (userList.length > 0) {
+            setUser(userList[0]);
         } else {
             notFound();
         }

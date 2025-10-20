@@ -4,7 +4,7 @@
 import { useEffect, useState, useCallback } from 'react';
 import { notFound, useParams } from 'next/navigation';
 import { doc, getDoc, updateDoc, collection, addDoc, serverTimestamp } from 'firebase/firestore';
-import { db } from '@/lib/firebase';
+import { db, dbService } from '@/lib/firebase';
 import type { MockLessonNote } from '@/lib/schema';
 import {
   Card,
@@ -69,10 +69,9 @@ export default function LessonNoteDetailPage() {
     if (typeof id !== 'string') return;
     setIsLoading(true);
     try {
-      const docRef = doc(db, 'lessonNotes', id);
-      const docSnap = await getDoc(docRef);
-      if (docSnap.exists()) {
-        setNote({ id: docSnap.id, ...docSnap.data() } as MockLessonNote);
+      const noteData = await dbService.getDoc<MockLessonNote>('lessonNotes', id);
+      if (noteData) {
+        setNote(noteData);
       } else {
         notFound();
       }
@@ -113,8 +112,7 @@ export default function LessonNoteDetailPage() {
 
 
     try {
-        const docRef = doc(db, 'lessonNotes', id);
-        await updateDoc(docRef, reviewData);
+        await dbService.updateDoc('lessonNotes', id, reviewData);
         
         await createLessonNoteNotification(note.teacherId, note.id, note.title, newStatus, comment);
 
@@ -150,8 +148,7 @@ export default function LessonNoteDetailPage() {
     }
 
     try {
-        const docRef = doc(db, 'lessonNotes', id);
-        await updateDoc(docRef, reviewData);
+        await dbService.updateDoc('lessonNotes', id, reviewData);
         
         await createLessonNoteNotification(note.teacherId, note.id, note.title, 'Approved');
 

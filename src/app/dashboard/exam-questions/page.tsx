@@ -27,11 +27,11 @@ import { useToast } from '@/hooks/use-toast';
 import { Skeleton } from '@/components/ui/skeleton';
 import { AddLessonNoteForm } from '@/components/dashboard/lesson-notes/add-lesson-note-form'; // Re-using the unified form
 import { format } from 'date-fns';
-import { db, dbService } from '@/lib/firebase';
+import { dbService } from '@/lib/dbService';
 import type { QueryConstraint } from '@/services/types';
 import { collection, addDoc, serverTimestamp } from 'firebase/firestore';
 import usePersistentState from '@/hooks/use-persistent-state';
-
+import { db } from '@/lib/firebase';
 
 type ExamQuestion = {
     id: string;
