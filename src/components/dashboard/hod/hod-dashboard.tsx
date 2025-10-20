@@ -40,7 +40,7 @@ import {
   ChartLegend,
   ChartLegendContent,
 } from '@/components/ui/chart';
-import { Pie, PieChart, Cell, Bar, BarChart as BarChartRecharts, XAxis, YAxis, CartesianGrid, ResponsiveContainer } from 'recharts';
+import { Pie, PieChart, Cell, Bar, BarChart as RechartsBarChart, XAxis, YAxis, CartesianGrid, ResponsiveContainer } from 'recharts';
 import { format } from 'date-fns';
 
 
@@ -241,14 +241,14 @@ export function HodDashboard() {
                         </TableRow>
                     </TableHeader>
                     <TableBody>
-                        {isLoading ? Array.from({length: 3}).map((_, i) => (
+                        {isLoading ? (Array.from({length: 3}).map((_, i) => (
                            <TableRow key={i}>
                                 <TableCell><Skeleton className="h-5 w-24" /></TableCell>
                                 <TableCell className="hidden sm:table-cell"><Skeleton className="h-5 w-20" /></TableCell>
                                 <TableCell><Skeleton className="h-6 w-28" /></TableCell>
                                 <TableCell className="text-right"><Skeleton className="h-8 w-20 ml-auto" /></TableCell>
                            </TableRow>
-                        )) : notes.length > 0 ? notes.map((note) => (
+                        ))) : notes.length > 0 ? (notes.map((note) => (
                         <TableRow key={note.id}>
                             <TableCell>
                             <div className="font-medium">{note.teacherName}</div>
@@ -264,7 +264,7 @@ export function HodDashboard() {
                             </Button>
                             </TableCell>
                         </TableRow>
-                        )) : (
+                        ))) : (
                             <TableRow>
                                 <TableCell colSpan={4} className="h-24 text-center">No lesson plans in the queue.</TableCell>
                             </TableRow>
@@ -281,7 +281,7 @@ export function HodDashboard() {
                 <CardContent>
                   <ChartContainer config={chartConfig} className="w-full h-[250px]">
                     <ResponsiveContainer width="100%" height="100%">
-                         <BarChartRecharts data={subjectPerformanceData}>
+                         <RechartsBarChart data={subjectPerformanceData}>
                             <CartesianGrid vertical={false} />
                             <XAxis dataKey="subject" tickLine={false} axisLine={false} tickMargin={8} fontSize={12} />
                             <YAxis domain={[0, 100]} />
@@ -289,7 +289,7 @@ export function HodDashboard() {
                              <Bar dataKey="average" radius={4}>
                                 {subjectPerformanceData.map(entry => <Cell key={entry.subject} fill={entry.color} />)}
                             </Bar>
-                         </BarChartRecharts>
+                         </RechartsBarChart>
                     </ResponsiveContainer>
                    </ChartContainer>
                 </CardContent>
@@ -333,5 +333,6 @@ export function HodDashboard() {
             </Card>
         </div>
       </div>
+    </div>
   );
 }

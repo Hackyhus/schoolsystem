@@ -1,3 +1,4 @@
+
 'use client';
 import {
   Users,
@@ -214,8 +215,8 @@ export function NewAdminDashboard() {
       monthNames.forEach((m) => (monthCounts[m] = 0));
 
       notes.forEach((note) => {
-        if (note.submissionDate && typeof note.submissionDate === 'string') {
-          const date = new Date(note.submissionDate);
+        if (note.submittedOn?.seconds) {
+          const date = new Date(note.submittedOn.seconds * 1000);
           if (!isNaN(date.getTime())) {
             const month = monthNames[date.getMonth()];
             if (month) monthCounts[month]++;

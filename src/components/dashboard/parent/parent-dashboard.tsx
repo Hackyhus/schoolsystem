@@ -66,7 +66,7 @@ export function ParentDashboard() {
     try {
       // Find the student linked to the logged-in parent
       const studentsRef = collection(db, 'students');
-      const studentQuery = query(studentsRef, where('guardians', 'array-contains-any', [{ email: user.email }]));
+      const studentQuery = query(studentsRef, where('guardians', 'array-contains-any', [{ email: user.email, isPrimary: true }]));
       const studentSnapshot = await getDocs(studentQuery);
 
       if (!studentSnapshot.empty) {

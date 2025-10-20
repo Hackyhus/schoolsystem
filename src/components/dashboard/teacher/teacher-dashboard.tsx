@@ -86,10 +86,12 @@ export function TeacherDashboard() {
       monthNames.forEach((m) => (monthCounts[m] = 0));
 
       allNotesList.forEach((note) => {
-        const date = new Date(note.submissionDate);
-        const month = monthNames[date.getMonth()];
-        if (month) {
-          monthCounts[month]++;
+        if (note.submittedOn?.seconds) {
+            const date = new Date(note.submittedOn.seconds * 1000);
+            const month = monthNames[date.getMonth()];
+            if (month) {
+              monthCounts[month]++;
+            }
         }
       });
       

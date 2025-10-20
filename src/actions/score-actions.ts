@@ -34,12 +34,11 @@ export async function bulkUpdateScores(payload: BulkUpdatePayload) {
         const existingScoresMap = new Map<string, Score>();
         existingScores.forEach(score => existingScoresMap.set(score.studentId, score));
         
-        const teacherIdResult = await dbService.getDocs<{teacherId: string}>('scores', [
-            { type: 'where', fieldPath: 'class', opStr: '==', value: className },
-            { type: 'where', fieldPath: 'subject', opStr: '==', value: subject },
-            { type: 'limit', limitCount: 1 }
+        const teacherUsers = await dbService.getDocs<{teacherId: string}>('users', [
+             { type: 'where', fieldPath: 'role', opStr: '==', value: 'Teacher' },
+             { type: 'limit', limitCount: 1 }
         ]);
-        const teacherId = teacherIdResult[0]?.teacherId || 'placeholder-teacher-id';
+        const teacherId = teacherUsers[0]?.id || 'placeholder-teacher-id';
 
         for (const record of scores) {
             if (!record.studentId) continue;
