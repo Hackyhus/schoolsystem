@@ -40,7 +40,7 @@ import {
   ChartLegend,
   ChartLegendContent,
 } from '@/components/ui/chart';
-import { Pie, PieChart, Cell, Bar as BarRechart, BarChart as BarChartRecharts, XAxis, YAxis, CartesianGrid, ResponsiveContainer } from 'recharts';
+import { Pie, PieChart, Cell, Bar, BarChart as BarChartRecharts, XAxis, YAxis, CartesianGrid, ResponsiveContainer } from 'recharts';
 import { format } from 'date-fns';
 
 
@@ -286,9 +286,9 @@ export function HodDashboard() {
                             <XAxis dataKey="subject" tickLine={false} axisLine={false} tickMargin={8} fontSize={12} />
                             <YAxis domain={[0, 100]} />
                              <ChartTooltip content={<ChartTooltipContent indicator="dot" />} />
-                             <BarRechart dataKey="average" radius={4}>
+                             <Bar dataKey="average" radius={4}>
                                 {subjectPerformanceData.map(entry => <Cell key={entry.subject} fill={entry.color} />)}
-                            </BarRechart>
+                            </Bar>
                          </BarChartRecharts>
                     </ResponsiveContainer>
                    </ChartContainer>
@@ -335,4 +335,3 @@ export function HodDashboard() {
       </div>
   );
 }
-
