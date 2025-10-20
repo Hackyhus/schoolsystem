@@ -50,6 +50,8 @@ export default function HodAnalyticsPage() {
   const [departmentName, setDepartmentName] = useState<string>('');
   const [submissionStats, setSubmissionStats] = useState<SubmissionStats[]>([]);
   const [teacherStats, setTeacherStats] = useState<TeacherStats[]>([]);
+  const [isGenerating, startAiTransition] = useTransition();
+  const [aiNarrative, setAiNarrative] = useState<string | null>(null);
 
   
   const chartConfig = {
@@ -140,6 +142,32 @@ export default function HodAnalyticsPage() {
     }
   }, [userIsLoading, fetchData]);
 
+  const handleGenerateAnalysis = () => {
+    if (teacherStats.length === 0) {
+      toast({ title: 'No Data', description: 'There is no data to analyze yet.' });
+      return;
+    }
+    startAiTransition(async () => {
+      setAiNarrative(null);
+      try {
+        const result = await aiEngine.academic.narrate({
+          context: `An analysis of teacher submission statistics for the ${departmentName} department.`,
+          data: teacherStats,
+        });
+        if (result.narrative) {
+          setAiNarrative(result.narrative);
+        }
+      } catch (e) {
+        console.error(e);
+        toast({
+          variant: 'destructive',
+          title: 'Analysis Failed',
+          description: 'The AI could not generate an analysis at this time.',
+        });
+      }
+    });
+  };
+
   return (
     <div className="space-y-8">
       <div>
@@ -156,12 +184,21 @@ export default function HodAnalyticsPage() {
                       <CardTitle className="flex items-center gap-2"><Sparkles className="text-accent" /> AI-Powered Analysis</CardTitle>
                       <CardDescription>Get a quick narrative summary of your department's performance.</CardDescription>
                   </div>
-                   <Button disabled>
-                      <Sparkles className="mr-2 h-4 w-4" />
-                       Generate Analysis (Coming Soon)
+                   <Button onClick={handleGenerateAnalysis} disabled={isGenerating || isLoading}>
+                        {isGenerating ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Sparkles className="mr-2 h-4 w-4" />}
+                       Generate Analysis
                   </Button>
               </div>
           </CardHeader>
+           {aiNarrative && (
+            <CardContent>
+              <Alert>
+                <Sparkles className="h-4 w-4" />
+                <AlertTitle>AI Narrative</AlertTitle>
+                <AlertDescription>{aiNarrative}</AlertDescription>
+              </Alert>
+            </CardContent>
+          )}
       </Card>
 
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
@@ -230,5 +267,3 @@ export default function HodAnalyticsPage() {
     </div>
   )
 }
-
-    

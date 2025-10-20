@@ -35,6 +35,8 @@ export function FinancialReportGenerator() {
     const [isLoading, setIsLoading] = useState(false);
     const [reportData, setReportData] = useState<ReportData | null>(null);
     const { toast } = useToast();
+    const [isGeneratingAiSummary, startAiTransition] = useTransition();
+    const [aiSummary, setAiSummary] = useState<string | null>(null);
     
     const chartConfig = {
       total: { label: 'Expenses', color: 'hsl(var(--chart-1))' },
@@ -48,6 +50,7 @@ export function FinancialReportGenerator() {
 
         setIsLoading(true);
         setReportData(null);
+        setAiSummary(null);
 
         try {
             const fromDate = date.from;
@@ -96,6 +99,25 @@ export function FinancialReportGenerator() {
         }
     };
     
+    const handleGenerateAiSummary = () => {
+      if (!reportData) return;
+      startAiTransition(async () => {
+        setAiSummary('');
+        try {
+          const { summary } = await aiEngine.financial.analyze({
+            totalRevenue: reportData.totalRevenue,
+            totalExpenses: reportData.totalExpenses,
+            netIncome: reportData.netIncome,
+            currency: 'NGN',
+          });
+          setAiSummary(summary);
+        } catch (e) {
+          console.error(e);
+          setAiSummary('Failed to generate AI summary.');
+        }
+      });
+    };
+
     const handlePrintReport = () => {
         window.print();
     };
@@ -144,13 +166,20 @@ export function FinancialReportGenerator() {
                                     </CardDescription>
                                 </div>
                                 <div className="print:hidden">
-                                     <Button disabled variant="outline" size="sm">
-                                        <Sparkles className="mr-2 h-4 w-4" />
-                                        AI Summary (Coming Soon)
+                                     <Button onClick={handleGenerateAiSummary} disabled={isGeneratingAiSummary} variant="outline" size="sm">
+                                        {isGeneratingAiSummary ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Sparkles className="mr-2 h-4 w-4" />}
+                                        AI Summary
                                      </Button>
                                 </div>
                             </CardHeader>
                             <CardContent className="space-y-4">
+                                {aiSummary && (
+                                  <Alert>
+                                    <Sparkles className="h-4 w-4" />
+                                    <AlertTitle>AI-Powered Summary</AlertTitle>
+                                    <AlertDescription>{aiSummary}</AlertDescription>
+                                  </Alert>
+                                )}
                                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                                     <div className="flex items-center gap-4 rounded-lg border p-4 bg-green-50 dark:bg-green-900/30">
                                         <div className="flex h-12 w-12 items-center justify-center rounded-full bg-green-100 dark:bg-green-900/50">
@@ -273,5 +302,3 @@ export function FinancialReportGenerator() {
         </div>
     )
 }
-
-    
