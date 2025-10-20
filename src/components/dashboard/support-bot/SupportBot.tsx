@@ -43,16 +43,20 @@ export function SupportBot() {
   return (
     <>
       <Button
-        className="fixed bottom-6 right-6 h-14 w-14 rounded-full shadow-lg z-50"
+        className="fixed bottom-6 right-6 h-16 w-16 rounded-full shadow-lg z-50 transition-transform duration-300 ease-in-out hover:scale-110"
         size="icon"
         onClick={() => setIsOpen(!isOpen)}
         aria-label="Toggle chat"
       >
-        {isOpen ? <X className="h-6 w-6" /> : <MessageSquare className="h-6 w-6" />}
+        <MessageSquare className={cn("h-7 w-7 transition-all duration-300", isOpen && "rotate-90 scale-0")} />
+        <X className={cn("absolute h-7 w-7 transition-all duration-300", !isOpen && "-rotate-90 scale-0")} />
       </Button>
       
-      {isOpen && (
-        <Card className="fixed bottom-24 right-6 w-full max-w-sm h-[60vh] flex flex-col z-50 shadow-2xl">
+      <div className={cn(
+          "fixed bottom-24 right-6 z-50 transition-all duration-500 ease-in-out",
+          isOpen ? "opacity-100 translate-y-0" : "opacity-0 translate-y-10 pointer-events-none"
+      )}>
+        <Card className="w-full max-w-sm h-[60vh] flex flex-col shadow-2xl">
           <CardHeader className="border-b">
             <CardTitle className="flex items-center gap-2">
               <Sparkles className="text-primary" />
@@ -115,7 +119,7 @@ export function SupportBot() {
             </form>
           </CardFooter>
         </Card>
-      )}
+      </div>
     </>
   );
 }
