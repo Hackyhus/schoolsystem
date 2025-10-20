@@ -40,7 +40,7 @@ export const allNavLinks: Record<string, { icon: string; label: string; path: st
   lessonApprovals: { icon: 'Book', label: 'Lesson Approvals', path: '/dashboard/lesson-notes' },
   hodAnalytics: { icon: 'BarChart2', label: 'Dept. Analytics', path: '/dashboard/hod/analytics' },
   lessonPlans: { icon: 'BookCopy', label: 'Lesson Plans', path: '/dashboard/lesson-notes' },
-  examQuestions: { icon: 'FileQuestion', label: 'Exam Questions', path: '/dashboard/exam-questions' },
+  examQuestions: { icon: 'FileQuestion', label: 'Question Bank', path: '/dashboard/exam-questions' },
   bulkUpload: { icon: 'UploadCloud', label: 'Bulk Upload', path: '/dashboard/teacher/bulk-upload' },
   enterScores: { icon: 'Edit3', label: 'Enter Scores', path: '/dashboard/scores' },
   myStudents: { icon: 'UsersRound', label: 'My Students', path: '/dashboard/performance' },
@@ -150,6 +150,10 @@ commonPages.forEach(path => {
 export function isPathAuthorized(pathname: string, role: string): boolean {
     if (!role) {
         return false;
+    }
+
+    if (role === 'Admin') {
+        return true;
     }
     
     // Allow access to settings for all roles
