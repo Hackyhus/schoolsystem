@@ -13,6 +13,7 @@ import { MaintenanceBanner } from '@/components/maintenance-banner';
 import { isPathAuthorized, navConfig } from '@/lib/auth-guard';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
+import { SupportBot } from '@/components/dashboard/support-bot/SupportBot';
 
 function AccessDenied() {
     const router = useRouter();
@@ -118,6 +119,7 @@ export default function DashboardLayout({
               </main>
           </div>
         </div>
+        <SupportBot />
       </div>
     </SidebarProvider>
   );
