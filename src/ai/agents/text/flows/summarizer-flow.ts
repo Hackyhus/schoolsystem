@@ -15,7 +15,7 @@ export const summarizeTextFlow = ai.defineFlow(
   },
   async (input) => {
     const {output} = await ai.generate({
-      model: 'gemini-1.5-flash',
+      model: 'gemini-2.5-flash',
       prompt: `You are an expert assistant tasked with summarizing text for professional review.
         Your goal is to provide a concise and informative summary that captures the key points of the provided content.
 

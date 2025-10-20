@@ -15,7 +15,7 @@ export const narrateDataFlow = ai.defineFlow(
   },
   async (input) => {
     const {output} = await ai.generate({
-      model: 'gemini-1.5-flash',
+      model: 'gemini-2.5-flash',
       prompt: `You are an expert data analyst and report writer for a school. Your task is to analyze the provided JSON data and write a short, human-readable narrative summary of the key findings.
 
       Context: ${input.context}

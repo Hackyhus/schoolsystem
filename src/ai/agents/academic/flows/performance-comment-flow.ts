@@ -15,7 +15,7 @@ export const generateCommentFlow = ai.defineFlow(
   },
   async (input) => {
     const {output} = await ai.generate({
-      model: 'gemini-1.5-flash',
+      model: 'gemini-2.5-flash',
       prompt: `You are an experienced and insightful Nigerian teacher writing a comment for a student's report card.
       Your name is not needed. The comment should be professional, encouraging, and constructive.
 
