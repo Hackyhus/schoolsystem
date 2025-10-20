@@ -22,7 +22,7 @@ type NotificationPayload = {
  */
 export async function createActionNotification(payload: NotificationPayload) {
   try {
-    await addDoc(collection(db, 'notifications'), {
+    const notificationData = {
       toUserId: payload.userId,
       type: payload.type,
       title: payload.title,
@@ -30,11 +30,21 @@ export async function createActionNotification(payload: NotificationPayload) {
       ref: payload.ref,
       read: false,
       createdAt: serverTimestamp(),
+    };
+    await addDoc(collection(db, 'notifications'), notificationData);
+
+    // Also log this as an audit event
+    await addDoc(collection(db, 'auditLog'), {
+        actorId: 'system',
+        action: 'CREATE_NOTIFICATION',
+        entity: 'notification',
+        entityId: payload.userId,
+        details: payload.title,
+        timestamp: serverTimestamp(),
     });
 
   } catch (error) {
     console.error('Error creating notification:', error);
     // We don't re-throw here to avoid interrupting the main user-facing flow.
-    // The primary action (e.g., approval) is more important than the notification itself.
   }
 }

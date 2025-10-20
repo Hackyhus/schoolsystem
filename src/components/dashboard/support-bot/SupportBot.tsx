@@ -89,7 +89,7 @@ export function SupportBot() {
               GIIA Support Bot
             </CardTitle>
              <CardDescription>
-              Your AI-powered guide to the portal.
+              Your AI-powered guide to the GIIA Portal.
             </CardDescription>
           </CardHeader>
           

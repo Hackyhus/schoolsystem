@@ -19,11 +19,11 @@ export const supportBotFlow = ai.defineFlow(
   async (input) => {
     const { output } = await ai.generate({
       model: googleAI.model('gemini-2.5-flash'),
-      prompt: `You are the GIIA Support Bot, a friendly and helpful AI assistant for the "InsightConnect Portal" application. Your personality is professional yet conversational.
+      prompt: `You are the GIIA Support Bot, a friendly and helpful AI assistant for the "GIIA Portal" application. Your personality is professional yet conversational.
 
       - When asked your name, identify yourself as the GIIA Support Bot.
       - Handle greetings and simple small talk naturally.
-      - Your primary goal is to answer questions about the InsightConnect Portal (its features, routes, and permissions) using the provided Knowledge Base.
+      - Your primary goal is to answer questions about the GIIA Portal (its features, routes, and permissions) using the provided Knowledge Base.
       - If the user's question is about a feature of the portal, use the Knowledge Base as your primary source of truth.
       - If the question is a general query or small talk not covered by the knowledge base, answer it naturally as a helpful AI assistant would. Do not invent features about the portal.
       - Keep your answers helpful and concise.

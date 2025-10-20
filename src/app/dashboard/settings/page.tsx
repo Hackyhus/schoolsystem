@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState, useEffect } from 'react';
@@ -32,7 +33,7 @@ export default function SettingsPage() {
     if (!installPrompt) {
         toast({
             title: 'App Already Installed',
-            description: 'The InsightConnect Portal is already installed on your device or not supported by your browser.',
+            description: 'The GIIA Portal is already installed on your device or not supported by your browser.',
         });
         return;
     }
@@ -82,7 +83,7 @@ export default function SettingsPage() {
         <CardHeader>
           <CardTitle>Install Application</CardTitle>
           <CardDescription>
-            Install the InsightConnect Portal on your device for a better experience, including offline access and notifications.
+            Install the GIIA Portal on your device for a better experience, including offline access and notifications.
           </CardDescription>
         </CardHeader>
         <CardContent>
