@@ -35,7 +35,7 @@ import { useAcademicData } from '@/hooks/use-academic-data';
 import type { MockLessonNote } from '@/lib/schema';
 
 const formSchema = z.object({
-  title: z.string().min(1, { message: 'Title is required.' }),
+  title: z.string().optional(), // Made optional, will be derived from filename if not provided
   type: z.enum(['Lesson Plan', 'Exam Question', 'Test Question']),
   paperType: z.string().optional(),
   class: z.string().min(1, { message: 'Please select a class.' }),
@@ -81,6 +81,7 @@ export function DocumentSubmissionForm({
   });
 
   const documentTypeValue = form.watch('type');
+  const showTypeSelector = !documentType; // Only show if not pre-set
 
   useEffect(() => {
     if (documentType) {
@@ -122,6 +123,8 @@ export function DocumentSubmissionForm({
       const file = values.file[0];
       const { type } = values;
       
+      const documentTitle = values.title || file.name.replace(/\.[^/.]+$/, '');
+      
       let collectionName = 'lessonNotes';
       let status = 'Pending HOD Approval';
       let reviewer = 'HeadOfDepartment';
@@ -148,7 +151,7 @@ export function DocumentSubmissionForm({
       const teacherName = userDoc?.name || user.displayName || 'Unknown Teacher';
 
       const submissionData: any = {
-        title: values.title,
+        title: documentTitle,
         class: values.class,
         subject: values.subject,
         fileUrl: downloadURL,
@@ -159,6 +162,7 @@ export function DocumentSubmissionForm({
         submissionDate: new Date().toLocaleDateString('en-CA'),
         submittedOn: new Date(),
         reviewer: reviewer,
+        type: type,
       };
 
       if (values.paperType) {
@@ -213,42 +217,49 @@ export function DocumentSubmissionForm({
   return (
     <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4 pt-4">
-        <FormField
-          control={form.control}
-          name="title"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Document Title</FormLabel>
-              <FormControl>
-                <Input placeholder="e.g. Week 1 - Introduction to Algebra" {...field} disabled={isResubmission} />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-        <div className="grid grid-cols-2 gap-4">
+        
+        {documentType === 'Lesson Plan' && (
           <FormField
             control={form.control}
-            name="type"
+            name="title"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Document Type</FormLabel>
-                 <Select onValueChange={field.onChange} value={field.value} defaultValue={field.value} disabled={!!documentType || isResubmission}>
-                    <FormControl>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select document type" />
-                      </SelectTrigger>
-                    </FormControl>
-                    <SelectContent>
-                        <SelectItem value="Lesson Plan">Lesson Plan</SelectItem>
-                        <SelectItem value="Exam Question">Exam Question</SelectItem>
-                        <SelectItem value="Test Question">Test Question (CA)</SelectItem>
-                    </SelectContent>
-                  </Select>
+                <FormLabel>Document Title</FormLabel>
+                <FormControl>
+                  <Input placeholder="e.g. Week 1 - Introduction to Algebra" {...field} disabled={isResubmission} />
+                </FormControl>
                 <FormMessage />
               </FormItem>
             )}
           />
+        )}
+
+        <div className="grid grid-cols-2 gap-4">
+          {showTypeSelector && (
+            <FormField
+              control={form.control}
+              name="type"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Document Type</FormLabel>
+                  <Select onValueChange={field.onChange} value={field.value} defaultValue={field.value} disabled={!!documentType || isResubmission}>
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select document type" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                          <SelectItem value="Lesson Plan">Lesson Plan</SelectItem>
+                          <SelectItem value="Exam Question">Exam Question</SelectItem>
+                          <SelectItem value="Test Question">Test Question (CA)</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+          )}
+
            {(documentTypeValue === 'Test Question' || documentTypeValue === 'Exam Question') && (
             <FormField
               control={form.control}
@@ -343,7 +354,7 @@ export function DocumentSubmissionForm({
                 />
               </FormControl>
               <FormDescription>
-                {isResubmission ? 'Upload the corrected version of your document.' : 'Upload your document here. It will be routed to the correct reviewer.'}
+                {isResubmission ? 'Upload the corrected version of your document.' : 'Upload your document here. The title will be the filename if not specified.'}
               </FormDescription>
               <FormMessage />
             </FormItem>
