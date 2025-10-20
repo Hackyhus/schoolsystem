@@ -1,7 +1,7 @@
 
 'use client';
 
-import { useState } from 'react';
+import { useState, useTransition } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { MessageSquare, Send, Sparkles, User, X, Bot } from 'lucide-react';
@@ -10,6 +10,8 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { cn } from '@/lib/utils';
 import { useRole } from '@/context/role-context';
 import { Card, CardContent, CardFooter, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+import { aiEngine } from '@/ai';
+import { Loader2 } from 'lucide-react';
 
 type Message = {
     role: 'user' | 'bot';
@@ -25,19 +27,35 @@ export function SupportBot() {
     }
   ]);
   const [input, setInput] = useState('');
-  const { user } = useRole();
+  const [isAiThinking, startAiTransition] = useTransition();
+  const { user, role } = useRole();
 
   const handleSendMessage = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!input.trim()) return;
+    if (!input.trim() || !role) return;
 
     const userMessage: Message = { role: 'user', content: input };
     setMessages(prev => [...prev, userMessage]);
+    const currentInput = input;
     setInput('');
 
-    // TODO: Wire up AI logic here
-    const botMessage: Message = { role: 'bot', content: "AI response is not connected yet." };
-    setMessages(prev => [...prev, botMessage]);
+    startAiTransition(async () => {
+        try {
+            const response = await aiEngine.support.answer({
+                question: currentInput,
+                role: role,
+                history: messages.slice(-4), // Send last 4 messages for context
+            });
+
+            const botMessage: Message = { role: 'bot', content: response.answer };
+            setMessages(prev => [...prev, botMessage]);
+
+        } catch (error) {
+            console.error("AI support error:", error);
+            const errorMessage: Message = { role: 'bot', content: "Sorry, I'm having trouble connecting. Please try again in a moment." };
+            setMessages(prev => [...prev, errorMessage]);
+        }
+    });
   };
 
   return (
@@ -101,6 +119,16 @@ export function SupportBot() {
                             )}
                         </div>
                     ))}
+                    {isAiThinking && (
+                         <div className="flex items-start gap-3">
+                             <Avatar className="h-8 w-8">
+                                <AvatarFallback><Bot /></AvatarFallback>
+                             </Avatar>
+                             <div className="bg-muted rounded-lg p-3 text-sm">
+                                <Loader2 className="h-5 w-5 animate-spin" />
+                             </div>
+                         </div>
+                    )}
                 </div>
             </ScrollArea>
           </CardContent>
@@ -112,8 +140,9 @@ export function SupportBot() {
                     onChange={(e) => setInput(e.target.value)}
                     placeholder="Ask a question..."
                     className="flex-1"
+                    disabled={isAiThinking}
                 />
-                <Button type="submit" size="icon" aria-label="Send message">
+                <Button type="submit" size="icon" aria-label="Send message" disabled={isAiThinking}>
                     <Send className="h-4 w-4" />
                 </Button>
             </form>

@@ -11,6 +11,7 @@ import { analyzeFinancials } from './agents/financial/analyst';
 import { categorizeExpense } from './agents/financial/categorizer';
 import { generatePerformanceComment } from './agents/academic/performance-comment-generator';
 import { narrateData } from './agents/academic/narrator';
+import { answerSupportQuestion } from './agents/support/support-bot';
 
 export const aiEngine = {
   text: {
@@ -24,6 +25,9 @@ export const aiEngine = {
   academic: {
     generateComment: generatePerformanceComment,
     narrate: narrateData,
+  },
+  support: {
+    answer: answerSupportQuestion,
   },
   // Future AI categories will be added here.
 };
