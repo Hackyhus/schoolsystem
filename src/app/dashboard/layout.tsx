@@ -1,15 +1,46 @@
 
 'use client';
 
-import { useRouter } from 'next/navigation';
-import { useEffect } from 'react';
+import { useRouter, usePathname } from 'next/navigation';
+import { useEffect, useState } from 'react';
 
 import { DashboardHeader } from '@/components/dashboard/header';
 import { DashboardSidebar } from '@/components/dashboard/sidebar';
-import { SidebarProvider, SidebarInset, Sidebar } from '@/components/ui/sidebar';
+import { SidebarProvider } from '@/components/ui/sidebar';
 import { useRole } from '@/context/role-context';
-import { Loader2 } from 'lucide-react';
+import { Loader2, ShieldAlert } from 'lucide-react';
 import { MaintenanceBanner } from '@/components/maintenance-banner';
+import { isPathAuthorized, navConfig } from '@/lib/auth-guard';
+import { Card, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+
+function AccessDenied() {
+    const router = useRouter();
+    return (
+        <div className="flex flex-1 items-center justify-center h-full">
+            <Card className="w-full max-w-md text-center">
+                <CardHeader>
+                    <CardTitle className="flex items-center justify-center gap-2 text-3xl text-destructive">
+                        <ShieldAlert className="h-8 w-8" />
+                        Access Denied
+                    </CardTitle>
+                    <CardDescription>
+                        You do not have the necessary permissions to view this page.
+                    </CardDescription>
+                </CardHeader>
+                <CardContent>
+                    <p className="text-sm text-muted-foreground">
+                        The page you are trying to access is restricted to other user roles.
+                    </p>
+                    <Button onClick={() => router.push('/dashboard')} className="mt-6">
+                        Return to Dashboard
+                    </Button>
+                </CardContent>
+            </Card>
+        </div>
+    );
+}
+
 
 export default function DashboardLayout({
   children,
@@ -18,12 +49,21 @@ export default function DashboardLayout({
 }) {
   const { role, isLoading } = useRole();
   const router = useRouter();
+  const pathname = usePathname();
+  const [isAuthorized, setIsAuthorized] = useState(false);
 
   useEffect(() => {
-    if (!isLoading && !role) {
+    if (isLoading) return;
+
+    if (!role) {
       router.push('/');
+      return;
     }
-  }, [role, isLoading, router]);
+
+    const authorized = isPathAuthorized(pathname, role);
+    setIsAuthorized(authorized);
+
+  }, [role, isLoading, router, pathname]);
 
   if (isLoading || !role) {
     return (
@@ -73,8 +113,8 @@ export default function DashboardLayout({
                 <MaintenanceBanner />
                 <DashboardHeader />
               </div>
-              <main className="flex-1 p-4 md:p-6 lg:p-8">
-                {children}
+              <main className="flex-1 p-4 md:p-6 lg:p-8 flex flex-col">
+                {isAuthorized ? children : <AccessDenied />}
               </main>
           </div>
         </div>
