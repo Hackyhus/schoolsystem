@@ -21,9 +21,8 @@ import { useState, useTransition } from 'react';
 import { Loader2, Send, Sparkles } from 'lucide-react';
 import { useRole } from '@/context/role-context';
 import type { Announcement } from '@/lib/schema';
-import { Separator } from '@/components/ui/separator';
 import { aiEngine } from '@/ai';
-import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
 const formSchema = z.object({
   id: z.string().optional(),
@@ -44,6 +43,8 @@ export function AnnouncementForm({ initialData, onFormSubmit }: AnnouncementForm
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isAiGenerating, startAiTransition] = useTransition();
   const [aiTopic, setAiTopic] = useState('Announce a 3-day mid-term break starting next Monday.');
+  const [aiAudience, setAiAudience] = useState<'Parents' | 'Staff' | 'All Users'>('All Users');
+  const [aiTone, setAiTone] = useState<'Formal' | 'Friendly' | 'Urgent'>('Formal');
   const [aiError, setAiError] = useState('');
 
 
@@ -66,8 +67,8 @@ export function AnnouncementForm({ initialData, onFormSubmit }: AnnouncementForm
       try {
         const result = await aiEngine.text.draft({
           topic: aiTopic,
-          audience: 'All Users',
-          tone: 'Formal',
+          audience: aiAudience,
+          tone: aiTone,
         });
         if (result.draft) {
           form.setValue('content', result.draft, { shouldValidate: true });
@@ -124,15 +125,33 @@ export function AnnouncementForm({ initialData, onFormSubmit }: AnnouncementForm
             )}
         />
         
-        <div className="space-y-2 rounded-lg border p-4">
+        <div className="space-y-4 rounded-lg border p-4">
             <h3 className="text-sm font-medium">AI Content Assistant</h3>
-            <p className="text-xs text-muted-foreground">Give the AI a topic and let it draft the announcement content for you.</p>
+            <p className="text-xs text-muted-foreground">Give the AI a topic and context, and let it draft the announcement content for you.</p>
              <Textarea
                 placeholder="Enter a topic for the AI to expand on. e.g., Announce a 3-day mid-term break starting next Monday."
                 value={aiTopic}
                 onChange={(e) => setAiTopic(e.target.value)}
                 rows={2}
             />
+            <div className="grid grid-cols-2 gap-4">
+              <Select onValueChange={(value) => setAiAudience(value as any)} defaultValue={aiAudience}>
+                <SelectTrigger><SelectValue/></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="All Users">All Users</SelectItem>
+                  <SelectItem value="Parents">Parents</SelectItem>
+                  <SelectItem value="Staff">Staff</SelectItem>
+                </SelectContent>
+              </Select>
+               <Select onValueChange={(value) => setAiTone(value as any)} defaultValue={aiTone}>
+                <SelectTrigger><SelectValue/></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="Formal">Formal</SelectItem>
+                  <SelectItem value="Friendly">Friendly</SelectItem>
+                  <SelectItem value="Urgent">Urgent</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
             {aiError && <p className="text-xs text-destructive">{aiError}</p>}
             <Button type="button" onClick={handleGenerateContent} disabled={isAiGenerating} variant="outline" size="sm">
                 {isAiGenerating ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Sparkles className="mr-2 h-4 w-4" />}
