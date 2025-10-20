@@ -26,7 +26,8 @@ import {
 } from '@/components/ui/select';
 import { Input } from '@/components/ui/input';
 import { useToast } from '@/hooks/use-toast';
-import { db, storage, dbService } from '@/lib/firebase';
+import { db, storage } from '@/lib/firebase';
+import { dbService } from '@/lib/dbService';
 import { UploadCloud, Loader2 } from 'lucide-react';
 import { useRole } from '@/context/role-context';
 import { useState, useEffect } from 'react';

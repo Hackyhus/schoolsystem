@@ -21,7 +21,7 @@ import { useToast } from '@/hooks/use-toast';
 import { useRole } from '@/context/role-context';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useEffect, useState, useCallback, useTransition } from 'react';
-import { dbService } from '@/lib/firebase';
+import { dbService } from '@/lib/dbService';
 import { Bar, BarChart as BarChartRecharts, XAxis, YAxis, CartesianGrid, ResponsiveContainer } from 'recharts';
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from '@/components/ui/chart';
 import type { MockUser, MockLessonNote } from '@/lib/schema';

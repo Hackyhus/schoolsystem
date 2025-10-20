@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
@@ -6,7 +7,7 @@ import { Button } from '@/components/ui/button';
 import { Loader2, AlertCircle, ArrowLeft, Printer, Download } from 'lucide-react';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Skeleton } from '@/components/ui/skeleton';
-import { dbService } from '@/lib/firebase';
+import { dbService } from '@/lib/dbService';
 import type { Announcement, SchoolInfo } from '@/lib/schema';
 import { AnnouncementTemplate } from '@/components/dashboard/announcements/announcement-template';
 import jsPDF from 'jspdf';

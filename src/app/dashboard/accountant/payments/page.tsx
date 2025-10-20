@@ -10,7 +10,7 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
-import { dbService } from '@/lib/firebase';
+import { dbService } from '@/lib/dbService';
 import type { Invoice, Payment } from '@/lib/schema';
 import { useToast } from '@/hooks/use-toast';
 import { AlertCircle, Loader2, Search, CheckCircle, RefreshCw, Eye } from 'lucide-react';

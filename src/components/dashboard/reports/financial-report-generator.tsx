@@ -8,7 +8,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from '@/components/ui/button';
 import { DateRangePicker } from '@/components/ui/date-range-picker';
 import { useToast } from '@/hooks/use-toast';
-import { dbService } from '@/lib/firebase';
+import { dbService } from '@/lib/dbService';
 import type { Payment, Expense } from '@/lib/schema';
 import { ArrowDown, ArrowUp, BarChart, FileText, Loader2, Minus, Plus, Printer, Sparkles } from 'lucide-react';
 import { Skeleton } from '@/components/ui/skeleton';

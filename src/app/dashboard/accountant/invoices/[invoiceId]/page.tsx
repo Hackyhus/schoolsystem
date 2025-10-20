@@ -10,7 +10,7 @@ import { InvoiceTemplate } from '@/components/dashboard/invoices/invoice-templat
 import { Skeleton } from '@/components/ui/skeleton';
 import jsPDF from 'jspdf';
 import html2canvas from 'html2canvas';
-import { dbService } from '@/lib/firebase';
+import { dbService } from '@/lib/dbService';
 import type { Invoice, SchoolInfo } from '@/lib/schema';
 
 export default function IndividualInvoicePage() {

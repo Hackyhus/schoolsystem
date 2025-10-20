@@ -6,7 +6,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button";
 import { Briefcase, Loader2, RefreshCw, AlertCircle, CheckCircle } from "lucide-react";
 import { useToast } from '@/hooks/use-toast';
-import { dbService } from '@/lib/firebase';
+import { dbService } from '@/lib/dbService';
 import type { MockUser, PayrollRun } from '@/lib/schema';
 import { Skeleton } from '@/components/ui/skeleton';
 import {

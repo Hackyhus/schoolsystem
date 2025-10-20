@@ -4,7 +4,7 @@
 import { useEffect, useState, useCallback } from 'react';
 import { notFound, useParams } from 'next/navigation';
 import { doc, getDoc, updateDoc, collection, addDoc, serverTimestamp } from 'firebase/firestore';
-import { db, dbService } from '@/lib/firebase';
+import { db, dbService } from '@/lib/dbService';
 import type { MockLessonNote } from '@/lib/schema';
 import {
   Card,

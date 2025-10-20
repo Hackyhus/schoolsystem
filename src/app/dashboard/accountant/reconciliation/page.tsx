@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Upload, Loader2, AlertCircle, FileCheck2, Scale, Search } from "lucide-react";
 import { useToast } from '@/hooks/use-toast';
 import * as XLSX from 'xlsx';
-import { dbService } from '@/lib/firebase';
+import { dbService } from '@/lib/dbService';
 import type { Payment } from '@/lib/schema';
 import { addDays, differenceInDays, format } from 'date-fns';
 import {

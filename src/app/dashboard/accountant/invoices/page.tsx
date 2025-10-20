@@ -10,7 +10,7 @@ import { useToast } from "@/hooks/use-toast";
 import { useAcademicData } from '@/hooks/use-academic-data';
 import { generateInvoicesForClass } from '@/actions/invoice-actions';
 import type { Invoice } from '@/lib/schema';
-import { dbService } from '@/lib/firebase';
+import { dbService } from '@/lib/dbService';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
 import { format } from 'date-fns';

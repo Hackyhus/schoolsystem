@@ -5,7 +5,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { DollarSign, FileText, Landmark, Wallet, Eye } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useEffect, useState, useCallback } from "react";
-import { dbService } from "@/lib/firebase";
+import { dbService } from "@/lib/dbService";
 import type { Invoice, Payment, Expense, PayrollRun } from "@/lib/schema";
 import { useToast } from "@/hooks/use-toast";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";

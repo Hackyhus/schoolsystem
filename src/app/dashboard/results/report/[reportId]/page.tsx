@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState, useEffect, useCallback, useRef } from 'react';
@@ -9,7 +10,7 @@ import { ReportCardTemplate } from '@/components/dashboard/results/report-card-t
 import { Skeleton } from '@/components/ui/skeleton';
 import jsPDF from 'jspdf';
 import html2canvas from 'html2canvas';
-import { dbService } from '@/lib/firebase';
+import { dbService } from '@/lib/dbService';
 import type { ReportCard, SchoolInfo } from '@/lib/schema';
 
 export default function IndividualReportPage() {

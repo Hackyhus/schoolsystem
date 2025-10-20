@@ -10,7 +10,7 @@ import { ReceiptTemplate } from '@/components/dashboard/receipts/receipt-templat
 import { Skeleton } from '@/components/ui/skeleton';
 import jsPDF from 'jspdf';
 import html2canvas from 'html2canvas';
-import { dbService } from '@/lib/firebase';
+import { dbService } from '@/lib/dbService';
 import type { Payment, SchoolInfo } from '@/lib/schema';
 
 export default function IndividualReceiptPage() {
