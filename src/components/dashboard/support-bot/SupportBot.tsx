@@ -3,20 +3,13 @@
 
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogDescription,
-  DialogFooter,
-} from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
-import { MessageSquare, Send, Sparkles, User, X } from 'lucide-react';
+import { MessageSquare, Send, Sparkles, User, X, Bot } from 'lucide-react';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { cn } from '@/lib/utils';
 import { useRole } from '@/context/role-context';
+import { Card, CardContent, CardFooter, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 
 type Message = {
     role: 'user' | 'bot';
@@ -50,61 +43,65 @@ export function SupportBot() {
   return (
     <>
       <Button
-        className="fixed bottom-6 right-6 h-14 w-14 rounded-full shadow-lg"
+        className="fixed bottom-6 right-6 h-14 w-14 rounded-full shadow-lg z-50"
         size="icon"
-        onClick={() => setIsOpen(true)}
+        onClick={() => setIsOpen(!isOpen)}
+        aria-label="Toggle chat"
       >
-        <MessageSquare className="h-6 w-6" />
+        {isOpen ? <X className="h-6 w-6" /> : <MessageSquare className="h-6 w-6" />}
       </Button>
-      <Dialog open={isOpen} onOpenChange={setIsOpen}>
-        <DialogContent className="max-w-md p-0 flex flex-col h-[70vh]">
-          <DialogHeader className="p-4 border-b">
-            <DialogTitle className="flex items-center gap-2">
+      
+      {isOpen && (
+        <Card className="fixed bottom-24 right-6 w-full max-w-sm h-[60vh] flex flex-col z-50 shadow-2xl">
+          <CardHeader className="border-b">
+            <CardTitle className="flex items-center gap-2">
               <Sparkles className="text-primary" />
               Support Assistant
-            </DialogTitle>
-             <DialogDescription>
-              Your AI-powered guide to the InsightConnect Portal.
-            </DialogDescription>
-          </DialogHeader>
+            </CardTitle>
+             <CardDescription>
+              Your AI-powered guide to the portal.
+            </CardDescription>
+          </CardHeader>
           
-          <ScrollArea className="flex-1 px-4">
-             <div className="space-y-6">
-                {messages.map((message, index) => (
-                    <div
-                        key={index}
-                        className={cn(
-                            "flex items-start gap-3",
-                            message.role === 'user' && "justify-end"
-                        )}
-                    >
-                        {message.role === 'bot' && (
-                            <Avatar className="h-8 w-8">
-                                <AvatarFallback><Sparkles /></AvatarFallback>
-                            </Avatar>
-                        )}
-                         <div
+          <CardContent className="flex-1 p-4 overflow-hidden">
+            <ScrollArea className="h-full">
+                <div className="space-y-6">
+                    {messages.map((message, index) => (
+                        <div
+                            key={index}
                             className={cn(
-                                "max-w-[75%] rounded-lg p-3 text-sm",
-                                message.role === 'user'
-                                ? "bg-primary text-primary-foreground"
-                                : "bg-muted"
+                                "flex items-start gap-3",
+                                message.role === 'user' && "justify-end"
                             )}
                         >
-                            {message.content}
+                            {message.role === 'bot' && (
+                                <Avatar className="h-8 w-8">
+                                    <AvatarFallback><Bot /></AvatarFallback>
+                                </Avatar>
+                            )}
+                            <div
+                                className={cn(
+                                    "max-w-[75%] rounded-lg p-3 text-sm",
+                                    message.role === 'user'
+                                    ? "bg-primary text-primary-foreground"
+                                    : "bg-muted"
+                                )}
+                            >
+                                {message.content}
+                            </div>
+                            {message.role === 'user' && (
+                                <Avatar className="h-8 w-8">
+                                    <AvatarImage src={user?.photoURL || ''} />
+                                    <AvatarFallback><User /></AvatarFallback>
+                                </Avatar>
+                            )}
                         </div>
-                        {message.role === 'user' && (
-                             <Avatar className="h-8 w-8">
-                                <AvatarImage src={user?.photoURL || ''} />
-                                <AvatarFallback><User /></AvatarFallback>
-                            </Avatar>
-                        )}
-                    </div>
-                ))}
-             </div>
-          </ScrollArea>
+                    ))}
+                </div>
+            </ScrollArea>
+          </CardContent>
 
-          <DialogFooter className="p-4 border-t">
+          <CardFooter className="p-4 border-t">
             <form onSubmit={handleSendMessage} className="flex w-full items-center gap-2">
                 <Input
                     value={input}
@@ -112,13 +109,13 @@ export function SupportBot() {
                     placeholder="Ask a question..."
                     className="flex-1"
                 />
-                <Button type="submit" size="icon">
+                <Button type="submit" size="icon" aria-label="Send message">
                     <Send className="h-4 w-4" />
                 </Button>
             </form>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+          </CardFooter>
+        </Card>
+      )}
     </>
   );
 }
