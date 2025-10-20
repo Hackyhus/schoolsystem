@@ -108,7 +108,7 @@ export function HodDashboard() {
       });
 
       // Sort client-side to avoid composite index
-      notesList.sort((a, b) => (a.createdAt?.seconds || 0) - (b.createdAt?.seconds || 0));
+      notesList.sort((a, b) => (b.submittedOn?.seconds || 0) - (a.submittedOn?.seconds || 0));
 
       setNotes(notesList.slice(0, 5)); // Show recent 5
 
@@ -335,3 +335,4 @@ export function HodDashboard() {
       </div>
   );
 }
+
