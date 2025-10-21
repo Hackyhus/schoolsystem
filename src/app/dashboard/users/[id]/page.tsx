@@ -10,7 +10,7 @@ import type { MockUser } from '@/lib/schema';
 import { useRole } from '@/context/role-context';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Button } from '@/components/ui/button';
-import { ArrowLeft, Edit, FileText, User, Home, HeartPulse, Briefcase, Mail, Phone } from 'lucide-react';
+import { ArrowLeft, Edit, FileText, User, Home, HeartPulse, Briefcase, Mail, Phone, AlertCircle, Banknote } from 'lucide-react';
 import {
   Card,
   CardContent,
@@ -28,6 +28,7 @@ import { BankDetailsForm } from '@/components/dashboard/profile/bank-details-for
 import { Dialog, DialogTrigger, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { cn } from '@/lib/utils';
 import { authService } from '@/lib/authService';
+import { Alert, AlertTitle, AlertDescription } from '@/components/ui/alert';
 
 export default function UserProfilePage() {
   const params = useParams();
@@ -53,8 +54,8 @@ export default function UserProfilePage() {
         const querySnapshot = await getDocs(q);
         if (!querySnapshot.empty) {
             const userDoc = querySnapshot.docs[0];
-            const studentData = { id: userDoc.id, ...doc.data() } as MockUser;
-            setUser(studentData);
+            const userData = { id: userDoc.id, ...userDoc.data() } as MockUser;
+            setUser(userData);
         } else {
             notFound();
         }
@@ -77,11 +78,13 @@ export default function UserProfilePage() {
     setBankInfoModalOpen(false);
   };
   
-  const canEditPersonalInfo =
-    currentUserRole === 'Admin' ||
-    (user && authUser?.uid === user.id);
-
+  const isOwnProfile = user && authUser?.uid === user.id;
   const isAdmin = currentUserRole === 'Admin';
+  
+  const canEditPersonalInfo = isAdmin || isOwnProfile;
+  const canEditBankDetails = isAdmin || isOwnProfile;
+  
+  const bankDetailsMissing = !user?.salary?.bankName || !user?.salary?.accountNumber || !user?.salary?.accountName;
 
 
   if (isLoading) {
@@ -138,6 +141,16 @@ export default function UserProfilePage() {
         </CardHeader>
       </Card>
       
+      {isOwnProfile && bankDetailsMissing && (
+        <Alert variant="destructive">
+          <AlertCircle className="h-4 w-4" />
+          <AlertTitle>Action Required: Bank Details Missing</AlertTitle>
+          <AlertDescription>
+            Your bank details are incomplete. Please update them in the "Bank & Salary" section to ensure you can receive payments.
+          </AlertDescription>
+        </Alert>
+      )}
+
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <div className="space-y-6">
             <Card>
@@ -199,7 +212,7 @@ export default function UserProfilePage() {
                 <CardTitle>Bank & Salary</CardTitle>
                 <CardDescription>Financial details for salary payment.</CardDescription>
                </div>
-               {isAdmin && (
+               {canEditBankDetails && (
                     <Dialog open={bankInfoModalOpen} onOpenChange={setBankInfoModalOpen}>
                         <DialogTrigger asChild><Button variant="outline" size="sm"><Edit className="mr-2 h-4 w-4" /> Edit</Button></DialogTrigger>
                         <DialogContent>

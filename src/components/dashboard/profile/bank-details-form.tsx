@@ -134,7 +134,7 @@ export function BankDetailsForm({
                     disabled={!isAdmin}
                   />
                 </FormControl>
-                <FormMessage />
+                {!isAdmin && <FormMessage>Only an administrator can change the salary amount.</FormMessage>}
               </FormItem>
             )}
           />
