@@ -222,14 +222,14 @@ export function DashboardSidebar() {
             <Link href="/dashboard" className="flex items-center justify-center">
               <Image
                 src="/school-logo.png"
-                alt="Great Insight International Academy Logo"
+                alt="GIIA Logo"
                 width={200}
                 height={48}
                 className="w-auto h-10 group-data-[state=collapsed]:hidden"
               />
                <Image
                 src="/favicon.ico"
-                alt="Great Insight International Academy Logo"
+                alt="GIIA Logo"
                 width={32}
                 height={32}
                 className="w-auto h-8 hidden group-data-[state=collapsed]:block"
