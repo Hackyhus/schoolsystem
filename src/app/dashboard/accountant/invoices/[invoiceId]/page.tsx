@@ -64,7 +64,7 @@ export default function IndividualInvoicePage() {
   };
 
   const handleDownload = async () => {
-    const contentElement = document.getElementById('pdf-content');
+    const contentElement = document.getElementById('printable-area');
     if (!contentElement || !invoice) return;
     setIsDownloading(true);
 

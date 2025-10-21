@@ -64,7 +64,7 @@ export default function IndividualReceiptPage() {
   };
 
   const handleDownload = async () => {
-    const contentElement = document.getElementById('pdf-content');
+    const contentElement = document.getElementById('printable-area');
     if (!contentElement || !payment) return;
     setIsDownloading(true);
     
