@@ -37,9 +37,9 @@ export function BulkStaffUploadDialog({ onUploadComplete }: { onUploadComplete: 
   const { toast } = useToast();
   
   const handleDownloadTemplate = () => {
+    // Simplified to only the required fields for account creation
     const headers = [
-      "firstName", "lastName", "email", "phone", "role", "stateOfOrigin",
-      "department", "address", "gender", "dateOfBirth(YYYY-MM-DD)", "employmentDate(YYYY-MM-DD)"
+      "firstName", "lastName", "email", "phone", "role", "stateOfOrigin"
     ];
     
     const workbook = XLSX.utils.book_new();
