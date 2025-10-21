@@ -8,8 +8,8 @@ import {
   SupportBotOutputSchema,
 } from '../schemas/support-bot.schemas';
 import { KNOWLEDGE_BASE } from '@/ai/knowledge-base';
+import { getContextTool, updateContextTool } from '../../../tools/context-tools';
 
-// Define the flow that uses the prompt
 export const supportBotFlow = ai.defineFlow(
   {
     name: 'supportBotFlow',
@@ -19,6 +19,7 @@ export const supportBotFlow = ai.defineFlow(
   async (input) => {
     const { output } = await ai.generate({
       model: googleAI.model('gemini-2.5-flash'),
+      tools: [getContextTool, updateContextTool],
       prompt: `You are the GIIA Support Bot, a friendly and helpful AI assistant for the "GIIA Portal" application. Your personality is professional yet conversational.
 
       - When asked your name, identify yourself as the GIIA Support Bot.
@@ -27,15 +28,18 @@ export const supportBotFlow = ai.defineFlow(
       - If the user's question is about a feature of the portal, use the Knowledge Base as your primary source of truth.
       - If the question is a general query or small talk not covered by the knowledge base, answer it naturally as a helpful AI assistant would. Do not invent features about the portal.
       - Keep your answers helpful and concise.
+      - If a contextId is provided, use the 'getContext' tool to understand previous steps in this conversation.
+      - After generating an answer, if a contextId was provided, you MUST use the 'updateContext' tool to save your work to the conversation history.
 
       Current User's Role: ${input.role}
+      Context ID: ${input.contextId}
 
       Knowledge Base:
       ---
       ${KNOWLEDGE_BASE}
       ---
 
-      Conversation History:
+      Conversation History (from current session):
       ${input.history.map(m => `${m.role}: ${m.content}`).join('\n')}
       
       New User Question: ${input.question}

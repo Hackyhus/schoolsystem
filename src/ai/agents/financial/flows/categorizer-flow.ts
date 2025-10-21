@@ -7,6 +7,7 @@ import {
   CategorizeExpenseInputSchema,
   CategorizeExpenseOutputSchema,
 } from '../schemas/categorizer.schemas';
+import { getContextTool, updateContextTool } from '../../../tools/context-tools';
 
 export const categorizeExpenseFlow = ai.defineFlow(
   {
@@ -17,6 +18,7 @@ export const categorizeExpenseFlow = ai.defineFlow(
   async (input) => {
     const {output} = await ai.generate({
       model: googleAI.model('gemini-2.5-flash'),
+      tools: [getContextTool, updateContextTool],
       prompt: `You are an expert accountant for a school. Your task is to categorize an expense based on its description.
 
       The available categories are:
@@ -27,10 +29,14 @@ export const categorizeExpenseFlow = ai.defineFlow(
       - Marketing (e.g., adverts, flyers)
       - Capital Expenditure (e.g., buying new furniture, computers, building renovations)
       - Miscellaneous (for items that do not fit other categories)
+      
+      Context ID: ${input.contextId || 'N/A'}
 
       Expense Description: ${input.description}
 
       Based on this description, select the single most appropriate category.
+      - If a contextId is provided, you can use the 'getContext' tool to understand previous steps in this conversation.
+      - After generating the category, if a contextId was provided, you MUST use the 'updateContext' tool to save your work to the conversation history.
       `,
       output: {
         schema: CategorizeExpenseOutputSchema,

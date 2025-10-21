@@ -30,6 +30,9 @@ export function SupportBot() {
   const [isAiThinking, startAiTransition] = useTransition();
   const { user, role } = useRole();
   const scrollAreaRef = useRef<HTMLDivElement>(null);
+  
+  // Create a unique ID for this chat session
+  const [contextId] = useState(() => `support-session-${Date.now()}-${Math.random().toString(36).substring(7)}`);
 
   useEffect(() => {
     if (scrollAreaRef.current) {
@@ -52,7 +55,8 @@ export function SupportBot() {
             const response = await aiEngine.support.answer({
                 question: currentInput,
                 role: role,
-                history: messages.slice(-4), // Send last 4 messages for context
+                history: messages.slice(-4), // Send recent history for context
+                contextId: contextId, // Pass the session ID to the agent
             });
 
             const botMessage: Message = { role: 'bot', content: response.answer };

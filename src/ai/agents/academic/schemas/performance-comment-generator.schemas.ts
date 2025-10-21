@@ -10,6 +10,7 @@ const SubjectPerformanceSchema = z.object({
 export const PerformanceCommentInputSchema = z.object({
   studentName: z.string().describe("The student's first name."),
   grades: z.array(SubjectPerformanceSchema).describe("An array of the student's performance in each subject."),
+  contextId: z.string().optional().describe('An optional ID for maintaining conversation context across multiple AI calls.'),
 });
 export type PerformanceCommentInput = z.infer<typeof PerformanceCommentInputSchema>;
 

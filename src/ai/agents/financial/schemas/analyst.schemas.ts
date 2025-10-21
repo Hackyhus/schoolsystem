@@ -6,6 +6,7 @@ export const FinancialAnalysisInputSchema = z.object({
   totalExpenses: z.number().describe('The total expenses for the period.'),
   netIncome: z.number().describe('The net income (revenue - expenses) for the period.'),
   currency: z.string().default('NGN').describe('The currency code, e.g., NGN.'),
+  contextId: z.string().optional().describe('An optional ID for maintaining conversation context across multiple AI calls.'),
 });
 export type FinancialAnalysisInput = z.infer<typeof FinancialAnalysisInputSchema>;
 

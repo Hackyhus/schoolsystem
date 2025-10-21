@@ -5,6 +5,7 @@ export const EXPENSE_CATEGORIES = ['Utilities', 'Salaries', 'Maintenance', 'Supp
 
 export const CategorizeExpenseInputSchema = z.object({
   description: z.string().describe('The description of the expense item.'),
+  contextId: z.string().optional().describe('An optional ID for maintaining conversation context across multiple AI calls.'),
 });
 export type CategorizeExpenseInput = z.infer<typeof CategorizeExpenseInputSchema>;
 

@@ -10,6 +10,7 @@ export const SupportBotInputSchema = z.object({
   question: z.string().describe('The user\'s latest question.'),
   role: z.string().describe('The role of the user asking the question (e.g., "Admin", "Teacher").'),
   history: z.array(MessageSchema).describe('The recent conversation history between the user and the bot.'),
+  contextId: z.string().optional().describe('An optional ID for maintaining conversation context across multiple AI calls.'),
 });
 export type SupportBotInput = z.infer<typeof SupportBotInputSchema>;
 
