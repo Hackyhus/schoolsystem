@@ -8,6 +8,8 @@ import {
   DraftCommunicationOutputSchema,
 } from '../schemas/drafter.schemas';
 import { getDateTool } from '../../../tools/date-tool';
+import { getContextTool, updateContextTool } from '../../../tools/context-tools';
+
 
 export const draftCommunicationFlow = ai.defineFlow(
   {
@@ -18,17 +20,20 @@ export const draftCommunicationFlow = ai.defineFlow(
   async (input) => {
     const {output} = await ai.generate({
       model: googleAI.model('gemini-2.5-flash'),
-      tools: [getDateTool],
+      tools: [getDateTool, getContextTool, updateContextTool],
       prompt: `You are an expert school administrator's assistant. Your task is to draft a clear, professional, and well-structured announcement for a school portal based on the provided topic, audience, and tone.
 
       Topic: ${input.topic}
       Audience: ${input.audience}
       Tone: ${input.tone}
+      Context ID: ${input.contextId || 'N/A'}
 
+      - If a contextId is provided, you can use the 'getContext' tool to understand previous steps in this conversation.
       - If the topic mentions any dates (e.g., "next Monday", "in three days"), you MUST use the provided getDate tool to calculate the exact date.
       - Expand on the topic to create a full announcement. Ensure the language is appropriate for the specified audience and tone.
       - Structure the announcement with a clear salutation (e.g., "Dear Parents," or "Dear Students, Parents, and Staff,"), a body with separate paragraphs for clarity, and a closing (e.g., "Sincerely, The School Administration").
       - Do not add a title. The output should be only the body of the announcement.
+      - After generating the draft, if a contextId was provided, you MUST use the 'updateContext' tool to save your work to the conversation history.
       \n  Draft:`,
       output: {
         schema: DraftCommunicationOutputSchema,

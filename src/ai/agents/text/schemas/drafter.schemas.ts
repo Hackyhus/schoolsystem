@@ -13,6 +13,7 @@ export const DraftCommunicationInputSchema = z.object({
     .enum(['Formal', 'Friendly', 'Urgent'])
     .default('Formal')
     .describe('The desired tone of the communication, influencing the wording and urgency.'),
+  contextId: z.string().optional().describe('An optional ID for maintaining conversation context across multiple AI calls.'),
 });
 export type DraftCommunicationInput = z.infer<typeof DraftCommunicationInputSchema>;
 

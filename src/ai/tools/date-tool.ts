@@ -24,7 +24,7 @@ const DateToolInputSchema = z.object({
 
 export const getDateTool = ai.defineTool(
   {
-    name: 'getDateTool',
+    name: 'getDate',
     description: 'Calculates a future date based on a natural language description and returns it as a formatted string (e.g., "October 28, 2024").',
     inputSchema: DateToolInputSchema,
     outputSchema: z.string(),
