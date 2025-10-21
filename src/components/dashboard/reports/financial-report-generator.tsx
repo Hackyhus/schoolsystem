@@ -158,7 +158,7 @@ export function FinancialReportGenerator() {
                             <h2 className="text-xl font-semibold">{reportTitle}</h2>
                         </div>
                          <Card>
-                            <CardHeader className="flex flex-row items-center justify-between">
+                            <CardHeader className="flex flex-col sm:flex-row items-start sm:items-center justify-between">
                                 <div>
                                     <CardTitle>Income Statement</CardTitle>
                                     <CardDescription className="print:hidden">
@@ -235,13 +235,13 @@ export function FinancialReportGenerator() {
                                 <CardHeader><CardTitle>Income Transactions</CardTitle></CardHeader>
                                 <CardContent>
                                     <Table>
-                                        <TableHeader><TableRow><TableHead>Student</TableHead><TableHead>Amount</TableHead><TableHead>Date</TableHead></TableRow></TableHeader>
+                                        <TableHeader><TableRow><TableHead>Student</TableHead><TableHead>Amount</TableHead><TableHead className="hidden sm:table-cell">Date</TableHead></TableRow></TableHeader>
                                         <TableBody>
                                             {reportData.payments.map(p => (
                                                 <TableRow key={p.id}>
                                                     <TableCell>{p.studentName}</TableCell>
                                                     <TableCell>NGN {p.amountPaid.toLocaleString()}</TableCell>
-                                                    <TableCell>{format(new Date(p.paymentDate.seconds*1000), 'PPP')}</TableCell>
+                                                    <TableCell className="hidden sm:table-cell">{format(new Date(p.paymentDate.seconds*1000), 'PPP')}</TableCell>
                                                 </TableRow>
                                             ))}
                                             {reportData.payments.length === 0 && <TableRow><TableCell colSpan={3} className="text-center h-24">No income recorded in this period.</TableCell></TableRow>}
@@ -253,13 +253,13 @@ export function FinancialReportGenerator() {
                                 <CardHeader><CardTitle>Expense Transactions</CardTitle></CardHeader>
                                 <CardContent>
                                     <Table>
-                                        <TableHeader><TableRow><TableHead>Description</TableHead><TableHead>Amount</TableHead><TableHead>Date</TableHead></TableRow></TableHeader>
+                                        <TableHeader><TableRow><TableHead>Description</TableHead><TableHead>Amount</TableHead><TableHead className="hidden sm:table-cell">Date</TableHead></TableRow></TableHeader>
                                         <TableBody>
                                             {reportData.expenses.map(e => (
                                                 <TableRow key={e.id}>
                                                     <TableCell>{e.description}</TableCell>
                                                     <TableCell>NGN {e.amount.toLocaleString()}</TableCell>
-                                                    <TableCell>{format(new Date(e.date.seconds*1000), 'PPP')}</TableCell>
+                                                    <TableCell className="hidden sm:table-cell">{format(new Date(e.date.seconds*1000), 'PPP')}</TableCell>
                                                 </TableRow>
                                             ))}
                                              {reportData.expenses.length === 0 && <TableRow><TableCell colSpan={3} className="text-center h-24">No expenses recorded in this period.</TableCell></TableRow>}

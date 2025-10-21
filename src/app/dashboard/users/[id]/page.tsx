@@ -3,13 +3,13 @@
 
 import { useEffect, useState, useCallback } from 'react';
 import { notFound, useParams, useRouter } from 'next/navigation';
-import { dbService } from '@/lib/dbService';
-import { auth } from '@/lib/firebase';
+import { collection, query, where, getDocs, onSnapshot, doc } from 'firebase/firestore';
+import { db } from '@/lib/firebase';
 import type { MockUser } from '@/lib/schema';
 import { useRole } from '@/context/role-context';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Button } from '@/components/ui/button';
-import { ArrowLeft, Edit } from 'lucide-react';
+import { ArrowLeft, Edit, FileText, User, Home, HeartPulse, Briefcase, Mail, Phone } from 'lucide-react';
 import {
   Card,
   CardContent,
@@ -19,11 +19,14 @@ import {
 } from '@/components/ui/card';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
+import { Separator } from '@/components/ui/separator';
+import { format } from 'date-fns';
 import { PersonalInfoForm } from '@/components/dashboard/profile/personal-info-form';
 import { ProfessionalInfoForm } from '@/components/dashboard/profile/professional-info-form';
 import { BankDetailsForm } from '@/components/dashboard/profile/bank-details-form';
 import { Dialog, DialogTrigger, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { cn } from '@/lib/utils';
+import { authService } from '@/lib/authService';
 
 export default function UserProfilePage() {
   const params = useParams();
@@ -32,7 +35,7 @@ export default function UserProfilePage() {
   const [user, setUser] = useState<MockUser | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [personalInfoModalOpen, setPersonalInfoModalOpen] = useState(false);
-  const { role: currentUserRole } = useRole();
+  const { role: currentUserRole, user: authUser } = useRole();
 
   const staffId = Array.isArray(id) ? id[0] : id;
 
@@ -41,14 +44,18 @@ export default function UserProfilePage() {
     if (!staffId) return;
 
     try {
-        const userList = await dbService.getDocs<MockUser>('users', [{type: 'where', fieldPath: 'staffId', opStr: '==', value: staffId}]);
+        const usersRef = collection(db, 'users');
+        const q = query(usersRef, where('staffId', '==', staffId));
 
-        if (userList.length > 0) {
-            setUser(userList[0]);
+        const querySnapshot = await getDocs(q);
+        if (!querySnapshot.empty) {
+            const userDoc = querySnapshot.docs[0];
+            const studentData = { id: userDoc.id, ...userDoc.data() } as MockUser;
+            setUser(studentData);
         } else {
             notFound();
         }
-    } catch (error) {
+    } catch(error) {
         console.error("Error fetching user by staffId:", error);
         notFound();
     } finally {
@@ -67,7 +74,7 @@ export default function UserProfilePage() {
   
   const canEditPersonalInfo =
     currentUserRole === 'Admin' ||
-    (user && auth.currentUser?.uid === user.id);
+    (user && authUser?.uid === user.id);
 
   const isAdmin = currentUserRole === 'Admin';
 
@@ -118,7 +125,7 @@ export default function UserProfilePage() {
             </Avatar>
             <div className="flex-1">
                 <CardTitle className="text-3xl">{user.name}</CardTitle>
-                <div className={cn("text-sm text-muted-foreground", "flex items-center justify-center gap-2 md:justify-start md:flex-row flex-col")}>
+                <div className={cn("text-sm text-muted-foreground mt-1", "flex items-center justify-center gap-2 md:justify-start md:flex-row flex-col")}>
                   <span>{user.email}</span> <Badge variant="outline">{user.role}</Badge>
                 </div>
             </div>
@@ -133,7 +140,7 @@ export default function UserProfilePage() {
                      <DialogHeader>
                         <DialogTitle>Edit Personal Information</DialogTitle>
                         <DialogDescription>
-                            Request a change to your personal information. An admin will approve it.
+                            Update your name, phone number, and profile picture.
                         </DialogDescription>
                      </DialogHeader>
                       <PersonalInfoForm user={user} onUpdate={handleUpdate} />

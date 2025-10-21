@@ -135,12 +135,12 @@ export default function IndividualReceiptPage() {
                 <ArrowLeft className="mr-2 h-4 w-4" />
                 Back to Payments
             </Button>
-            <div className="flex gap-2">
-              <Button onClick={handlePrint} variant="outline">
+            <div className="flex flex-col sm:flex-row gap-2">
+              <Button onClick={handlePrint} variant="outline" className="w-full sm:w-auto">
                   <Printer className="mr-2 h-4 w-4" />
                   Print
               </Button>
-              <Button onClick={handleDownload} size="lg" disabled={isDownloading}>
+              <Button onClick={handleDownload} size="lg" disabled={isDownloading} className="w-full sm:w-auto">
                   {isDownloading ? (
                       <>
                           <Loader2 className="mr-2 h-4 w-4 animate-spin" />

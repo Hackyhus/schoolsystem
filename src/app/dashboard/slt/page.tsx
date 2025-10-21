@@ -21,7 +21,7 @@ import { dbService } from '@/lib/dbService';
 import type { MockLessonNote, Payment, Expense } from '@/lib/schema';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from '@/components/ui/chart';
-import { Bar, BarChart, CartesianGrid, ResponsiveContainer, XAxis, YAxis } from 'recharts';
+import { Bar, BarChart, CartesianGrid, ResponsiveContainer, XAxis, YAxis, AreaChart, Area } from 'recharts';
 import { Badge } from '@/components/ui/badge';
 import { formatDistanceToNow } from 'date-fns';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -40,25 +40,33 @@ type SubmissionStatus = {
     'Exam Questions': number;
 };
 
+const financialData = [
+  { name: 'Revenue', value: 0, fill: 'hsl(var(--chart-2))' },
+  { name: 'Expenses', value: 0, fill: 'hsl(var(--destructive))' },
+];
+
 export default function SltPage() {
   const { toast } = useToast();
   const [isLoading, setIsLoading] = useState(true);
   const [stats, setStats] = useState<DashboardStats | null>(null);
   const [submissionStatus, setSubmissionStatus] = useState<SubmissionStatus[]>([]);
   const [recentNotes, setRecentNotes] = useState<MockLessonNote[]>([]);
+  const [financeChartData, setFinanceChartData] = useState(financialData);
 
   const fetchData = useCallback(async () => {
     setIsLoading(true);
     try {
-        const [studentCount, staffCount, payments, lessonNotes, examQuestions] = await Promise.all([
+        const [studentCount, staffCount, payments, expenses, lessonNotes, examQuestions] = await Promise.all([
             dbService.getCountFromServer('students', [{ type: 'where', fieldPath: 'status', opStr: '==', value: 'Active' }]),
             dbService.getCountFromServer('users', [{ type: 'where', fieldPath: 'status', opStr: '==', value: 'active' }]),
             dbService.getDocs<Payment>('payments'),
+            dbService.getDocs<Expense>('expenses'),
             dbService.getDocs<MockLessonNote>('lessonNotes'),
             dbService.getDocs<MockLessonNote>('examQuestions'),
         ]);
 
         const termRevenue = payments.reduce((sum, p) => sum + p.amountPaid, 0);
+        const termExpenses = expenses.reduce((sum, e) => sum + e.amount, 0);
 
         const pendingLessonNotes = lessonNotes.filter(n => n.status.includes('Pending')).length;
         const pendingExamQuestions = examQuestions.filter(q => q.status.includes('Pending')).length;
@@ -80,6 +88,11 @@ export default function SltPage() {
         
         const sortedNotes = lessonNotes.sort((a,b) => (b.submittedOn?.seconds || 0) - (a.submittedOn?.seconds || 0));
         setRecentNotes(sortedNotes.slice(0, 5));
+        
+        setFinanceChartData([
+            { name: 'Revenue', value: termRevenue, fill: 'hsl(var(--chart-2))' },
+            { name: 'Expenses', value: termExpenses, fill: 'hsl(var(--destructive))' },
+        ])
 
     } catch (error) {
       console.error("Failed to fetch SLT dashboard data:", error);
@@ -116,7 +129,7 @@ export default function SltPage() {
       </div>
 
        <Tabs defaultValue="overview">
-        <TabsList>
+        <TabsList className="grid w-full grid-cols-2 md:w-[400px]">
             <TabsTrigger value="overview">Overview</TabsTrigger>
             <TabsTrigger value="assignments">Assignments</TabsTrigger>
         </TabsList>
@@ -170,9 +183,9 @@ export default function SltPage() {
                         <TableHeader>
                             <TableRow>
                                 <TableHead>Teacher</TableHead>
-                                <TableHead>Subject</TableHead>
+                                <TableHead className="hidden sm:table-cell">Subject</TableHead>
                                 <TableHead>Status</TableHead>
-                                <TableHead>Submitted</TableHead>
+                                <TableHead className="hidden md:table-cell">Submitted</TableHead>
                             </TableRow>
                         </TableHeader>
                         <TableBody>
@@ -186,9 +199,9 @@ export default function SltPage() {
                                 recentNotes.map(note => (
                                     <TableRow key={note.id}>
                                         <TableCell>{note.teacherName}</TableCell>
-                                        <TableCell>{note.subject}</TableCell>
+                                        <TableCell className="hidden sm:table-cell">{note.subject}</TableCell>
                                         <TableCell><Badge variant={statusVariant(note.status)}>{note.status}</Badge></TableCell>
-                                        <TableCell className="text-xs text-muted-foreground">
+                                        <TableCell className="text-xs text-muted-foreground hidden md:table-cell">
                                             {note.submittedOn ? formatDistanceToNow(new Date(note.submittedOn.seconds * 1000), { addSuffix: true }) : 'N/A'}
                                         </TableCell>
                                     </TableRow>
@@ -204,19 +217,18 @@ export default function SltPage() {
                 </Card>
                 <Card className="lg:col-span-2">
                     <CardHeader>
-                        <CardTitle>Academic Submissions</CardTitle>
-                        <CardDescription>A comparison of pending vs. approved documents.</CardDescription>
+                        <CardTitle>Financial Summary</CardTitle>
+                        <CardDescription>A quick look at term revenue vs. expenses.</CardDescription>
                     </CardHeader>
                     <CardContent>
                         <ChartContainer config={{}} className="w-full h-64">
                             <ResponsiveContainer>
-                                <BarChart data={submissionStatus} layout="vertical" margin={{ left: 10 }}>
+                                <BarChart data={financeChartData} layout="vertical" margin={{ left: 10 }}>
                                     <CartesianGrid horizontal={false} />
-                                    <YAxis type="category" dataKey="name" tickLine={false} axisLine={false} tickMargin={10} />
+                                    <YAxis type="category" dataKey="name" tickLine={false} axisLine={false} tickMargin={10} width={60}/>
                                     <XAxis type="number" hide />
-                                    <ChartTooltip content={<ChartTooltipContent />} />
-                                    <Bar dataKey="Lesson Plans" fill="hsl(var(--chart-1))" radius={4} stackId="a" />
-                                    <Bar dataKey="Exam Questions" fill="hsl(var(--chart-2))" radius={4} stackId="a" />
+                                    <ChartTooltip cursor={false} content={<ChartTooltipContent formatter={(value) => `NGN ${Number(value).toLocaleString()}`} />} />
+                                    <Bar dataKey="value" radius={5} />
                                 </BarChart>
                             </ResponsiveContainer>
                         </ChartContainer>

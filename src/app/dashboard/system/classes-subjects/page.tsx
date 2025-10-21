@@ -294,101 +294,102 @@ export default function ClassesSubjectsPage() {
                 </p>
             </div>
             
-             <Card>
-                <CardHeader>
-                    <CardTitle>Subjects by Department</CardTitle>
-                    <CardDescription>Add or remove subjects within each academic department.</CardDescription>
-                </CardHeader>
-                <CardContent className="space-y-6">
-                    {departments.map(dept => (
-                        <div key={dept.id}>
-                            <h3 className="font-semibold mb-2">{dept.name}</h3>
-                            <div className="flex flex-wrap gap-2 items-center">
-                                {subjectsByDept[dept.id]?.map(s => (
-                                    <Badge key={s.id} variant="secondary" className="flex gap-2 items-center">
-                                        <span>{s.name}</span>
-                                        <button onClick={() => handleRemoveItem('subject', s)}><X className="h-3 w-3" /></button>
-                                    </Badge>
-                                )) || <p className="text-xs text-muted-foreground">No subjects added yet.</p>}
+             <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                 <Card>
+                    <CardHeader>
+                        <CardTitle>Subjects by Department</CardTitle>
+                        <CardDescription>Add or remove subjects within each academic department.</CardDescription>
+                    </CardHeader>
+                    <CardContent className="space-y-6">
+                        {departments.map(dept => (
+                            <div key={dept.id}>
+                                <h3 className="font-semibold mb-2">{dept.name}</h3>
+                                <div className="flex flex-wrap gap-2 items-center">
+                                    {subjectsByDept[dept.id]?.map(s => (
+                                        <Badge key={s.id} variant="secondary" className="flex gap-2 items-center">
+                                            <span>{s.name}</span>
+                                            <button onClick={() => handleRemoveItem('subject', s)}><X className="h-3 w-3" /></button>
+                                        </Badge>
+                                    )) || <p className="text-xs text-muted-foreground">No subjects added yet.</p>}
+                                </div>
                             </div>
-                        </div>
-                    ))}
-                    <Separator />
-                     <Dialog open={isSubjectModalOpen} onOpenChange={setIsSubjectModalOpen}>
-                        <DialogTrigger asChild>
-                            <Button size="sm" variant="outline"><PlusCircle className="mr-2 h-4 w-4" /> Add Subject</Button>
-                        </DialogTrigger>
-                        <DialogContent>
-                            <DialogHeader><DialogTitle>Add New Subject</DialogTitle></DialogHeader>
-                            <div className="space-y-4 py-4">
-                                <Input placeholder="e.g., Further Mathematics" value={newItemName} onChange={(e) => setNewItemName(e.target.value)} />
-                                <Select onValueChange={setSelectedDepartmentForNewSubject} value={selectedDepartmentForNewSubject}>
-                                    <SelectTrigger><SelectValue placeholder="Select a department" /></SelectTrigger>
-                                    <SelectContent>
-                                        {departments.map(d => <SelectItem key={d.id} value={d.id}>{d.name}</SelectItem>)}
-                                    </SelectContent>
-                                </Select>
-                                <Button onClick={handleAddSubject} className="w-full">Add Subject</Button>
-                            </div>
-                        </DialogContent>
-                    </Dialog>
-                </CardContent>
-            </Card>
+                        ))}
+                        <Separator />
+                         <Dialog open={isSubjectModalOpen} onOpenChange={setIsSubjectModalOpen}>
+                            <DialogTrigger asChild>
+                                <Button size="sm" variant="outline"><PlusCircle className="mr-2 h-4 w-4" /> Add Subject</Button>
+                            </DialogTrigger>
+                            <DialogContent>
+                                <DialogHeader><DialogTitle>Add New Subject</DialogTitle></DialogHeader>
+                                <div className="space-y-4 py-4">
+                                    <Input placeholder="e.g., Further Mathematics" value={newItemName} onChange={(e) => setNewItemName(e.target.value)} />
+                                    <Select onValueChange={setSelectedDepartmentForNewSubject} value={selectedDepartmentForNewSubject}>
+                                        <SelectTrigger><SelectValue placeholder="Select a department" /></SelectTrigger>
+                                        <SelectContent>
+                                            {departments.map(d => <SelectItem key={d.id} value={d.id}>{d.name}</SelectItem>)}
+                                        </SelectContent>
+                                    </Select>
+                                    <Button onClick={handleAddSubject} className="w-full">Add Subject</Button>
+                                </div>
+                            </DialogContent>
+                        </Dialog>
+                    </CardContent>
+                </Card>
 
-            <Card>
-                <CardHeader className="flex flex-row items-center justify-between">
-                    <div>
-                        <CardTitle>Manage Classes &amp; Assignments</CardTitle>
-                        <CardDescription>View all classes and configure their teachers and subjects.</CardDescription>
-                    </div>
-                     <Dialog open={isClassModalOpen} onOpenChange={setIsClassModalOpen}>
-                        <DialogTrigger asChild>
-                            <Button size="sm"><PlusCircle className="mr-2 h-4 w-4" /> Add Class</Button>
-                        </DialogTrigger>
-                        <DialogContent>
-                            <DialogHeader><DialogTitle>Add New Class</DialogTitle></DialogHeader>
-                            <div className="space-y-4 py-4">
-                                <Input placeholder="e.g., SS 3" value={newItemName} onChange={(e) => setNewItemName(e.target.value)} />
-                                <Button onClick={handleAddClass} className="w-full">Add Class</Button>
-                            </div>
-                        </DialogContent>
-                    </Dialog>
-                </CardHeader>
-                <CardContent>
-                    <Table>
-                        <TableHeader>
-                            <TableRow>
-                                <TableHead>Class Name</TableHead>
-                                <TableHead>Class Teacher</TableHead>
-                                <TableHead>Subjects Offered</TableHead>
-                                <TableHead className="text-right">Action</TableHead>
-                            </TableRow>
-                        </TableHeader>
-                        <TableBody>
-                            {isLoading ? (
-                                Array.from({ length: 3 }).map((_, i) => (
-                                    <TableRow key={i}>
-                                        <TableCell><Skeleton className="h-5 w-24" /></TableCell>
-                                        <TableCell><Skeleton className="h-5 w-32" /></TableCell>
-                                        <TableCell><Skeleton className="h-5 w-12" /></TableCell>
-                                        <TableCell className="text-right"><Skeleton className="ml-auto h-8 w-8" /></TableCell>
-                                    </TableRow>
-                                ))
-                            ) : classDetails.map((c) => (
-                                <TableRow key={c.id}>
-                                    <TableCell className="font-medium">{c.name}</TableCell>
-                                    <TableCell>{c.teacherName}</TableCell>
-                                    <TableCell>{c.subjects?.length || 0}</TableCell>
-                                    <TableCell className="text-right space-x-2">
-                                        <Button variant="outline" size="sm" onClick={() => setEditingClass(c)}><Edit className="mr-2 h-4 w-4" />Configure</Button>
-                                        <Button variant="ghost" size="icon" onClick={() => handleRemoveItem('class', c)}><Trash2 className="h-4 w-4" /></Button>
-                                    </TableCell>
+                <Card>
+                    <CardHeader className="flex flex-row items-center justify-between">
+                        <div>
+                            <CardTitle>Manage Classes &amp; Assignments</CardTitle>
+                            <CardDescription>View all classes and configure their teachers and subjects.</CardDescription>
+                        </div>
+                         <Dialog open={isClassModalOpen} onOpenChange={setIsClassModalOpen}>
+                            <DialogTrigger asChild>
+                                <Button size="sm"><PlusCircle className="mr-2 h-4 w-4" /> Add Class</Button>
+                            </DialogTrigger>
+                            <DialogContent>
+                                <DialogHeader><DialogTitle>Add New Class</DialogTitle></DialogHeader>
+                                <div className="space-y-4 py-4">
+                                    <Input placeholder="e.g., SS 3" value={newItemName} onChange={(e) => setNewItemName(e.target.value)} />
+                                    <Button onClick={handleAddClass} className="w-full">Add Class</Button>
+                                </div>
+                            </DialogContent>
+                        </Dialog>
+                    </CardHeader>
+                    <CardContent>
+                        <Table>
+                            <TableHeader>
+                                <TableRow>
+                                    <TableHead>Class Name</TableHead>
+                                    <TableHead className="hidden sm:table-cell">Class Teacher</TableHead>
+                                    <TableHead className="text-center">Subjects</TableHead>
+                                    <TableHead className="text-right">Action</TableHead>
                                 </TableRow>
-                            ))}
-                        </TableBody>
-                    </Table>
-                </CardContent>
-            </Card>
+                            </TableHeader>
+                            <TableBody>
+                                {isLoading ? (
+                                    Array.from({ length: 3 }).map((_, i) => (
+                                        <TableRow key={i}>
+                                            <TableCell><Skeleton className="h-5 w-24" /></TableCell>
+                                            <TableCell className="hidden sm:table-cell"><Skeleton className="h-5 w-32" /></TableCell>
+                                            <TableCell className="text-center"><Skeleton className="h-5 w-12 mx-auto" /></TableCell>
+                                            <TableCell className="text-right"><Skeleton className="ml-auto h-8 w-24" /></TableCell>
+                                        </TableRow>
+                                    ))
+                                ) : classDetails.map((c) => (
+                                    <TableRow key={c.id}>
+                                        <TableCell className="font-medium">{c.name}</TableCell>
+                                        <TableCell className="hidden sm:table-cell">{c.teacherName}</TableCell>
+                                        <TableCell className="text-center">{c.subjects?.length || 0}</TableCell>
+                                        <TableCell className="text-right space-x-2">
+                                            <Button variant="outline" size="sm" onClick={() => setEditingClass(c)}><Edit className="mr-2 h-4 w-4" />Configure</Button>
+                                        </TableCell>
+                                    </TableRow>
+                                ))}
+                            </TableBody>
+                        </Table>
+                    </CardContent>
+                </Card>
+             </div>
         </div>
     );
 }
