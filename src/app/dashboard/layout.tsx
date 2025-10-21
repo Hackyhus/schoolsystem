@@ -42,19 +42,29 @@ function AccessDenied() {
     );
 }
 
+const AuthLoader = () => (
+    <div className="flex flex-1 items-center justify-center h-full">
+        <div className="flex flex-col items-center gap-4">
+             <Loader2 className="h-8 w-8 animate-spin text-primary" />
+             <p className="text-muted-foreground">Verifying permissions...</p>
+        </div>
+    </div>
+);
+
 
 export default function DashboardLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
-  const { role, isLoading } = useRole();
+  const { role, isLoading: isRoleLoading } = useRole();
   const router = useRouter();
   const pathname = usePathname();
   const [isAuthorized, setIsAuthorized] = useState(false);
+  const [isCheckingAuth, setIsCheckingAuth] = useState(true);
 
   useEffect(() => {
-    if (isLoading) return;
+    if (isRoleLoading) return;
 
     if (!role) {
       router.push('/');
@@ -63,10 +73,11 @@ export default function DashboardLayout({
 
     const authorized = isPathAuthorized(pathname, role);
     setIsAuthorized(authorized);
+    setIsCheckingAuth(false);
 
-  }, [role, isLoading, router, pathname]);
+  }, [role, isRoleLoading, router, pathname]);
 
-  if (isLoading || !role) {
+  if (isRoleLoading || !role) {
     return (
       <div className="flex h-screen w-full flex-col items-center justify-center bg-background gap-4">
         <Loader2 className="h-12 w-12 animate-spin text-primary" />
@@ -115,7 +126,7 @@ export default function DashboardLayout({
                 <DashboardHeader />
               </div>
               <main className="flex-1 p-4 md:p-6 lg:p-8 flex flex-col">
-                {isAuthorized ? children : <AccessDenied />}
+                {isCheckingAuth ? <AuthLoader /> : (isAuthorized ? children : <AccessDenied />)}
               </main>
           </div>
         </div>
