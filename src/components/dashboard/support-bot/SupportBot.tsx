@@ -115,7 +115,7 @@ export function SupportBot() {
                             )}
                             <div
                                 className={cn(
-                                    "max-w-[75%] rounded-lg p-3 text-sm",
+                                    "max-w-[75%] rounded-lg p-3 text-sm whitespace-pre-wrap", // Added whitespace-pre-wrap
                                     message.role === 'user'
                                     ? "bg-primary text-primary-foreground"
                                     : "bg-muted"
@@ -154,7 +154,7 @@ export function SupportBot() {
                     className="flex-1"
                     disabled={isAiThinking}
                 />
-                <Button type="submit" size="icon" aria-label="Send message" disabled={isAiThinking}>
+                <Button type="submit" size="icon" aria-label="Send message" disabled={isAiThinking || !input.trim()}>
                     <Send className="h-4 w-4" />
                 </Button>
             </form>
