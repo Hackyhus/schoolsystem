@@ -5,7 +5,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button";
 import { Download, Upload, ServerCrash, RefreshCw } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
-import { dbService } from "@/lib/firebase";
+import { dbService } from '@/lib/dbService';
 
 export default function DatabasePage() {
     const { toast } = useToast();

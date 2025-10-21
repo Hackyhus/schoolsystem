@@ -5,7 +5,7 @@ import { useRole } from '@/context/role-context';
 import { useRouter } from 'next/navigation';
 import { useEffect } from 'react';
 import { Skeleton } from '@/components/ui/skeleton';
-import { dbService } from '@/lib/firebase';
+import { dbService } from '@/lib/dbService';
 
 export default function ProfilePage() {
     const { user, isLoading } = useRole();

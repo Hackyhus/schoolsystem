@@ -33,10 +33,10 @@ import {
   DialogTitle,
   DialogTrigger,
 } from '@/components/ui/dialog';
-import { AddLessonNoteForm } from '../lesson-notes/add-lesson-note-form';
+import { DocumentSubmissionForm } from '../lesson-notes/add-lesson-note-form';
 import { Skeleton } from '@/components/ui/skeleton';
 import { ChartContainer, ChartTooltip, ChartTooltipContent, ChartLegend, ChartLegendContent } from '@/components/ui/chart';
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, AreaChart, Area } from 'recharts';
+import { LineChart, Line, XAxis, YAxis, CartesianGrid, AreaChart, Area, ResponsiveContainer } from 'recharts';
 
 const classPerformanceData = [
   { month: 'Jan', average: 0 },
@@ -250,13 +250,15 @@ export function TeacherDashboard() {
                 </CardHeader>
                 <CardContent>
                     <ChartContainer config={chartConfig} className="h-[250px] w-full">
-                        <LineChart data={classPerformanceData} margin={{ top: 5, right: 10, left: -20, bottom: 0 }}>
-                            <CartesianGrid vertical={false} />
-                            <XAxis dataKey="month" tickLine={false} axisLine={false} tickMargin={8} />
-                            <YAxis domain={[60, 90]} tickFormatter={(value) => `${value}%`} />
-                            <ChartTooltip content={<ChartTooltipContent />} />
-                            <Line type="monotone" dataKey="average" stroke="var(--color-average)" strokeWidth={2} dot={true} />
-                        </LineChart>
+                         <ResponsiveContainer>
+                            <LineChart data={classPerformanceData} margin={{ top: 5, right: 10, left: -20, bottom: 0 }}>
+                                <CartesianGrid vertical={false} />
+                                <XAxis dataKey="month" tickLine={false} axisLine={false} tickMargin={8} />
+                                <YAxis domain={[60, 90]} tickFormatter={(value) => `${value}%`} />
+                                <ChartTooltip content={<ChartTooltipContent />} />
+                                <Line type="monotone" dataKey="average" stroke="var(--color-average)" strokeWidth={2} dot={true} />
+                            </LineChart>
+                         </ResponsiveContainer>
                     </ChartContainer>
                 </CardContent>
             </Card>
@@ -281,7 +283,7 @@ export function TeacherDashboard() {
                                 Select the class, subject, document type, and upload your file. It will be routed to the correct reviewer.
                                 </DialogDescription>
                             </DialogHeader>
-                            <AddLessonNoteForm onNoteAdded={handleSubmissionAdded} />
+                            <DocumentSubmissionForm onNoteAdded={handleSubmissionAdded} />
                         </DialogContent>
                     </Dialog>
                     <Button asChild variant="outline" size="lg">
@@ -299,13 +301,15 @@ export function TeacherDashboard() {
                 <CardContent>
                     {isLoading ? ( <Skeleton className="h-[250px] w-full" /> ) : totalSubmissions > 0 ? (
                     <ChartContainer config={chartConfig} className="h-[250px] w-full">
-                        <AreaChart data={submissionHistory} margin={{ top: 5, right: 10, left: -10, bottom: 0 }}>
-                            <CartesianGrid vertical={false} />
-                            <XAxis dataKey="month" tickLine={false} axisLine={false} tickMargin={8} fontSize={12}/>
-                            <YAxis allowDecimals={false} />
-                            <ChartTooltip content={<ChartTooltipContent />} />
-                            <Area type="monotone" dataKey="submitted" fill="var(--color-submitted)" fillOpacity={0.4} stroke="var(--color-submitted)" />
-                        </AreaChart>
+                        <ResponsiveContainer>
+                            <AreaChart data={submissionHistory} margin={{ top: 5, right: 10, left: -10, bottom: 0 }}>
+                                <CartesianGrid vertical={false} />
+                                <XAxis dataKey="month" tickLine={false} axisLine={false} tickMargin={8} fontSize={12}/>
+                                <YAxis allowDecimals={false} />
+                                <ChartTooltip content={<ChartTooltipContent />} />
+                                <Area type="monotone" dataKey="submitted" fill="var(--color-submitted)" fillOpacity={0.4} stroke="var(--color-submitted)" />
+                            </AreaChart>
+                        </ResponsiveContainer>
                     </ChartContainer>
                     ) : (
                         <div className="flex h-[250px] items-center justify-center text-center text-muted-foreground">
