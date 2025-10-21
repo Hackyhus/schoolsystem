@@ -60,8 +60,8 @@ export default function DashboardLayout({
   const { role, isLoading: isRoleLoading } = useRole();
   const router = useRouter();
   const pathname = usePathname();
-  const [isAuthorized, setIsAuthorized] = useState(false);
-  const [isCheckingAuth, setIsCheckingAuth] = useState(true);
+  const [isAuthorized, setIsAuthorized] = useState(true); // Temporarily set to true
+  const [isCheckingAuth, setIsCheckingAuth] = useState(false); // Temporarily set to false
 
   useEffect(() => {
     if (isRoleLoading) return;
@@ -71,9 +71,13 @@ export default function DashboardLayout({
       return;
     }
 
-    const authorized = isPathAuthorized(pathname, role);
-    setIsAuthorized(authorized);
-    setIsCheckingAuth(false);
+    // Temporarily disabled authorization check
+    // const authorized = isPathAuthorized(pathname, role);
+    // setIsAuthorized(authorized);
+    // setIsCheckingAuth(false);
+    
+    // To re-enable auth guard, uncomment the lines above and set the initial states of
+    // isAuthorized to false and isCheckingAuth to true.
 
   }, [role, isRoleLoading, router, pathname]);
 
