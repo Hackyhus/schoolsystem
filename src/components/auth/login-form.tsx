@@ -112,10 +112,8 @@ export function LoginForm() {
         let description = 'An unexpected error occurred.';
         if (error.code === 'auth/user-not-found') {
             description = 'No user found with that ID or Email.';
-        } else if (error.code === 'auth/wrong-password') {
+        } else if (error.code === 'auth/wrong-password' || error.code === 'auth/invalid-credential') {
             description = 'Incorrect password. Please try again.';
-        } else if (error.code === 'auth/invalid-credential') {
-             description = 'Invalid credentials provided.';
         }
        toast({
         variant: 'destructive',

@@ -9,7 +9,7 @@ import type { MockUser } from '@/lib/schema';
 type FileMetadata = {
   name: string;
   title: string;
-  type: 'Lesson Plan' | 'Exam Question';
+  type: 'Lesson Plan' | 'Exam Question' | 'Test Question';
   class: string;
   subject: string;
 };
@@ -38,9 +38,19 @@ export async function bulkUploadDocuments(formData: FormData) {
 
       if (!file) continue;
 
-      const collectionName = meta.type === 'Lesson Plan' ? 'lessonNotes' : 'examQuestions';
-      const status = meta.type === 'Lesson Plan' ? 'Pending HOD Approval' : 'Pending Review';
-      const reviewer = meta.type === 'Lesson Plan' ? 'HeadOfDepartment' : 'Exam Officer';
+      let collectionName = 'lessonNotes';
+      let status = 'Pending HOD Approval';
+      let reviewer = 'HeadOfDepartment';
+
+      if (meta.type === 'Exam Question') {
+        collectionName = 'examQuestions';
+        status = 'Pending Review';
+        reviewer = 'Exam Officer';
+      } else if (meta.type === 'Test Question') {
+        collectionName = 'testQuestions';
+        status = 'Pending Review';
+        reviewer = 'Exam Officer';
+      }
 
       const { downloadURL, storagePath } = await storageService.uploadFile(
         `${collectionName}/${userId}/${Date.now()}-${file.name}`,
@@ -59,6 +69,7 @@ export async function bulkUploadDocuments(formData: FormData) {
         submissionDate: new Date().toLocaleDateString('en-CA'),
         submittedOn: serverTimestamp(),
         reviewer: reviewer,
+        type: meta.type,
       };
 
       batch.set(collectionName, null, newDocData);

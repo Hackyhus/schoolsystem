@@ -95,6 +95,7 @@ export function HodDashboard() {
         setStats({ pending: 0, approved: 0, rejected: 0, staffCount: 0 });
         setNotes([]);
         setSubmissionStatusData([]);
+        setStaff([]);
         setIsLoading(false);
         return;
       }
@@ -122,18 +123,13 @@ export function HodDashboard() {
         { name: 'Rejected', value: rejected, fill: 'hsl(var(--destructive))' },
       ]);
 
-
-      // In a real app, this should filter by the HOD's department
-      const staffQuery = query(collection(db, 'users'), where('role', '==', 'Teacher'), where('department', '==', hodUser.department));
-      const staffSnapshot = await getDocs(staffQuery);
-      const staffList = staffSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as unknown as MockUser));
-      setStaff(staffList.slice(0, 5));
+      setStaff(departmentTeachers);
       
       setStats({
         pending,
         approved,
         rejected,
-        staffCount: staffList.length,
+        staffCount: departmentTeachers.length,
       });
 
     } catch (error) {
