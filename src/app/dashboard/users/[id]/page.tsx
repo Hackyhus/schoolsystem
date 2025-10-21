@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import { useEffect, useState, useCallback } from 'react';
@@ -35,6 +36,8 @@ export default function UserProfilePage() {
   const [user, setUser] = useState<MockUser | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [personalInfoModalOpen, setPersonalInfoModalOpen] = useState(false);
+  const [profInfoModalOpen, setProfInfoModalOpen] = useState(false);
+  const [bankInfoModalOpen, setBankInfoModalOpen] = useState(false);
   const { role: currentUserRole, user: authUser } = useRole();
 
   const staffId = Array.isArray(id) ? id[0] : id;
@@ -50,7 +53,7 @@ export default function UserProfilePage() {
         const querySnapshot = await getDocs(q);
         if (!querySnapshot.empty) {
             const userDoc = querySnapshot.docs[0];
-            const studentData = { id: userDoc.id, ...userDoc.data() } as MockUser;
+            const studentData = { id: userDoc.id, ...doc.data() } as MockUser;
             setUser(studentData);
         } else {
             notFound();
@@ -70,6 +73,8 @@ export default function UserProfilePage() {
   const handleUpdate = () => {
     fetchUser(); // Re-fetch to ensure data is fresh
     setPersonalInfoModalOpen(false);
+    setProfInfoModalOpen(false);
+    setBankInfoModalOpen(false);
   };
   
   const canEditPersonalInfo =
@@ -129,24 +134,6 @@ export default function UserProfilePage() {
                   <span>{user.email}</span> <Badge variant="outline">{user.role}</Badge>
                 </div>
             </div>
-             {canEditPersonalInfo && (
-               <Dialog open={personalInfoModalOpen} onOpenChange={setPersonalInfoModalOpen}>
-                  <DialogTrigger asChild>
-                     <Button variant="outline">
-                        <Edit className="mr-2 h-4 w-4" /> Edit Personal Details
-                     </Button>
-                  </DialogTrigger>
-                  <DialogContent>
-                     <DialogHeader>
-                        <DialogTitle>Edit Personal Information</DialogTitle>
-                        <DialogDescription>
-                            Update your name, phone number, and profile picture.
-                        </DialogDescription>
-                     </DialogHeader>
-                      <PersonalInfoForm user={user} onUpdate={handleUpdate} />
-                  </DialogContent>
-               </Dialog>
-              )}
             </div>
         </CardHeader>
       </Card>
@@ -154,26 +141,46 @@ export default function UserProfilePage() {
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <div className="space-y-6">
             <Card>
-                <CardHeader>
-                   <CardTitle>Professional Information</CardTitle>
-                   <CardDescription>Role, department, and employment details.</CardDescription>
-                </CardHeader>
-                <CardContent>
-                   {isAdmin ? (
-                     <ProfessionalInfoForm user={user} onUpdate={handleUpdate} />
-                   ) : (
-                     <div className="space-y-4 text-sm">
-                        <p><strong>Role:</strong> {user.role}</p>
-                        <p><strong>Department:</strong> {user.department}</p>
-                        <p><strong>Employment Date:</strong> {user.employmentDate?.seconds ? new Date(user.employmentDate.seconds * 1000).toLocaleDateString() : 'N/A'}</p>
-                     </div>
+                <CardHeader className="flex flex-row items-center justify-between">
+                   <div>
+                    <CardTitle>Professional Information</CardTitle>
+                    <CardDescription>Role, department, and employment details.</CardDescription>
+                   </div>
+                   {isAdmin && (
+                        <Dialog open={profInfoModalOpen} onOpenChange={setProfInfoModalOpen}>
+                            <DialogTrigger asChild><Button variant="outline" size="sm"><Edit className="mr-2 h-4 w-4" /> Edit</Button></DialogTrigger>
+                            <DialogContent>
+                                <DialogHeader>
+                                    <DialogTitle>Edit Professional Information</DialogTitle>
+                                </DialogHeader>
+                                <ProfessionalInfoForm user={user} onUpdate={handleUpdate} />
+                            </DialogContent>
+                        </Dialog>
                    )}
+                </CardHeader>
+                <CardContent className="space-y-2 text-sm">
+                    <p><strong>Role:</strong> {user.role}</p>
+                    <p><strong>Department:</strong> {user.department}</p>
+                    <p><strong>Employment Date:</strong> {user.employmentDate?.seconds ? new Date(user.employmentDate.seconds * 1000).toLocaleDateString() : 'N/A'}</p>
                 </CardContent>
             </Card>
              <Card>
-                <CardHeader>
-                   <CardTitle>Personal Details</CardTitle>
-                   <CardDescription>Contact and demographic information.</CardDescription>
+                <CardHeader className="flex flex-row items-center justify-between">
+                   <div>
+                    <CardTitle>Personal Details</CardTitle>
+                    <CardDescription>Contact and demographic information.</CardDescription>
+                   </div>
+                   {canEditPersonalInfo && (
+                     <Dialog open={personalInfoModalOpen} onOpenChange={setPersonalInfoModalOpen}>
+                        <DialogTrigger asChild><Button variant="outline" size="sm"><Edit className="mr-2 h-4 w-4" /> Edit</Button></DialogTrigger>
+                        <DialogContent>
+                            <DialogHeader>
+                                <DialogTitle>Edit Personal Information</DialogTitle>
+                            </DialogHeader>
+                            <PersonalInfoForm user={user} onUpdate={handleUpdate} />
+                        </DialogContent>
+                    </Dialog>
+                   )}
                 </CardHeader>
                 <CardContent className="space-y-2 text-sm">
                    <p><strong>Phone:</strong> {user.phone}</p>
@@ -187,12 +194,28 @@ export default function UserProfilePage() {
         </div>
 
          <Card className="lg:col-span-1">
-            <CardHeader>
-               <CardTitle>Bank & Salary</CardTitle>
-               <CardDescription>Financial details for salary payment.</CardDescription>
+            <CardHeader className="flex flex-row items-center justify-between">
+               <div>
+                <CardTitle>Bank & Salary</CardTitle>
+                <CardDescription>Financial details for salary payment.</CardDescription>
+               </div>
+               {isAdmin && (
+                    <Dialog open={bankInfoModalOpen} onOpenChange={setBankInfoModalOpen}>
+                        <DialogTrigger asChild><Button variant="outline" size="sm"><Edit className="mr-2 h-4 w-4" /> Edit</Button></DialogTrigger>
+                        <DialogContent>
+                            <DialogHeader>
+                                <DialogTitle>Edit Bank & Salary Details</DialogTitle>
+                            </DialogHeader>
+                            <BankDetailsForm user={user} onUpdate={handleUpdate} />
+                        </DialogContent>
+                    </Dialog>
+               )}
             </CardHeader>
-            <CardContent>
-                <BankDetailsForm user={user} onUpdate={handleUpdate} />
+            <CardContent className="space-y-2 text-sm">
+                <p><strong>Salary:</strong> {isAdmin ? `NGN ${user.salary?.amount.toLocaleString() || '0'}` : 'Hidden'}</p>
+                <p><strong>Bank Name:</strong> {user.salary?.bankName || 'Not Set'}</p>
+                <p><strong>Account Number:</strong> {user.salary?.accountNumber || 'Not Set'}</p>
+                <p><strong>Account Name:</strong> {user.salary?.accountName || 'Not Set'}</p>
             </CardContent>
         </Card>
       </div>

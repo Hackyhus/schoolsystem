@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -164,7 +165,7 @@ export function BankDetailsForm({
               <FormItem>
                 <FormLabel>Account Number</FormLabel>
                 <FormControl>
-                  <Input type="number" placeholder="e.g. 0123456789" {...field} disabled={!isAdmin} />
+                  <Input type="number" placeholder="e.g. 0123456789" {...field} />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -177,24 +178,23 @@ export function BankDetailsForm({
               <FormItem>
                 <FormLabel>Account Name</FormLabel>
                 <FormControl>
-                  <Input placeholder="e.g. Amina Sani" {...field} disabled={!isAdmin} />
+                  <Input placeholder="e.g. Amina Sani" {...field} />
                 </FormControl>
                 <FormMessage />
               </FormItem>
             )}
           />
         </div>
-        {isAdmin && (
-            <Button type="submit" className="w-full" disabled={isSubmitting}>
-            {isSubmitting ? (
-                'Saving...'
-            ) : (
-                <>
-                <Save className="mr-2 h-4 w-4" /> Save Changes
-                </>
-            )}
-            </Button>
+        
+        <Button type="submit" className="w-full" disabled={isSubmitting}>
+        {isSubmitting ? (
+            'Saving...'
+        ) : (
+            <>
+            <Save className="mr-2 h-4 w-4" /> Save Changes
+            </>
         )}
+        </Button>
       </form>
     </Form>
   );
