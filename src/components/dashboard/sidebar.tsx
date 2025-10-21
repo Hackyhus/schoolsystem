@@ -115,7 +115,7 @@ const allNavLinks = {
   seatingPlans: { icon: 'Grid', label: 'Seating Plans', path: '/dashboard/seating-plan' },
 
   // Accountant
-  feeSystem: { icon: 'DollarSign', label: 'System Fee Structure', path: '/dashboard/accountant/fees' },
+  feeSystem: { icon: 'DollarSign', label: 'Fee Structures', path: '/dashboard/accountant/fees' },
   invoices: { icon: 'FileText', label: 'Invoices', path: '/dashboard/accountant/invoices' },
   payments: { icon: 'CreditCard', label: 'Payments', path: '/dashboard/accountant/payments' },
   expenses: { icon: 'Wallet', label: 'Expenses', path: '/dashboard/accountant/expenses' },
