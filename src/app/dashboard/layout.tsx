@@ -116,7 +116,7 @@ export default function DashboardLayout({
             }
           }
         `}</style>
-         <div className="flex flex-1 overflow-hidden">
+         <div className="flex flex-1 overflow-hidden h-full">
           <div className="print-hidden">
             <DashboardSidebar />
           </div>
