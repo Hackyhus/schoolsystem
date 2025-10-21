@@ -295,7 +295,7 @@ export default function PaymentsPage() {
                                 <TableCell>{format(new Date(payment.paymentDate.seconds * 1000), 'PPP')}</TableCell>
                                 <TableCell className="text-right">
                                     <Button asChild variant="outline" size="sm">
-                                        <Link href={`/dashboard/accountant/receipts/${payment.id}`}>
+                                        <Link href={`/dashboard/receipts/${payment.id}`}>
                                             <Eye className="mr-2 h-4 w-4" /> View Receipt
                                         </Link>
                                     </Button>

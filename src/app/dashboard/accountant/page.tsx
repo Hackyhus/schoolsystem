@@ -178,7 +178,7 @@ export default function AccountantPage() {
                                             <TableCell><Badge variant="secondary">{p.paymentMethod}</Badge></TableCell>
                                             <TableCell className="text-right">
                                                 <Button asChild variant="outline" size="sm">
-                                                    <Link href={`/dashboard/accountant/receipts/${p.id}`}><Eye className="mr-2 h-4 w-4"/> View</Link>
+                                                    <Link href={`/dashboard/receipts/${p.id}`}><Eye className="mr-2 h-4 w-4"/> View</Link>
                                                 </Button>
                                             </TableCell>
                                         </TableRow>
