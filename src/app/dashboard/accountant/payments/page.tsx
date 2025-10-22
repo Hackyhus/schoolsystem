@@ -141,7 +141,8 @@ export default function PaymentsPage() {
 
         toast({
             title: 'Payment Recorded!',
-            description: `Payment of NGN ${values.amountPaid.toLocaleString()} for ${foundInvoice?.studentName} has been recorded.`,
+            description: result.message,
+            duration: 8000,
         });
         setFoundInvoice(null);
         setInvoiceIdToSearch('');

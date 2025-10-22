@@ -45,6 +45,7 @@ export async function recordPayment(values: z.infer<typeof paymentSchema>) {
         let newBalance: number;
         let newAmountPaid: number;
         let newStatus: Invoice['status'];
+        let successMessage = `Payment of NGN ${amountPaid.toLocaleString()} for ${invoice.studentName} has been recorded.`;
 
         if (overpayment > 0) {
             // Overpayment case
@@ -73,6 +74,8 @@ export async function recordPayment(values: z.infer<typeof paymentSchema>) {
                 const currentCredit = student.creditBalance || 0;
                 const newCreditBalance = currentCredit + overpayment;
                 batch.update('students', student.id, { creditBalance: newCreditBalance });
+
+                successMessage += ` An overpayment of NGN ${overpayment.toLocaleString()} has been added to the student's credit balance.`;
             }
         }
         
@@ -98,7 +101,7 @@ export async function recordPayment(values: z.infer<typeof paymentSchema>) {
         revalidatePath('/dashboard/accountant/payments');
         revalidatePath('/dashboard/accountant/invoices');
 
-        return { success: true };
+        return { success: true, message: successMessage };
 
     } catch (error: any) {
         console.error('Error recording payment:', error);

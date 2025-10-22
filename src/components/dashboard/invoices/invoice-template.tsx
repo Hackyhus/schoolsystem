@@ -98,7 +98,7 @@ export function InvoiceTemplate({ invoice, schoolInfo }: InvoiceTemplateProps) {
                                 <>
                                  <TableRow className="text-base font-medium">
                                     <TableCell>Amount Paid</TableCell>
-                                    <TableCell className="text-right">NGN {invoice.amountPaid.toLocaleString()}</TableCell>
+                                    <TableCell className="text-right">NGN {(invoice.status === 'Paid' && invoice.balance === 0) ? invoice.totalAmount.toLocaleString() : invoice.amountPaid.toLocaleString()}</TableCell>
                                 </TableRow>
                                 <TableRow className="text-base font-bold bg-gray-100">
                                     <TableCell>Balance</TableCell>
