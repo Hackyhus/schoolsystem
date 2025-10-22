@@ -27,9 +27,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import Link from 'next/link';
 import { useEffect, useState, useCallback } from 'react';
-import { collection, query, where, getDocs, orderBy, limit } from 'firebase/firestore';
 import { dbService } from '@/lib/dbService';
-import { db } from '@/lib/firebase';
 import type { MockLessonNote, MockUser } from '@/lib/schema';
 import { useToast } from '@/hooks/use-toast';
 import { useRole } from '@/context/role-context';
@@ -102,13 +100,10 @@ export function HodDashboard() {
       }
 
       // Firestore 'in' query has a limit of 30 values. If there are more teachers, we'd need multiple queries.
-      const notesQuery = query(collection(db, 'lessonNotes'), where('teacherId', 'in', teacherIds));
-      const notesSnapshot = await getDocs(notesQuery);
+      const notesList = await dbService.getDocs<MockLessonNote>('lessonNotes', [
+        { type: 'where', fieldPath: 'teacherId', opStr: 'in', value: teacherIds }
+      ]);
       
-      const notesList = notesSnapshot.docs.map(doc => {
-        return { id: doc.id, ...doc.data() } as MockLessonNote;
-      });
-
       // Sort client-side to avoid composite index
       notesList.sort((a, b) => (b.submittedOn?.seconds || 0) - (a.submittedOn?.seconds || 0));
 
