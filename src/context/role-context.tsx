@@ -2,14 +2,15 @@
 'use client';
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
-import { User } from 'firebase/auth';
+import { User as AuthUser } from 'firebase/auth';
 import { useToast } from '@/hooks/use-toast';
 import { useInactivityTimeout } from '@/hooks/useInactivityTimeout';
 import { authService } from '@/lib/authService';
 import { dbService } from '@/lib/dbService';
+import type { MockUser } from '@/lib/schema';
 
 type RoleContextType = {
-  user: User | null;
+  user: MockUser | null;
   role: string | null;
   setRole: (role: string) => void;
   logout: () => void;
@@ -19,7 +20,7 @@ type RoleContextType = {
 const RoleContext = createContext<RoleContextType | undefined>(undefined);
 
 export const RoleProvider = ({ children }: { children: React.ReactNode }) => {
-  const [user, setUser] = useState<User | null>(null);
+  const [user, setUser] = useState<MockUser | null>(null);
   const [role, setRoleState] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const router = useRouter();
@@ -49,19 +50,18 @@ export const RoleProvider = ({ children }: { children: React.ReactNode }) => {
   }, 3600000); // 1 hour
 
   useEffect(() => {
-    const unsubscribe = authService.onAuthStateChanged(async (currentUser) => {
+    const unsubscribe = authService.onAuthStateChanged(async (currentUser: AuthUser | null) => {
       if (currentUser) {
-        setUser(currentUser);
-        // Fetch user document from Firestore to get the role
-        const userDoc = await dbService.getDoc('users', currentUser.uid);
+        // Fetch the full user document from Firestore to get role, staffId, etc.
+        const userDoc = await dbService.getDoc<MockUser>('users', currentUser.uid);
 
         if (userDoc) {
-          const userData = userDoc as { role: string };
-          const userRole = userData.role;
-          setRoleState(userRole);
-          localStorage.setItem('user-role', userRole);
+          setUser(userDoc);
+          setRoleState(userDoc.role);
+          localStorage.setItem('user-role', userDoc.role);
         } else {
           // If a user is in auth but not Firestore, something is wrong. Log them out.
+          console.warn(`User with UID ${currentUser.uid} exists in Auth but not in Firestore. Logging out.`);
           await logout({ silent: true });
         }
       } else {

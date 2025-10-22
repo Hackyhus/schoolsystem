@@ -14,14 +14,13 @@ export default function ProfilePage() {
         if (isLoading) return;
 
         if (user?.staffId) {
-            // If the user object from the context has a staffId, redirect to their profile.
             router.replace(`/dashboard/users/${user.staffId}`);
         } else if (user) {
-            // If the user is logged in but is not a staff member (e.g., a parent),
-            // redirect them to their dashboard as they don't have a staff profile page.
+            // User is logged in but not a staff member (e.g., Parent)
+            // Or staffId is missing for some reason. Redirect to their dashboard.
             router.replace('/dashboard');
         } else {
-            // If not logged in at all, go to the login page.
+            // Not logged in at all
             router.replace('/');
         }
     }, [isLoading, user, router]);
