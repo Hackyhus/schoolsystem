@@ -217,7 +217,7 @@ const Sidebar = React.forwardRef<
       <div
         ref={ref}
         className={cn(
-          "group hidden md:flex flex-col h-full bg-sidebar text-sidebar-foreground print:hidden transition-[width] duration-200 ease-linear overflow-y-auto",
+          "group hidden md:flex flex-col h-full bg-sidebar text-sidebar-foreground print:hidden transition-[width] duration-200 ease-linear",
           state === "expanded" ? "w-[--sidebar-width]" : "w-[--sidebar-width-icon]",
           side === "left" ? "border-r" : "border-l",
           className
@@ -380,7 +380,7 @@ const SidebarContent = React.forwardRef<
       ref={ref}
       data-sidebar="content"
       className={cn(
-        "flex min-h-0 flex-1 flex-col overflow-y-auto group-data-[collapsible=icon]:overflow-hidden",
+        "flex min-h-0 flex-1 flex-col overflow-y-auto",
         className
       )}
       {...props}
@@ -737,5 +737,3 @@ export {
   SidebarTrigger,
   useSidebar,
 }
-
-    
