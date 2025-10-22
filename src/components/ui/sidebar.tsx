@@ -217,7 +217,7 @@ const Sidebar = React.forwardRef<
       <div
         ref={ref}
         className={cn(
-          "group hidden md:flex flex-col h-full bg-sidebar text-sidebar-foreground print:hidden transition-[width] duration-200 ease-linear overflow-hidden",
+          "group hidden md:flex flex-col h-full bg-sidebar text-sidebar-foreground print:hidden transition-[width] duration-200 ease-linear overflow-y-auto",
           state === "expanded" ? "w-[--sidebar-width]" : "w-[--sidebar-width-icon]",
           side === "left" ? "border-r" : "border-l",
           className
@@ -737,3 +737,5 @@ export {
   SidebarTrigger,
   useSidebar,
 }
+
+    
