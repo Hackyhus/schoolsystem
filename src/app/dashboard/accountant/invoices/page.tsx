@@ -36,7 +36,7 @@ export default function InvoicesPage() {
     const fetchInvoices = useCallback(async () => {
         setIsLoadingInvoices(true);
         try {
-            const fetchedInvoices = await dbService.getDocs<Invoice>('invoices', [{ type: 'orderBy', fieldPath: 'createdAt', direction: 'desc' }]);
+            const fetchedInvoices = await dbService.getDocs<Invoice>('invoices', [{ type: 'orderBy', fieldPath: 'createdAt', direction: 'asc' }]);
             setInvoices(fetchedInvoices);
         } catch (error) {
             console.error(error);
@@ -166,9 +166,9 @@ export default function InvoicesPage() {
             <Card>
                  <CardHeader className="flex flex-row items-center justify-between">
                     <div>
-                        <CardTitle>Recent Invoices</CardTitle>
+                        <CardTitle>Invoice History</CardTitle>
                         <CardDescription>
-                           A list of the most recently generated invoices.
+                           A list of all generated invoices.
                         </CardDescription>
                     </div>
                     <Button variant="outline" size="icon" onClick={fetchInvoices} disabled={isLoadingInvoices}>
