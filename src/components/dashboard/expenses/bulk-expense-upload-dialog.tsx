@@ -50,24 +50,22 @@ export function BulkExpenseUploadDialog({ children, open, onOpenChange, onUpload
   const handleDownloadTemplate = () => {
     const headers = ["date(YYYY-MM-DD)", "category", "description", "amount", "department"];
     const exampleData = [
-      {
-        "date(YYYY-MM-DD)": "2024-10-28",
-        "category": "Supplies",
-        "description": "Purchase of A4 paper",
-        "amount": 15000,
-        "department": "Administration"
-      },
-      {
-        "date(YYYY-MM-DD)": "2024-10-29",
-        "category": "Maintenance",
-        "description": "Fixing leaking roof",
-        "amount": 75000,
-        "department": ""
-      },
+      { "date(YYYY-MM-DD)": "2024-10-01", "category": "Salaries", "description": "September 2024 Staff Salaries", "amount": 2500000, "department": "Administration" },
+      { "date(YYYY-MM-DD)": "2024-10-05", "category": "Utilities", "description": "PHCN Electricity Bill - September", "amount": 85000, "department": "Administration" },
+      { "date(YYYY-MM-DD)": "2024-10-07", "category": "Supplies", "description": "Purchase of chalk and markers", "amount": 25000, "department": "Academics" },
+      { "date(YYYY-MM-DD)": "2024-10-10", "category": "Maintenance", "description": "Diesel for school generator (200L)", "amount": 150000, "department": "Maintenance" },
+      { "date(YYYY-MM-DD)": "2024-10-12", "category": "Supplies", "description": "Stationery for admin office (A4 paper, pens)", "amount": 35000, "department": "Administration" },
+      { "date(YYYY-MM-DD)": "2024-10-15", "category": "Maintenance", "description": "Repair of leaking roof in Primary block", "amount": 120000, "department": "Maintenance" },
+      { "date(YYYY-MM-DD)": "2024-10-18", "category": "Utilities", "description": "Monthly Internet Subscription", "amount": 45000, "department": "Administration" },
+      { "date(YYYY-MM-DD)": "2024-10-20", "category": "Marketing", "description": "Printing of new school flyers", "amount": 50000, "department": "Administration" },
+      { "date(YYYY-MM-DD)": "2024-10-22", "category": "Supplies", "description": "Cleaning supplies (detergent, brooms, etc.)", "amount": 30000, "department": "Maintenance" },
+      { "date(YYYY-MM-DD)": "2024-10-25", "category": "Capital Expenditure", "description": "Purchase of 5 new student desks", "amount": 250000, "department": "Administration" },
+      { "date(YYYY-MM-DD)": "2024-10-28", "category": "Miscellaneous", "description": "Transportation for Inter-school debate competition", "amount": 20000, "department": "Academics" },
+      { "date(YYYY-MM-DD)": "2024-10-30", "category": "Utilities", "description": "Waste disposal service payment", "amount": 15000, "department": "Maintenance" },
     ];
     
     const workbook = XLSX.utils.book_new();
-    const worksheet = XLSX.utils.json_to_sheet(exampleData);
+    const worksheet = XLSX.utils.json_to_sheet(exampleData, {header: headers});
     XLSX.utils.book_append_sheet(workbook, worksheet, "Expenses");
     XLSX.writeFile(workbook, "expense-upload-template.xlsx");
   };
