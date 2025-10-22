@@ -29,14 +29,14 @@ export function SupportBot() {
   const [input, setInput] = useState('');
   const [isAiThinking, startAiTransition] = useTransition();
   const { user, role } = useRole();
-  const scrollAreaRef = useRef<HTMLDivElement>(null);
+  const scrollViewportRef = useRef<HTMLDivElement>(null);
   
   // Create a unique ID for this chat session
   const [contextId] = useState(() => `support-session-${Date.now()}-${Math.random().toString(36).substring(7)}`);
 
   useEffect(() => {
-    if (scrollAreaRef.current) {
-        scrollAreaRef.current.scrollTo({ top: scrollAreaRef.current.scrollHeight, behavior: 'smooth' });
+    if (scrollViewportRef.current) {
+        scrollViewportRef.current.scrollTo({ top: scrollViewportRef.current.scrollHeight, behavior: 'smooth' });
     }
   }, [messages]);
 
@@ -98,7 +98,7 @@ export function SupportBot() {
           </CardHeader>
           
           <CardContent className="flex-1 p-0 overflow-hidden">
-            <ScrollArea className="h-full p-4" ref={scrollAreaRef}>
+            <ScrollArea className="h-full p-4" viewportRef={scrollViewportRef}>
                 <div className="space-y-6">
                     {messages.map((message, index) => (
                         <div
