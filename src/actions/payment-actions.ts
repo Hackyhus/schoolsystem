@@ -4,7 +4,7 @@
 import { z } from 'zod';
 import { dbService } from '@/lib/dbService';
 import { serverTimestamp, Timestamp } from 'firebase/firestore';
-import type { Invoice, Payment, MockUser } from '@/lib/schema';
+import type { Invoice, Payment, MockUser, Student } from '@/lib/schema';
 import { revalidatePath } from 'next/cache';
 
 const paymentSchema = z.object({
@@ -29,38 +29,53 @@ export async function recordPayment(values: z.infer<typeof paymentSchema>) {
             return { error: 'Authentication required.' };
         }
 
-        // 1. Fetch the invoice by its main document ID
         const invoices = await dbService.getDocs<Invoice>('invoices', [{ type: 'where', fieldPath: 'invoiceId', opStr: '==', value: invoiceId }]);
         if (invoices.length === 0) {
             return { error: 'Invoice not found.' };
         }
         const invoice = invoices[0];
         
-        // 2. Validate payment
         if (invoice.status === 'Paid') {
             return { error: 'This invoice has already been fully paid.' };
         }
-        if (amountPaid > invoice.balance) {
-            return { error: `Payment of NGN ${amountPaid.toLocaleString()} exceeds the balance of NGN ${invoice.balance.toLocaleString()}.` };
-        }
         
-        // 3. Prepare updates for batch
         const batch = dbService.createBatch();
-        const newBalance = invoice.balance - amountPaid;
-        const newAmountPaid = invoice.amountPaid + amountPaid;
-        let newStatus: Invoice['status'] = 'Partially Paid';
-        if (newBalance <= 0) {
+        const overpayment = amountPaid - invoice.balance;
+
+        let newBalance: number;
+        let newAmountPaid: number;
+        let newStatus: Invoice['status'];
+
+        if (overpayment > 0) {
+            // Overpayment case
+            newBalance = 0;
+            newAmountPaid = invoice.totalAmount;
             newStatus = 'Paid';
+        } else {
+            // Normal or partial payment case
+            newBalance = invoice.balance - amountPaid;
+            newAmountPaid = invoice.amountPaid + amountPaid;
+            newStatus = newBalance <= 0 ? 'Paid' : 'Partially Paid';
         }
 
-        // 4. Update the invoice document
+        // Update the invoice document
         batch.update('invoices', invoice.id, {
             amountPaid: newAmountPaid,
             balance: newBalance,
             status: newStatus,
         });
+
+        // If there was an overpayment, update student's credit balance
+        if (overpayment > 0) {
+            const studentDocs = await dbService.getDocs<Student>('students', [{ type: 'where', fieldPath: 'studentId', opStr: '==', value: invoice.studentId }]);
+            if (studentDocs.length > 0) {
+                const student = studentDocs[0];
+                const currentCredit = student.creditBalance || 0;
+                const newCreditBalance = currentCredit + overpayment;
+                batch.update('students', student.id, { creditBalance: newCreditBalance });
+            }
+        }
         
-        // 5. Create a new payment record for auditing
         const accountantDoc = await dbService.getDoc<MockUser>('users', userId);
 
         const newPayment: Omit<Payment, 'id'> = {
@@ -78,7 +93,6 @@ export async function recordPayment(values: z.infer<typeof paymentSchema>) {
 
         batch.set('payments', null, newPayment);
         
-        // 6. Commit the batch
         await batch.commit();
 
         revalidatePath('/dashboard/accountant/payments');

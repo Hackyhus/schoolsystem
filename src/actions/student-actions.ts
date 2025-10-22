@@ -104,6 +104,7 @@ export async function createStudent(formData: FormData) {
         classLevel: studentData.class,
         sessionYear: studentData.session,
         profilePicture: profilePictureUrl,
+        creditBalance: 0,
         guardians: [{
             fullName: studentData.guardianName,
             relationship: 'Parent/Guardian',
@@ -196,6 +197,7 @@ export async function bulkCreateStudents(students: any[]) {
                 classLevel: student.class,
                 sessionYear: student['session(YYYY/YYYY)'] || '',
                 profilePicture: '',
+                creditBalance: 0,
                 guardians: [{
                     fullName: student.guardianName,
                     relationship: 'Parent/Guardian',

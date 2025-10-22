@@ -87,6 +87,7 @@ export type Student = {
     classLevel: string;
     sessionYear: string;
     profilePicture?: string;
+    creditBalance?: number;
     guardians: Guardian[];
     contacts: EmergencyContact[];
     documents?: StudentDocument[];
