@@ -17,62 +17,73 @@ The GIIA Portal is a role-based school management system for Great Insight Inter
 
 ## Feature Breakdown by Route
 
-- Route: /dashboard
+- Feature: Dashboard
   - Purpose: The main landing page after login. Displays a summary of relevant information for the user's role.
   - Accessible by: All roles.
 
-- Route: /dashboard/users
+- Feature: Manage Staff
+  - Navigation: Users
   - Purpose: Staff management. Admins can add, view, and manage all staff profiles.
   - Accessible by: Admin, SLT, HeadOfDepartment.
 
-- Route: /dashboard/students
+- Feature: Manage Students
+  - Navigation: Students
   - Purpose: Student management. Admins can enroll new students, view profiles, and manage student records.
   - Accessible by: Admin, SLT.
 
-- Route: /dashboard/departments
+- Feature: Departments
+  - Navigation: Departments
   - Purpose: Manage academic departments and assign Heads of Department (HODs).
   - Accessible by: Admin.
 
-- Route: /dashboard/system/*
+- Feature: System Configuration
+  - Navigation: System
   - Purpose: System-wide configuration. Includes settings for school info, grading scales, academic year, roles, and maintenance mode.
   - Accessible by: Admin. SLT has access to some sub-sections.
 
-- Route: /dashboard/lesson-notes
+- Feature: Lesson Plans
+  - Navigation: Lesson Plans
   - Purpose: For teachers to submit lesson plans. For HODs and Admins to review, approve, or reject these submissions.
   - Accessible by: Admin, SLT, HeadOfDepartment, Teacher.
 
-- Route: /dashboard/exam-questions
+- Feature: Question Bank
+  - Navigation: Question Bank
   - Purpose: For teachers to submit test and exam questions. For Exam Officers to review and approve them.
   - Accessible by: Admin, ExamOfficer, Teacher.
 
-- Route: /dashboard/scores
+- Feature: Scores
+  - Navigation: Enter Scores
   - Purpose: For teachers to enter student scores (CAs and Exams). For Exam Officers to review and approve scores.
   - Accessible by: Admin, ExamOfficer, Teacher.
 
-- Route: /dashboard/results/*
+- Feature: Results
+  - Navigation: Generate Results / View Results
   - Purpose: For Exam Officers to generate final report cards from approved scores. All academic roles can view generated results.
   - Accessible by: Admin, SLT, HeadOfDepartment, ExamOfficer, Teacher.
 
-- Route: /dashboard/accountant/*
+- Feature: Accountant Tools
   - Purpose: A suite of tools for the Accountant role.
-  - Sub-routes:
-    - /fees: Create and manage fee structures for different class groups.
-    - /invoices: Generate and track student invoices.
-    - /payments: Record fee payments against invoices.
-    - /expenses: Log all school expenditures.
-    - /payroll: Run monthly payroll for staff.
-    - /reconciliation: Reconcile bank statements with portal records.
+  - Sections:
+    - Fee Structures: Create and manage fee structures for different class groups.
+    - Invoices: Generate and track student invoices.
+    - Payments: Record fee payments against invoices.
+    - Expenses: Log all school expenditures.
+    - Payroll: Run monthly payroll for staff.
+    - Reconciliation: Reconcile bank statements with portal records.
   - Accessible by: Accountant, Admin.
 
-- Route: /dashboard/performance
+- Feature: Student Performance
+  - Navigation: My Students (for Teachers) / Results (for Parents)
   - Purpose: A portal for parents to view their child's results and performance. Also used by teachers to see their student list.
   - Accessible by: Parent, Teacher.
 
-- Route: /profile
-  - Purpose: Allows users to view their own profile information.
+- Feature: Profile
+  - Navigation: Click your name in the top-right corner, then Profile.
+  - Purpose: Allows users to view and edit their own profile information.
   - Accessible by: All roles.
 
-- Route: /dashboard/notifications
+- Feature: Notifications
+  - Navigation: Notifications (bell icon in the header)
   - Purpose: Displays a list of all notifications for the user, such as submission approvals or rejections.
   - Accessible by: All roles.
 `;
