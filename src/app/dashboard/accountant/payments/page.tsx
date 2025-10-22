@@ -61,8 +61,11 @@ export default function PaymentsPage() {
   const form = useForm<PaymentFormValues>({
     resolver: zodResolver(paymentSchema),
     defaultValues: {
+      invoiceId: '',
+      amountPaid: 0,
       paymentMethod: 'Bank Transfer',
       notes: '',
+      paymentDate: undefined,
     }
   });
 
@@ -98,6 +101,9 @@ export default function PaymentsPage() {
     form.reset({
       paymentMethod: 'Bank Transfer',
       notes: '',
+      amountPaid: 0,
+      paymentDate: undefined,
+      invoiceId: ''
     });
 
     try {
