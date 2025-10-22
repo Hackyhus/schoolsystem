@@ -6,9 +6,11 @@ import { dbService } from '@/lib/dbService';
 import { serverTimestamp, Timestamp } from 'firebase/firestore';
 import type { FeeStructure, Student, Invoice, InvoiceItem } from '@/lib/schema';
 import { revalidatePath } from 'next/cache';
+import { CLASS_GROUPS } from '@/components/dashboard/fees/fee-structure-form';
+
 
 const invoiceSchema = z.object({
-  className: z.string().min(1, 'Class is required.'),
+  classGroup: z.string().min(1, 'Class group is required.'),
   session: z.string().min(1, 'Session is required.'),
   term: z.string().min(1, 'Term is required.'),
 });
@@ -20,23 +22,32 @@ async function getNextInvoiceId(offset: number = 0): Promise<string> {
     return `INV-${year}-${nextId}`;
 }
 
-const getClassGroup = (className: string): string => {
-    if (className.includes('Primary')) return 'Primary';
-    if (className.includes('JSS')) return 'JSS';
-    if (className.includes('SSS')) return 'SSS';
-    if (className.includes('Nursery')) return 'Pre-Nursery & Nursery';
-    return className; // Fallback to the class name itself if no group matches
+const getClassesInGroup = async (classGroup: string): Promise<string[]> => {
+    const all_classes = await dbService.getDocs<{name: string}>('classes');
+    if (classGroup === 'Pre-Nursery & Nursery') {
+        return all_classes.filter(c => c.name.includes('Nursery')).map(c => c.name);
+    }
+     if (classGroup === 'Primary') {
+        return all_classes.filter(c => c.name.includes('Primary')).map(c => c.name);
+    }
+    if (classGroup === 'JSS') {
+        return all_classes.filter(c => c.name.includes('JSS')).map(c => c.name);
+    }
+    if (classGroup === 'SSS') {
+        return all_classes.filter(c => c.name.includes('SSS')).map(c => c.name);
+    }
+    return [];
 }
 
-export async function generateInvoicesForClass(className: string, session: string, term: string) {
+
+export async function generateInvoicesForClassGroup(classGroup: string, session: string, term: string) {
     try {
-        const parsed = invoiceSchema.safeParse({ className, session, term });
+        const parsed = invoiceSchema.safeParse({ classGroup, session, term });
         if (!parsed.success) {
             return { error: 'Invalid input provided.' };
         }
 
-        // 1. Determine the class group and find the Fee Structure for that group
-        const classGroup = getClassGroup(className);
+        // 1. Find the Fee Structure for the selected group
         const feeStructures = await dbService.getDocs<FeeStructure>('feeStructures', [
             { type: 'where', fieldPath: 'className', opStr: '==', value: classGroup },
             { type: 'where', fieldPath: 'session', opStr: '==', value: session },
@@ -49,16 +60,22 @@ export async function generateInvoicesForClass(className: string, session: strin
             return { error: `No fee structure found for the ${classGroup} group for the ${term}, ${session} session. Please create one first.` };
         }
 
-        // 2. Get all students in the selected class
+        // 2. Get all classes within that group
+        const classesInGroup = await getClassesInGroup(classGroup);
+        if (classesInGroup.length === 0) {
+            return { error: `No classes found for the ${classGroup} group.` };
+        }
+
+        // 3. Get all students in those classes
         const students = await dbService.getDocs<Student>('students', [
-            { type: 'where', fieldPath: 'classLevel', opStr: '==', value: className },
+            { type: 'where', fieldPath: 'classLevel', opStr: 'in', value: classesInGroup },
             { type: 'where', fieldPath: 'status', opStr: '==', value: 'Active' },
         ]);
         if (students.length === 0) {
-            return { error: `No active students found in ${className}.` };
+            return { error: `No active students found in the ${classGroup} group.` };
         }
         
-        // 3. Check for existing invoices for these students for this term/session to prevent duplicates
+        // 4. Check for existing invoices for these students for this term/session to prevent duplicates
         const studentIds = students.map(s => s.studentId);
         const existingInvoices = await dbService.getDocs<Invoice>('invoices', [
             { type: 'where', fieldPath: 'studentId', opStr: 'in', value: studentIds },
@@ -67,11 +84,10 @@ export async function generateInvoicesForClass(className: string, session: strin
         ]);
         const existingInvoiceStudentIds = new Set(existingInvoices.map(inv => inv.studentId));
 
-        // 4. Generate invoices only for students who don't have one yet
+        // 5. Generate invoices only for students who don't have one yet
         const batch = dbService.createBatch();
         let generatedCount = 0;
         
-        // Get the starting invoice count once before the loop
         const initialInvoiceCount = await dbService.getCountFromServer('invoices');
         const year = new Date().getFullYear();
 
@@ -81,7 +97,6 @@ export async function generateInvoicesForClass(className: string, session: strin
                 continue; // Skip this student
             }
             
-            // Calculate the new invoice ID using an offset
             const nextId = (initialInvoiceCount + generatedCount + 1).toString().padStart(5, '0');
             const invoiceId = `INV-${year}-${nextId}`;
 

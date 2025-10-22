@@ -7,8 +7,8 @@ import { Button } from "@/components/ui/button";
 import { FileText, Loader2, AlertCircle, Eye, RefreshCw } from "lucide-react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
-import { useAcademicData } from '@/hooks/use-academic-data';
-import { generateInvoicesForClass } from '@/actions/invoice-actions';
+import { CLASS_GROUPS } from '@/components/dashboard/fees/fee-structure-form';
+import { generateInvoicesForClassGroup } from '@/actions/invoice-actions';
 import type { Invoice } from '@/lib/schema';
 import { dbService } from '@/lib/dbService';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
@@ -22,11 +22,10 @@ const SESSIONS = ["2023/2024", "2024/2025", "2025/2026"];
 const TERMS = ["First Term", "Second Term", "Third Term"];
 
 export default function InvoicesPage() {
-    const { classes, isLoading: isAcademicDataLoading } = useAcademicData();
     const { toast } = useToast();
 
     const [isGenerating, setIsGenerating] = useState(false);
-    const [selectedClass, setSelectedClass] = useState('');
+    const [selectedClassGroup, setSelectedClassGroup] = useState('');
     const [selectedSession, setSelectedSession] = useState(SESSIONS[0]);
     const [selectedTerm, setSelectedTerm] = useState(TERMS[0]);
 
@@ -56,19 +55,19 @@ export default function InvoicesPage() {
 
 
     const handleGenerate = async () => {
-        if (!selectedClass) {
-            toast({ variant: 'destructive', title: 'Error', description: 'Please select a class.' });
+        if (!selectedClassGroup) {
+            toast({ variant: 'destructive', title: 'Error', description: 'Please select a class group.' });
             return;
         }
         setIsGenerating(true);
         try {
-            const result = await generateInvoicesForClass(selectedClass, selectedSession, selectedTerm);
+            const result = await generateInvoicesForClassGroup(selectedClassGroup, selectedSession, selectedTerm);
 
             if (result.error) throw new Error(result.error);
             
             toast({
                 title: 'Invoice Generation Complete',
-                description: `${result.generatedCount} new invoices were created for ${selectedClass}. ${result.skippedCount} students already had invoices and were skipped.`,
+                description: `${result.generatedCount} new invoices were created for ${selectedClassGroup}. ${result.skippedCount} students already had invoices and were skipped.`,
                 duration: 7000
             });
 
@@ -108,7 +107,7 @@ export default function InvoicesPage() {
                 <CardHeader>
                     <CardTitle>Generate Invoices</CardTitle>
                     <CardDescription>
-                        Select a class, session, and term to generate invoices for all students based on the active fee structure.
+                        Select a class group, session, and term to generate invoices for all students based on the active fee structure.
                     </CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-6">
@@ -121,12 +120,12 @@ export default function InvoicesPage() {
                     </Alert>
 
                      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                         <Select onValueChange={setSelectedClass} value={selectedClass} disabled={isAcademicDataLoading || isGenerating}>
+                         <Select onValueChange={setSelectedClassGroup} value={selectedClassGroup} disabled={isGenerating}>
                             <SelectTrigger>
-                            <SelectValue placeholder={isAcademicDataLoading ? "Loading Classes..." : "Select Class"} />
+                            <SelectValue placeholder="Select Class Group" />
                             </SelectTrigger>
                             <SelectContent>
-                            {classes.map(c => <SelectItem key={c.id} value={c.name}>{c.name}</SelectItem>)}
+                            {CLASS_GROUPS.map(c => <SelectItem key={c} value={c}>{c}</SelectItem>)}
                             </SelectContent>
                         </Select>
                          <Select onValueChange={setSelectedSession} value={selectedSession} disabled={isGenerating}>
@@ -147,11 +146,11 @@ export default function InvoicesPage() {
                         </Select>
                     </div>
 
-                    <Button onClick={handleGenerate} disabled={isGenerating || !selectedClass} size="lg" className="w-full md:w-auto">
+                    <Button onClick={handleGenerate} disabled={isGenerating || !selectedClassGroup} size="lg" className="w-full md:w-auto">
                         {isGenerating ? (
                             <>
                                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                                Generating for {selectedClass}...
+                                Generating for {selectedClassGroup}...
                             </>
                         ) : (
                            <>
