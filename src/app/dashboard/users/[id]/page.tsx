@@ -174,6 +174,7 @@ export default function UserProfilePage() {
                 <CardContent className="space-y-2 text-sm">
                     <p><strong>Role:</strong> {user.role}</p>
                     <p><strong>Department:</strong> {user.department}</p>
+                    <p><strong>Employment Type:</strong> {user.employmentType || 'N/A'}</p>
                     <p><strong>Employment Date:</strong> {user.employmentDate?.seconds ? new Date(user.employmentDate.seconds * 1000).toLocaleDateString() : 'N/A'}</p>
                 </CardContent>
             </Card>

@@ -57,27 +57,12 @@ export function BankDetailsForm({
   const form = useForm<BankDetailsFormValues>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      salaryAmount: user.salary?.amount.toLocaleString() || '0',
+      salaryAmount: user.salary?.amount.toString() || '0',
       bankName: user.salary?.bankName?.toLowerCase() || '',
       accountNumber: user.salary?.accountNumber || '',
       accountName: user.salary?.accountName || '',
     },
   });
-
-  const handleSalaryChange = (
-    e: React.ChangeEvent<HTMLInputElement>,
-    field: any
-  ) => {
-    const rawValue = e.target.value.replace(/,/g, '');
-    if (!isNaN(Number(rawValue))) {
-      const formattedValue = new Intl.NumberFormat('en-NG').format(
-        Number(rawValue)
-      );
-      field.onChange(formattedValue);
-    } else if (rawValue === '') {
-      field.onChange('');
-    }
-  };
 
   async function onSubmit(values: BankDetailsFormValues) {
     setIsSubmitting(true);
@@ -127,10 +112,9 @@ export function BankDetailsForm({
                 <FormLabel>Salary (NGN)</FormLabel>
                 <FormControl>
                   <Input
-                    type="text"
-                    placeholder="e.g. 150,000"
+                    type="number"
+                    placeholder="e.g. 150000"
                     {...field}
-                    onChange={(e) => handleSalaryChange(e, field)}
                     disabled={!isAdmin}
                   />
                 </FormControl>

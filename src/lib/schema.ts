@@ -87,7 +87,7 @@ export type Student = {
     classLevel: string;
     sessionYear: string;
     profilePicture?: string;
-    creditBalance?: number;
+    creditBalance: number;
     guardians: Guardian[];
     contacts: EmergencyContact[];
     documents?: StudentDocument[];
@@ -280,12 +280,12 @@ export type MockUser = {
   classLevel?: string;
   role: string;
   employmentDate: any; // Can be a Firestore Timestamp
+  employmentType?: 'Full-Time' | 'Part-Time';
   salary?: {
     amount: number;
     bankName: string | null;
     accountNumber: string | null;
     accountName: string | null;
-    paymentStatus: string;
   };
   personalInfo?: {
     address: string;

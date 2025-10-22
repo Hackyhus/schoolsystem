@@ -31,6 +31,7 @@ import { useRole } from '@/context/role-context';
 const formSchema = z.object({
   role: z.string().min(1, { message: 'Role is required.' }),
   department: z.string().min(1, { message: 'Department is required.' }),
+  employmentType: z.enum(['Full-Time', 'Part-Time'], { required_error: 'Employment type is required.' }),
 });
 
 type ProfessionalInfoFormValues = z.infer<typeof formSchema>;
@@ -73,6 +74,7 @@ export function ProfessionalInfoForm({
     defaultValues: {
       role: user.role || '',
       department: user.department || '',
+      employmentType: user.employmentType || 'Full-Time',
     },
   });
 
@@ -83,6 +85,7 @@ export function ProfessionalInfoForm({
       await updateDoc(userRef, {
         role: values.role,
         department: values.department,
+        employmentType: values.employmentType,
       });
 
       toast({
@@ -107,6 +110,7 @@ export function ProfessionalInfoForm({
         <div className="space-y-4 text-sm pt-4">
             <p><strong>Role:</strong> {user.role}</p>
             <p><strong>Department:</strong> {user.department}</p>
+            <p><strong>Employment Type:</strong> {user.employmentType || 'N/A'}</p>
             <p><strong>Employment Date:</strong> {user.employmentDate?.seconds ? new Date(user.employmentDate.seconds * 1000).toLocaleDateString() : 'N/A'}</p>
              <p className="text-xs text-muted-foreground pt-4">Only administrators can modify this information.</p>
         </div>
@@ -166,6 +170,30 @@ export function ProfessionalInfoForm({
                         {dept}
                       </SelectItem>
                     ))}
+                  </SelectContent>
+                </Select>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+           <FormField
+            control={form.control}
+            name="employmentType"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Employment Type</FormLabel>
+                <Select
+                  onValueChange={field.onChange}
+                  defaultValue={field.value}
+                >
+                  <FormControl>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select employment type" />
+                    </SelectTrigger>
+                  </FormControl>
+                  <SelectContent>
+                    <SelectItem value="Full-Time">Full-Time</SelectItem>
+                    <SelectItem value="Part-Time">Part-Time</SelectItem>
                   </SelectContent>
                 </Select>
                 <FormMessage />
