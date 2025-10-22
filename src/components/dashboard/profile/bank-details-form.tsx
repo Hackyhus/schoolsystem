@@ -78,7 +78,7 @@ export function BankDetailsForm({
       };
 
       if (isAdmin && values.salaryAmount) {
-        updateData['salary.amount'] = Number(values.salaryAmount.replace(/,/g, ''));
+        updateData['salary.amount'] = Number(values.salaryAmount);
       }
 
       await updateDoc(userRef, updateData);
