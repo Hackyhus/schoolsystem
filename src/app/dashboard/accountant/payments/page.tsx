@@ -13,9 +13,9 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '
 import { dbService } from '@/lib/dbService';
 import type { Invoice, Payment } from '@/lib/schema';
 import { useToast } from '@/hooks/use-toast';
-import { AlertCircle, Loader2, Search, CheckCircle, RefreshCw, Eye } from 'lucide-react';
+import { AlertCircle, Loader2, Search, CheckCircle, RefreshCw, Eye, Trash2 } from 'lucide-react';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
-import { recordPayment } from '@/actions/payment-actions';
+import { recordPayment, deletePayment } from '@/actions/payment-actions';
 import {
   Select,
   SelectContent,
@@ -23,6 +23,17 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 import { DatePicker } from '@/components/ui/date-picker';
 import {
   Table,
@@ -157,6 +168,20 @@ export default function PaymentsPage() {
         });
     }
   }
+
+  const handleDelete = async (paymentId: string) => {
+    try {
+      const result = await deletePayment(paymentId);
+      if (result.error) {
+        throw new Error(result.error);
+      }
+      toast({ title: 'Success', description: 'Payment record deleted successfully.' });
+      fetchRecentPayments();
+    } catch (error: any) {
+      toast({ variant: 'destructive', title: 'Error', description: error.message });
+    }
+  };
+
 
   return (
     <div className="space-y-8">
@@ -300,12 +325,31 @@ export default function PaymentsPage() {
                                 <TableCell>{payment.amountPaid.toLocaleString()}</TableCell>
                                 <TableCell><Badge variant="secondary">{payment.paymentMethod}</Badge></TableCell>
                                 <TableCell>{format(new Date(payment.paymentDate.seconds * 1000), 'PPP')}</TableCell>
-                                <TableCell className="text-right">
+                                <TableCell className="text-right space-x-2">
                                     <Button asChild variant="outline" size="sm">
                                         <Link href={`/dashboard/receipts/${payment.id}`}>
-                                            <Eye className="mr-2 h-4 w-4" /> View Receipt
+                                            <Eye className="mr-2 h-4 w-4" /> View
                                         </Link>
                                     </Button>
+                                    <AlertDialog>
+                                      <AlertDialogTrigger asChild>
+                                        <Button variant="destructive" size="sm">
+                                          <Trash2 className="mr-2 h-4 w-4" /> Delete
+                                        </Button>
+                                      </AlertDialogTrigger>
+                                      <AlertDialogContent>
+                                        <AlertDialogHeader>
+                                          <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
+                                          <AlertDialogDescription>
+                                            This action cannot be undone. This will permanently delete the payment record and reverse its effect on the invoice balance.
+                                          </AlertDialogDescription>
+                                        </AlertDialogHeader>
+                                        <AlertDialogFooter>
+                                          <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                          <AlertDialogAction onClick={() => handleDelete(payment.id)}>Delete</AlertDialogAction>
+                                        </AlertDialogFooter>
+                                      </AlertDialogContent>
+                                    </AlertDialog>
                                 </TableCell>
                             </TableRow>
                         ))
