@@ -62,9 +62,9 @@ export default function PayrollPage() {
               { type: 'where', fieldPath: 'status', opStr: '==', value: 'active' }
             ]);
             
-            // Filter for active staff with a salary object defined
+            // Filter for active staff with a salary object where amount is a number.
             const eligibleStaff = allUsers.filter(
-              (user) => user.salary
+              (user) => user.salary && typeof user.salary.amount === 'number'
             );
             
             const runsData = await dbService.getDocs<PayrollRun>('payrollRuns', [
@@ -202,7 +202,7 @@ export default function PayrollPage() {
                                 {isLoading ? Array.from({length: 5}).map((_, i) => (
                                     <TableRow key={i}><TableCell><Skeleton className="h-5 w-32"/></TableCell><TableCell><Skeleton className="h-5 w-24 ml-auto"/></TableCell></TableRow>
                                 )) : staff.length > 0 ? staff.map(user => (
-                                    <TableRow key={user.id} className={user.salary.amount === 0 ? 'text-muted-foreground' : ''}>
+                                    <TableRow key={user.id} className={user.salary?.amount === 0 ? 'text-muted-foreground' : ''}>
                                         <TableCell>{user.name}</TableCell>
                                         <TableCell className="text-right font-medium">{user.salary?.amount.toLocaleString()}</TableCell>
                                     </TableRow>
