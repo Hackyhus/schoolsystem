@@ -13,10 +13,10 @@ const invoiceSchema = z.object({
   term: z.string().min(1, 'Term is required.'),
 });
 
-async function generateInvoiceId(): Promise<string> {
+async function getNextInvoiceId(offset: number = 0): Promise<string> {
     const year = new Date().getFullYear();
     const invoiceCount = await dbService.getCountFromServer('invoices');
-    const nextId = (invoiceCount + 1).toString().padStart(5, '0');
+    const nextId = (invoiceCount + offset + 1).toString().padStart(5, '0');
     return `INV-${year}-${nextId}`;
 }
 
@@ -70,13 +70,21 @@ export async function generateInvoicesForClass(className: string, session: strin
         // 4. Generate invoices only for students who don't have one yet
         const batch = dbService.createBatch();
         let generatedCount = 0;
+        
+        // Get the starting invoice count once before the loop
+        const initialInvoiceCount = await dbService.getCountFromServer('invoices');
+        const year = new Date().getFullYear();
+
 
         for (const student of students) {
             if (existingInvoiceStudentIds.has(student.studentId)) {
                 continue; // Skip this student
             }
+            
+            // Calculate the new invoice ID using an offset
+            const nextId = (initialInvoiceCount + generatedCount + 1).toString().padStart(5, '0');
+            const invoiceId = `INV-${year}-${nextId}`;
 
-            const invoiceId = await generateInvoiceId();
             const dueDate = Timestamp.fromDate(new Date(new Date().setDate(new Date().getDate() + 30))); // Due in 30 days
 
             const newInvoice: Omit<Invoice, 'id'> = {
