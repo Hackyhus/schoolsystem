@@ -1,5 +1,4 @@
 
-
 'use client';
 
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -52,7 +51,7 @@ export function BankDetailsForm({
   const { toast } = useToast();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const { role: currentUserRole } = useRole();
-  const isAdmin = currentUserRole === 'Admin';
+  const canEditSalary = currentUserRole === 'Admin' || currentUserRole === 'Accountant';
 
   const form = useForm<BankDetailsFormValues>({
     resolver: zodResolver(formSchema),
@@ -77,7 +76,7 @@ export function BankDetailsForm({
         'salary.accountName': values.accountName,
       };
 
-      if (isAdmin && values.salaryAmount) {
+      if (canEditSalary && values.salaryAmount) {
         updateData['salary.amount'] = Number(values.salaryAmount);
       }
 
@@ -115,10 +114,10 @@ export function BankDetailsForm({
                     type="number"
                     placeholder="e.g. 150000"
                     {...field}
-                    disabled={!isAdmin}
+                    disabled={!canEditSalary}
                   />
                 </FormControl>
-                {!isAdmin && <FormMessage>Only an administrator can change the salary amount.</FormMessage>}
+                {!canEditSalary && <FormMessage>Only an administrator can change the salary amount.</FormMessage>}
               </FormItem>
             )}
           />
