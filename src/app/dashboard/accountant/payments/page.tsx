@@ -1,7 +1,7 @@
 
 'use client';
 
-import { useState, useCallback, useEffect } from 'react';
+import { useState, useCallback, useEffect, useRef } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -13,7 +13,7 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '
 import { dbService } from '@/lib/dbService';
 import type { Invoice, Payment } from '@/lib/schema';
 import { useToast } from '@/hooks/use-toast';
-import { AlertCircle, Loader2, Search, CheckCircle, RefreshCw, Eye, Trash2 } from 'lucide-react';
+import { AlertCircle, Loader2, Search, CheckCircle, RefreshCw, Eye, Trash2, Upload, Download, FileCheck2 } from 'lucide-react';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { recordPayment, deletePayment } from '@/actions/payment-actions';
 import {
@@ -44,10 +44,12 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import { Skeleton } from '@/components/ui/skeleton';
-import { format } from 'date-fns';
+import { format, addDays, differenceInDays } from 'date-fns';
 import { Badge } from '@/components/ui/badge';
 import Link from 'next/link';
 import { useRole } from '@/context/role-context';
+import * as XLSX from 'xlsx';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
 const paymentSchema = z.object({
   invoiceId: z.string().min(1, 'Invoice ID is required'),
@@ -58,6 +60,25 @@ const paymentSchema = z.object({
 });
 
 type PaymentFormValues = z.infer<typeof paymentSchema>;
+
+type BankTransaction = {
+  Date: Date;
+  Description: string;
+  Amount: number;
+  __rowNum__: number;
+};
+
+type MatchedTransaction = {
+  bankTx: BankTransaction;
+  portalTx: Payment;
+};
+
+type ReconciliationResult = {
+  matched: MatchedTransaction[];
+  unmatchedBank: BankTransaction[];
+  unmatchedPortal: Payment[];
+};
+
 
 export default function PaymentsPage() {
   const [invoiceIdToSearch, setInvoiceIdToSearch] = useState('');
@@ -79,6 +100,11 @@ export default function PaymentsPage() {
       paymentDate: undefined,
     }
   });
+
+    const [isReconciling, setIsReconciling] = useState(false);
+    const [fileName, setFileName] = useState<string | null>(null);
+    const [reconciliationResult, setReconciliationResult] = useState<ReconciliationResult | null>(null);
+    const fileInputRef = useRef<HTMLInputElement>(null);
 
   const fetchRecentPayments = useCallback(async () => {
     setIsLoadingPayments(true);
@@ -128,7 +154,6 @@ export default function PaymentsPage() {
             setSearchError(`This invoice has already been fully paid.`);
         } else {
             setFoundInvoice(invoice);
-            // Pass the custom invoice ID to the form, not the document ID
             form.setValue('invoiceId', invoice.invoiceId);
         }
       } else {
@@ -181,6 +206,113 @@ export default function PaymentsPage() {
       toast({ variant: 'destructive', title: 'Error', description: error.message });
     }
   };
+
+   const handleFileSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
+        const file = event.target.files?.[0];
+        if (!file) return;
+
+        setIsReconciling(true);
+        setFileName(file.name);
+        setReconciliationResult(null);
+
+        const reader = new FileReader();
+        reader.onload = async (e) => {
+            try {
+                const data = e.target?.result;
+                const workbook = XLSX.read(data, { type: 'binary', cellDates: true });
+                const sheetName = workbook.SheetNames[0];
+                const worksheet = workbook.Sheets[sheetName];
+                const bankTransactions: BankTransaction[] = XLSX.utils.sheet_to_json(worksheet, {
+                    raw: false,
+                    dateNF: 'yyyy-mm-dd'
+                });
+
+                if (bankTransactions.length === 0) {
+                    throw new Error("No transactions found in the file.");
+                }
+
+                if (!bankTransactions[0].Date || !bankTransactions[0].Amount) {
+                    throw new Error("Invalid file format. Please ensure columns 'Date', 'Description', and 'Amount' exist.");
+                }
+
+                await runReconciliation(bankTransactions);
+            } catch (error: any) {
+                toast({
+                    variant: 'destructive',
+                    title: 'File Read Error',
+                    description: error.message || 'Could not parse the uploaded file.',
+                });
+                setIsReconciling(false);
+                setFileName(null);
+            }
+        };
+        reader.onerror = () => {
+            toast({
+                variant: 'destructive',
+                title: 'File Read Error',
+                description: 'There was a problem reading the file.',
+            });
+            setIsReconciling(false);
+            setFileName(null);
+        };
+        reader.readAsBinaryString(file);
+    };
+
+    const runReconciliation = async (bankTransactions: BankTransaction[]) => {
+        const validBankTxs = bankTransactions.filter(tx => tx.Amount > 0);
+        if (validBankTxs.length === 0) {
+            toast({ title: "No credit transactions found", description: "The statement contains no incoming payments to reconcile." });
+            setIsReconciling(false);
+            return;
+        }
+
+        const dates = validBankTxs.map(tx => tx.Date).sort((a, b) => a.getTime() - b.getTime());
+        const minDate = dates[0];
+        const maxDate = addDays(dates[dates.length - 1], 1); // Add a day for buffer
+
+        try {
+            const portalPayments = await dbService.getDocs<Payment>('payments', [
+                { type: 'where', fieldPath: 'paymentDate', opStr: '>=', value: minDate },
+                { type: 'where', fieldPath: 'paymentDate', opStr: '<=', value: maxDate },
+            ]);
+            
+            const result: ReconciliationResult = {
+                matched: [],
+                unmatchedBank: [],
+                unmatchedPortal: [...portalPayments]
+            };
+
+            for (const bankTx of validBankTxs) {
+                let foundMatch = false;
+                for (let i = 0; i < result.unmatchedPortal.length; i++) {
+                    const portalTx = result.unmatchedPortal[i];
+                    const portalDate = new Date(portalTx.paymentDate.seconds * 1000);
+                    
+                    const amountMatches = portalTx.amountPaid === bankTx.Amount;
+                    const dateDifference = Math.abs(differenceInDays(bankTx.Date, portalDate));
+
+                    if (amountMatches && dateDifference <= 2) { // Match if same amount within a 2-day window
+                        result.matched.push({ bankTx, portalTx });
+                        result.unmatchedPortal.splice(i, 1); // Remove from unmatched
+                        foundMatch = true;
+                        break; 
+                    }
+                }
+                if (!foundMatch) {
+                    result.unmatchedBank.push(bankTx);
+                }
+            }
+
+            setReconciliationResult(result);
+            toast({ title: 'Reconciliation Complete', description: 'Review the matched and unmatched transactions below.' });
+
+        } catch (error: any) {
+            console.error("Error during reconciliation:", error);
+            toast({ variant: 'destructive', title: 'Error', description: 'Could not fetch portal payment records.' });
+        } finally {
+            setIsReconciling(false);
+        }
+    };
 
 
   return (
@@ -283,6 +415,138 @@ export default function PaymentsPage() {
         </CardContent>
       </Card>
       
+       <Card>
+          <CardHeader>
+              <CardTitle>Bank Statement Reconciliation</CardTitle>
+              <CardDescription>
+                  Upload a bank statement (CSV or Excel) to automatically match transactions with portal payments. Required columns: 'Date', 'Description', 'Amount'.
+              </CardDescription>
+          </CardHeader>
+          <CardContent>
+              <div className="flex flex-col items-center justify-center rounded-lg border-2 border-dashed p-12 text-center">
+                  <Input
+                      type="file"
+                      ref={fileInputRef}
+                      className="hidden"
+                      accept=".xlsx, .xls, .csv"
+                      onChange={handleFileSelect}
+                      disabled={isReconciling}
+                  />
+                   <div className="mb-4">
+                      {isReconciling ? (
+                          <Loader2 className="h-12 w-12 animate-spin text-primary" />
+                      ) : (
+                          <FileCheck2 className="h-12 w-12 text-muted-foreground" />
+                      )}
+                  </div>
+                  <h3 className="text-lg font-semibold">{fileName || "Upload Your Bank Statement"}</h3>
+                  <p className="text-sm text-muted-foreground mb-4">
+                     {isReconciling ? "Processing file, please wait..." : "Only credit transactions will be reconciled."}
+                  </p>
+                  <Button
+                      variant="outline"
+                      onClick={() => fileInputRef.current?.click()}
+                      disabled={isReconciling}
+                  >
+                      <Upload className="mr-2 h-4 w-4" />
+                      {fileName ? 'Upload Different File' : 'Choose File'}
+                  </Button>
+              </div>
+          </CardContent>
+      </Card>
+
+        {reconciliationResult && (
+            <Tabs defaultValue="unmatched-bank">
+                <TabsList className="grid w-full grid-cols-3">
+                    <TabsTrigger value="unmatched-bank">Unmatched from Bank ({reconciliationResult.unmatchedBank.length})</TabsTrigger>
+                    <TabsTrigger value="matched">Matched ({reconciliationResult.matched.length})</TabsTrigger>
+                    <TabsTrigger value="unmatched-portal">Unmatched from Portal ({reconciliationResult.unmatchedPortal.length})</TabsTrigger>
+                </TabsList>
+                <TabsContent value="unmatched-bank">
+                    <Card>
+                        <CardHeader><CardTitle>Unmatched from Bank Statement</CardTitle><CardDescription>These transactions appeared on the bank statement but have no corresponding record in the portal. You may need to record these payments manually above.</CardDescription></CardHeader>
+                        <CardContent>
+                           <Table>
+                                <TableHeader>
+                                    <TableRow>
+                                        <TableHead>Bank Date</TableHead>
+                                        <TableHead>Description</TableHead>
+                                        <TableHead>Amount</TableHead>
+                                    </TableRow>
+                                </TableHeader>
+                                <TableBody>
+                                    {reconciliationResult.unmatchedBank.map(tx => (
+                                        <TableRow key={tx.__rowNum__}>
+                                            <TableCell>{format(tx.Date, 'PPP')}</TableCell>
+                                            <TableCell>{tx.Description}</TableCell>
+                                            <TableCell className="font-medium">NGN {tx.Amount.toLocaleString()}</TableCell>
+                                        </TableRow>
+                                    ))}
+                                    {reconciliationResult.unmatchedBank.length === 0 && <TableRow><TableCell colSpan={3} className="h-24 text-center">All bank transactions were matched.</TableCell></TableRow>}
+                                </TableBody>
+                            </Table>
+                        </CardContent>
+                    </Card>
+                </TabsContent>
+                <TabsContent value="matched">
+                    <Card>
+                        <CardHeader><CardTitle>Matched Transactions</CardTitle></CardHeader>
+                        <CardContent>
+                            <Table>
+                                <TableHeader>
+                                    <TableRow>
+                                        <TableHead>Portal Date</TableHead>
+                                        <TableHead>Student Name</TableHead>
+                                        <TableHead>Amount</TableHead>
+                                        <TableHead>Bank Date</TableHead>
+                                    </TableRow>
+                                </TableHeader>
+                                <TableBody>
+                                    {reconciliationResult.matched.map(({ portalTx, bankTx }) => (
+                                        <TableRow key={portalTx.id}>
+                                            <TableCell>{format(new Date(portalTx.paymentDate.seconds * 1000), 'PPP')}</TableCell>
+                                            <TableCell>{portalTx.studentName}</TableCell>
+                                            <TableCell className="font-medium">NGN {portalTx.amountPaid.toLocaleString()}</TableCell>
+                                            <TableCell>{format(bankTx.Date, 'PPP')}</TableCell>
+                                        </TableRow>
+                                    ))}
+                                     {reconciliationResult.matched.length === 0 && <TableRow><TableCell colSpan={4} className="h-24 text-center">No transactions were automatically matched.</TableCell></TableRow>}
+                                </TableBody>
+                            </Table>
+                        </CardContent>
+                    </Card>
+                </TabsContent>
+                <TabsContent value="unmatched-portal">
+                     <Card>
+                        <CardHeader><CardTitle>Unmatched from Portal Records</CardTitle><CardDescription>These payments were recorded in the portal but could not be found on the bank statement for the period. This may be due to date discrepancies or payments not yet reflecting in the bank.</CardDescription></CardHeader>
+                        <CardContent>
+                           <Table>
+                                <TableHeader>
+                                    <TableRow>
+                                        <TableHead>Portal Date</TableHead>
+                                        <TableHead>Student Name</TableHead>
+                                        <TableHead>Amount</TableHead>
+                                         <TableHead>Method</TableHead>
+                                    </TableRow>
+                                </TableHeader>
+                                <TableBody>
+                                    {reconciliationResult.unmatchedPortal.map(tx => (
+                                        <TableRow key={tx.id}>
+                                             <TableCell>{format(new Date(tx.paymentDate.seconds * 1000), 'PPP')}</TableCell>
+                                            <TableCell>{tx.studentName}</TableCell>
+                                            <TableCell className="font-medium">NGN {tx.amountPaid.toLocaleString()}</TableCell>
+                                            <TableCell><Badge variant="secondary">{tx.paymentMethod}</Badge></TableCell>
+                                        </TableRow>
+                                    ))}
+                                     {reconciliationResult.unmatchedPortal.length === 0 && <TableRow><TableCell colSpan={4} className="h-24 text-center">All portal payments were matched.</TableCell></TableRow>}
+                                </TableBody>
+                            </Table>
+                        </CardContent>
+                    </Card>
+                </TabsContent>
+            </Tabs>
+        )}
+
       <Card>
         <CardHeader className="flex flex-row items-center justify-between">
             <div>
@@ -367,3 +631,5 @@ export default function PaymentsPage() {
     </div>
   );
 }
+
+    

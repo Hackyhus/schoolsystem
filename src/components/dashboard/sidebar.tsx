@@ -120,7 +120,6 @@ const allNavLinks = {
   payments: { icon: 'CreditCard', label: 'Payments', path: '/dashboard/accountant/payments' },
   expenses: { icon: 'Wallet', label: 'Expenses', path: '/dashboard/accountant/expenses' },
   payroll: { icon: 'Briefcase', label: 'Payroll', path: '/dashboard/accountant/payroll' },
-  reconciliation: { icon: 'Landmark', label: 'Reconciliation', path: '/dashboard/accountant/reconciliation' },
   financialReports: { icon: 'BarChart2', label: 'Financial Reports', path: '/dashboard/accountant/reports' },
 
   // Parent
@@ -139,7 +138,7 @@ const navConfig: Record<string, { group: string; links: (keyof typeof allNavLink
     { group: 'Main', links: ['dashboard', 'profile', 'notifications'] },
     { group: 'Communication', links: ['announcements', 'messaging'] },
     { group: 'Management', links: ['reports', 'system', 'manageStaff', 'manageStudents', 'departments'] },
-    { group: 'Finance', links: ['feeSystem', 'invoices', 'payments', 'expenses', 'payroll', 'reconciliation', 'financialReports'] },
+    { group: 'Finance', links: ['feeSystem', 'invoices', 'payments', 'expenses', 'payroll', 'financialReports'] },
     { group: 'Academics', links: ['lessonApprovals', 'reviewQuestions', 'enterScores', 'generateResults', 'viewResults'] },
     { group: 'Infrastructure', links: ['database', 'logs'] }
   ],
@@ -159,7 +158,7 @@ const navConfig: Record<string, { group: string; links: (keyof typeof allNavLink
   Accountant: [
     { group: 'Main', links: ['dashboard', 'profile', 'notifications'] },
     { group: 'Communication', links: ['announcements', 'messaging'] },
-    { group: 'Finance', links: ['feeSystem', 'invoices', 'payments', 'expenses', 'payroll', 'reconciliation', 'financialReports'] },
+    { group: 'Finance', links: ['feeSystem', 'invoices', 'payments', 'expenses', 'payroll', 'financialReports'] },
   ],
   ExamOfficer: [
     { group: 'Main', links: ['dashboard', 'profile', 'notifications'] },
@@ -261,3 +260,5 @@ export function DashboardSidebar() {
     </Sidebar>
   );
 }
+
+    
