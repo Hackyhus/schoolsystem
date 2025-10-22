@@ -12,10 +12,36 @@ import { useRole } from '@/context/role-context';
 import { Card, CardContent, CardFooter, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { aiEngine } from '@/ai';
 import { Loader2 } from 'lucide-react';
+import Link from 'next/link';
 
 type Message = {
     role: 'user' | 'bot';
     content: string;
+};
+
+// Function to parse the bot's response and create links
+const renderMessageContent = (content: string) => {
+  const urlRegex = /\("([^"]+)"\s*(\/[^)]+)\)/g;
+  const parts = content.split(urlRegex);
+
+  return parts.map((part, index) => {
+    // Every 3rd part is the path, and the one before it is the label
+    if (index % 3 === 2) {
+      const label = parts[index - 1].replace(/"/g, '').trim();
+      const path = part.trim();
+      return (
+        <Link key={index} href={path} className="text-primary underline hover:no-underline font-semibold">
+          {label}
+        </Link>
+      );
+    }
+    // Render the text parts that are not links
+    if (index % 3 === 0) {
+      // Clean up leftover quote from the regex split
+      return part.replace(/"/g, '');
+    }
+    return null;
+  });
 };
 
 export function SupportBot() {
@@ -115,13 +141,13 @@ export function SupportBot() {
                             )}
                             <div
                                 className={cn(
-                                    "max-w-[75%] rounded-lg p-3 text-sm whitespace-pre-wrap", // Added whitespace-pre-wrap
+                                    "max-w-[75%] rounded-lg p-3 text-sm whitespace-pre-wrap",
                                     message.role === 'user'
                                     ? "bg-primary text-primary-foreground"
                                     : "bg-muted"
                                 )}
                             >
-                                {message.content}
+                                {message.role === 'bot' ? renderMessageContent(message.content) : message.content}
                             </div>
                             {message.role === 'user' && (
                                 <Avatar className="h-8 w-8">

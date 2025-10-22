@@ -18,72 +18,73 @@ The GIIA Portal is a role-based school management system for Great Insight Inter
 ## Feature Breakdown by Route
 
 - Feature: Dashboard
+  - Navigation: "Dashboard" (/dashboard)
   - Purpose: The main landing page after login. Displays a summary of relevant information for the user's role.
   - Accessible by: All roles.
 
 - Feature: Manage Staff
-  - Navigation: Users
+  - Navigation: "Users" (/dashboard/users)
   - Purpose: Staff management. Admins can add, view, and manage all staff profiles.
   - Accessible by: Admin, SLT, HeadOfDepartment.
 
 - Feature: Manage Students
-  - Navigation: Students
+  - Navigation: "Students" (/dashboard/students)
   - Purpose: Student management. Admins can enroll new students, view profiles, and manage student records.
   - Accessible by: Admin, SLT.
 
 - Feature: Departments
-  - Navigation: Departments
+  - Navigation: "Departments" (/dashboard/departments)
   - Purpose: Manage academic departments and assign Heads of Department (HODs).
   - Accessible by: Admin.
 
 - Feature: System Configuration
-  - Navigation: System
+  - Navigation: "System" (/dashboard/system)
   - Purpose: System-wide configuration. Includes settings for school info, grading scales, academic year, roles, and maintenance mode.
   - Accessible by: Admin. SLT has access to some sub-sections.
 
 - Feature: Lesson Plans
-  - Navigation: Lesson Plans
+  - Navigation: "Lesson Plans" (/dashboard/lesson-notes)
   - Purpose: For teachers to submit lesson plans. For HODs and Admins to review, approve, or reject these submissions.
   - Accessible by: Admin, SLT, HeadOfDepartment, Teacher.
 
 - Feature: Question Bank
-  - Navigation: Question Bank
+  - Navigation: "Question Bank" (/dashboard/exam-questions)
   - Purpose: For teachers to submit test and exam questions. For Exam Officers to review and approve them.
   - Accessible by: Admin, ExamOfficer, Teacher.
 
 - Feature: Scores
-  - Navigation: Enter Scores
+  - Navigation: "Enter Scores" (/dashboard/scores)
   - Purpose: For teachers to enter student scores (CAs and Exams). For Exam Officers to review and approve scores.
   - Accessible by: Admin, ExamOfficer, Teacher.
 
 - Feature: Results
-  - Navigation: Generate Results / View Results
+  - Navigation: "Generate Results" (/dashboard/results/generate) or "View Results" (/dashboard/results/view)
   - Purpose: For Exam Officers to generate final report cards from approved scores. All academic roles can view generated results.
   - Accessible by: Admin, SLT, HeadOfDepartment, ExamOfficer, Teacher.
 
 - Feature: Accountant Tools
   - Purpose: A suite of tools for the Accountant role.
   - Sections:
-    - Fee Structures: Create and manage fee structures for different class groups.
-    - Invoices: Generate and track student invoices.
-    - Payments: Record fee payments against invoices.
-    - Expenses: Log all school expenditures.
-    - Payroll: Run monthly payroll for staff.
-    - Reconciliation: Reconcile bank statements with portal records.
+    - Fee Structures: "Accountant > Fees" (/dashboard/accountant/fees)
+    - Invoices: "Accountant > Invoices" (/dashboard/accountant/invoices)
+    - Payments: "Accountant > Payments" (/dashboard/accountant/payments)
+    - Expenses: "Accountant > Expenses" (/dashboard/accountant/expenses)
+    - Payroll: "Accountant > Payroll" (/dashboard/accountant/payroll)
+    - Reconciliation: "Accountant > Reconciliation" (/dashboard/accountant/reconciliation)
   - Accessible by: Accountant, Admin.
 
 - Feature: Student Performance
-  - Navigation: My Students (for Teachers) / Results (for Parents)
+  - Navigation: "My Students" (/dashboard/performance) for Teachers or "Results" for Parents.
   - Purpose: A portal for parents to view their child's results and performance. Also used by teachers to see their student list.
   - Accessible by: Parent, Teacher.
 
 - Feature: Profile
-  - Navigation: Click your name in the top-right corner, then Profile.
+  - Navigation: Click your name in the top-right corner, then "Profile" (/profile).
   - Purpose: Allows users to view and edit their own profile information.
   - Accessible by: All roles.
 
 - Feature: Notifications
-  - Navigation: Notifications (bell icon in the header)
+  - Navigation: "Notifications" (bell icon in the header, leads to /dashboard/notifications)
   - Purpose: Displays a list of all notifications for the user, such as submission approvals or rejections.
   - Accessible by: All roles.
 `;
