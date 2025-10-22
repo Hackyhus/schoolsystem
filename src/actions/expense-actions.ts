@@ -70,3 +70,73 @@ export async function deleteExpense(id: string) {
     return { error: 'An unexpected error occurred while deleting.' };
   }
 }
+
+export async function bulkCreateExpenses(expenses: any[], userId: string) {
+    try {
+        if (!userId) {
+            throw new Error("Authentication required.");
+        }
+        const accountant = await dbService.getDoc<MockUser>('users', userId);
+        if (!accountant) {
+            throw new Error("User not found.");
+        }
+
+        const batch = dbService.createBatch();
+        const validExpenses: any[] = [];
+        const invalidRecords: any[] = [];
+        
+        const requiredFields = ["date(YYYY-MM-DD)", "category", "description", "amount"];
+
+        for (const expense of expenses) {
+            const missingFields = requiredFields.filter(field => !expense[field]);
+            
+            if (missingFields.length > 0) {
+                invalidRecords.push({ ...expense, error: `Missing required fields: ${missingFields.join(', ')}` });
+                continue;
+            }
+
+            if (!z.coerce.number().positive().safeParse(expense.amount).success) {
+                 invalidRecords.push({ ...expense, error: 'Invalid amount. Must be a positive number.' });
+                continue;
+            }
+
+            if (!EXPENSE_CATEGORIES.includes(expense.category)) {
+                 invalidRecords.push({ ...expense, error: `Invalid category. Must be one of: ${EXPENSE_CATEGORIES.join(', ')}` });
+                continue;
+            }
+
+            validExpenses.push(expense);
+        }
+        
+        for (const expense of validExpenses) {
+            const expenseData: Omit<Expense, 'id'> = {
+                category: expense.category,
+                description: expense.description,
+                amount: Number(expense.amount),
+                date: Timestamp.fromDate(new Date(expense["date(YYYY-MM-DD)"])),
+                department: expense.department || 'N/A',
+                recordedBy: userId,
+                recordedByName: accountant.name || 'N/A',
+                createdAt: serverTimestamp(),
+            };
+            batch.set('expenses', null, expenseData);
+        }
+
+        if (validExpenses.length > 0) {
+            await batch.commit();
+        }
+
+        revalidatePath('/dashboard/accountant/expenses');
+
+        return { 
+            success: true, 
+            importedCount: validExpenses.length,
+            errorCount: invalidRecords.length,
+            invalidRecords,
+        };
+
+    } catch (error: any) {
+        console.error('Error in bulk expense creation:', error);
+        return { error: error.message || 'An unexpected server error occurred during bulk import.' };
+    }
+}

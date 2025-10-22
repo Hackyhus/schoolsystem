@@ -4,7 +4,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { PlusCircle, Edit, Trash2 } from "lucide-react";
+import { PlusCircle, Edit, Trash2, Upload } from "lucide-react";
 import { useToast } from '@/hooks/use-toast';
 import { dbService } from '@/lib/dbService';
 import type { Expense } from '@/lib/schema';
@@ -40,11 +40,13 @@ import {
 } from "@/components/ui/alert-dialog";
 import { deleteExpense } from '@/actions/expense-actions';
 import usePersistentState from '@/hooks/use-persistent-state';
+import { BulkExpenseUploadDialog } from '@/components/dashboard/expenses/bulk-expense-upload-dialog';
 
 export default function ExpensesPage() {
     const [expenses, setExpenses] = useState<Expense[]>([]);
     const [isLoading, setIsLoading] = useState(true);
     const [isFormOpen, setIsFormOpen] = usePersistentState('expenses-form-open', false);
+    const [isBulkOpen, setIsBulkOpen] = usePersistentState('expenses-bulk-open', false);
     const [editingExpense, setEditingExpense] = useState<Expense | undefined>(undefined);
     const { toast } = useToast();
 
@@ -79,6 +81,11 @@ export default function ExpensesPage() {
         }
     };
     
+    const handleBulkClose = () => {
+      setIsBulkOpen(false);
+      fetchExpenses();
+    }
+    
     const handleEdit = (expense: Expense) => {
         setEditingExpense(expense);
         setIsFormOpen(true);
@@ -109,16 +116,23 @@ export default function ExpensesPage() {
                 if (!open) setEditingExpense(undefined);
             }}>
                 <Card>
-                    <CardHeader className="flex flex-row items-center justify-between">
+                    <CardHeader className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
                         <div>
                             <CardTitle>Recent Expenses</CardTitle>
                             <CardDescription>A log of all recorded school expenditures.</CardDescription>
                         </div>
-                        <DialogTrigger asChild>
-                            <Button>
-                                <PlusCircle className="mr-2 h-4 w-4" /> Add Expense
-                            </Button>
-                        </DialogTrigger>
+                        <div className="flex gap-2">
+                           <BulkExpenseUploadDialog open={isBulkOpen} onOpenChange={setIsBulkOpen} onUploadComplete={handleBulkClose}>
+                              <Button variant="outline">
+                                <Upload className="mr-2 h-4 w-4" /> Bulk Upload
+                              </Button>
+                           </BulkExpenseUploadDialog>
+                            <DialogTrigger asChild>
+                                <Button>
+                                    <PlusCircle className="mr-2 h-4 w-4" /> Add Expense
+                                </Button>
+                            </DialogTrigger>
+                        </div>
                     </CardHeader>
                     <CardContent>
                         {isLoading ? (
