@@ -30,14 +30,15 @@ export const parseStudentNameFlow = ai.defineFlow(
 
       1.  First, extract the full student name from the description. The name is likely in all caps and may be preceded or followed by other text. Return the name in title case (e.g., "Firstname Lastname").
       2.  If you successfully identify a name, you MUST use the 'findStudentInvoice' tool with the extracted name to find their most recent invoice ID.
-      3.  Return both the extracted name and the invoice ID found by the tool. If no name is clearly identifiable, return null for both fields.
+      3.  After calling the tool (or if no name was found), you MUST provide a final response in the required JSON format. Return both the extracted name and the invoice ID found by the tool. If no name is clearly identifiable or no invoice is found, return null for the respective fields.
       `,
       output: {
         schema: ParseStudentNameOutputSchema,
       },
     });
     if (!output) {
-      throw new Error('No output generated');
+      // If the model provides no output at all, we'll return a default null state.
+      return { studentName: null, invoiceId: null };
     }
     return output;
   }
