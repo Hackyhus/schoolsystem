@@ -232,7 +232,9 @@ export default function PaymentsPage() {
 
                 const bankTransactions: BankTransaction[] = rawJson
                     .map((row, index) => {
+                        // Skip if 'Date' or 'Amount' is missing
                         if (!row.Date || !row.Amount) {
+                            console.warn(`Skipping row ${index + 2} due to missing Date or Amount.`);
                             return null;
                         }
                         
@@ -240,12 +242,13 @@ export default function PaymentsPage() {
                         if (row.Date instanceof Date) {
                             date = row.Date;
                         } else {
-                            date = new Date(row.Date);
-                        }
-
-                        if (isNaN(date.getTime())) {
-                            console.warn(`Skipping row ${index + 2} due to invalid date:`, row.Date);
-                            return null;
+                            // Attempt to parse string dates, this is a common source of issues
+                            const parsedDate = new Date(row.Date);
+                             if (isNaN(parsedDate.getTime())) {
+                                console.warn(`Skipping row ${index + 2} due to invalid date format:`, row.Date);
+                                return null;
+                            }
+                            date = parsedDate;
                         }
 
                         return {
@@ -332,32 +335,33 @@ export default function PaymentsPage() {
                 }
             }
             
-            // Pass 2: AI-assisted match for remaining transactions
-            const aiPromises = mutableBankTxs.map(async (bankTx) => {
+            // Pass 2: AI-assisted match for remaining transactions (sequentially)
+            for (const bankTx of mutableBankTxs) {
+                let isMatchedByAI = false;
                 try {
                     const { studentName } = await aiEngine.financial.parseStudentName({ description: bankTx.Description });
                     bankTx.aiGuessedStudent = studentName;
 
                     if (studentName) {
                         for (let j = result.unmatchedPortal.length - 1; j >= 0; j--) {
-                             const portalTx = result.unmatchedPortal[j];
-                             // Check if AI-guessed name is a strong match for portal student name
-                             if (portalTx.studentName.toLowerCase().includes(studentName.toLowerCase())) {
-                                 result.matched.push({ bankTx, portalTx, matchType: 'AI Assisted' });
-                                 result.unmatchedPortal.splice(j, 1);
-                                 return null; // This bank transaction is now matched
-                             }
+                            const portalTx = result.unmatchedPortal[j];
+                            if (portalTx.studentName.toLowerCase().includes(studentName.toLowerCase())) {
+                                result.matched.push({ bankTx, portalTx, matchType: 'AI Assisted' });
+                                result.unmatchedPortal.splice(j, 1);
+                                isMatchedByAI = true;
+                                break;
+                            }
                         }
                     }
                 } catch (error) {
                     console.error("AI name parsing failed for a transaction:", error);
                     bankTx.aiGuessedStudent = "AI Error";
                 }
-                return bankTx; // Return if no match was found
-            });
 
-            const remainingBankTxs = (await Promise.all(aiPromises)).filter((tx): tx is BankTransaction => tx !== null);
-            result.unmatchedBank = remainingBankTxs;
+                if (!isMatchedByAI) {
+                    result.unmatchedBank.push(bankTx);
+                }
+            }
 
             setReconciliationResult(result);
             toast({ title: 'Reconciliation Complete', description: 'Review the matched and unmatched transactions below.' });
