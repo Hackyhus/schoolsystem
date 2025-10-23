@@ -47,6 +47,7 @@ export function ReceiptTemplate({ payment, schoolInfo }: ReceiptTemplateProps) {
           )}
           <h1 className="text-4xl font-bold" style={{color: "hsl(var(--primary))"}}>{schoolInfo?.name || 'School Name'}</h1>
           <p className="text-sm text-gray-600 mt-1">{schoolInfo?.address}</p>
+           <p className="text-sm text-gray-600 mt-1">Phone: {schoolInfo?.phone} | Email: {schoolInfo?.email}</p>
         </header>
 
         <main className="printable-main-receipt p-8">
@@ -83,10 +84,6 @@ export function ReceiptTemplate({ payment, schoolInfo }: ReceiptTemplateProps) {
                 <p className="text-gray-500">Your payment has been successfully recorded.</p>
            </div>
         </main>
-
-        <footer className="printable-footer-receipt p-8 text-center text-xs text-gray-500 border-t pt-4">
-            <p>Phone: {schoolInfo?.phone} | Email: {schoolInfo?.email}</p>
-        </footer>
       </div>
   );
 }

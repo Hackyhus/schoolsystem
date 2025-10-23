@@ -56,6 +56,7 @@ export function InvoiceTemplate({ invoice, schoolInfo }: InvoiceTemplateProps) {
                 )}
                 <h1 className="text-4xl font-bold" style={{color: "hsl(var(--primary))"}}>{schoolInfo?.name || 'School Name'}</h1>
                 <p className="text-sm text-gray-600 mt-1">{schoolInfo?.address}</p>
+                 <p className="text-sm text-gray-600 mt-1">Phone: {schoolInfo?.phone} | Email: {schoolInfo?.email}</p>
             </header>
             <main className="printable-main-invoice p-8">
                 <div className="text-center mb-6">
@@ -122,9 +123,6 @@ export function InvoiceTemplate({ invoice, schoolInfo }: InvoiceTemplateProps) {
                     <p>Use the Invoice ID as the payment reference.</p>
                 </div>
             </main>
-             <footer className="printable-footer-invoice p-8 text-center text-xs text-gray-500 border-t pt-4">
-                <p>Phone: {schoolInfo?.phone} | Email: {schoolInfo?.email}</p>
-            </footer>
         </div>
   );
 }
