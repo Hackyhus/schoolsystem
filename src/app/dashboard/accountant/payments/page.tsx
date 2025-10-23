@@ -8,7 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from '@/components/ui/label';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import * as z from 'zod';
+import * * as z from 'zod';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { dbService } from '@/lib/dbService';
 import type { Invoice, Payment } from '@/lib/schema';
@@ -419,7 +419,7 @@ export default function PaymentsPage() {
           <CardHeader>
               <CardTitle>Bank Statement Reconciliation</CardTitle>
               <CardDescription>
-                  Upload a bank statement (CSV or Excel) to automatically match transactions with portal payments. Required columns: 'Date', 'Description', 'Amount'.
+                  Upload a bank statement (CSV or Excel) to automatically match transactions with portal payments.
               </CardDescription>
           </CardHeader>
           <CardContent>
@@ -441,16 +441,24 @@ export default function PaymentsPage() {
                   </div>
                   <h3 className="text-lg font-semibold">{fileName || "Upload Your Bank Statement"}</h3>
                   <p className="text-sm text-muted-foreground mb-4">
-                     {isReconciling ? "Processing file, please wait..." : "Only credit transactions will be reconciled."}
+                     {isReconciling ? "Processing file, please wait..." : "Or use our sample file for testing."}
                   </p>
-                  <Button
-                      variant="outline"
-                      onClick={() => fileInputRef.current?.click()}
-                      disabled={isReconciling}
-                  >
-                      <Upload className="mr-2 h-4 w-4" />
-                      {fileName ? 'Upload Different File' : 'Choose File'}
-                  </Button>
+                  <div className="flex gap-4">
+                    <Button
+                        variant="outline"
+                        onClick={() => fileInputRef.current?.click()}
+                        disabled={isReconciling}
+                    >
+                        <Upload className="mr-2 h-4 w-4" />
+                        {fileName ? 'Upload Different File' : 'Choose File'}
+                    </Button>
+                    <Button variant="secondary" asChild>
+                        <a href="/sample-bank-statement.csv" download>
+                           <Download className="mr-2 h-4 w-4" />
+                           Download Sample
+                        </a>
+                    </Button>
+                  </div>
               </div>
           </CardContent>
       </Card>
@@ -631,5 +639,7 @@ export default function PaymentsPage() {
     </div>
   );
 }
+
+    
 
     
