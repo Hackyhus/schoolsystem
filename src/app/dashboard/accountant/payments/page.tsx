@@ -69,6 +69,7 @@ type BankTransaction = {
   Amount: number;
   __rowNum__: number;
   aiGuessedStudent?: string | null;
+  aiGuessedInvoiceId?: string | null;
 };
 
 type MatchedTransaction = {
@@ -227,7 +228,6 @@ export default function PaymentsPage() {
                 const data = e.target?.result;
                 const workbook = XLSX.read(data, { type: 'binary', cellDates: true });
                 const sheetName = workbook.SheetNames[0];
-                const worksheet = workbook.Sheets[sheetName];
                 const rawJson: any[] = XLSX.utils.sheet_to_json(worksheet, {
                     raw: false,
                 });
@@ -351,16 +351,28 @@ export default function PaymentsPage() {
         setParsingRow(tx.__rowNum__);
         startAiTransition(async () => {
             try {
-                const { studentName } = await aiEngine.financial.parseStudentName({ description: tx.Description });
+                const { studentName, invoiceId } = await aiEngine.financial.parseStudentName({ description: tx.Description });
+
                 if (reconciliationResult) {
                     const updatedUnmatched = reconciliationResult.unmatchedBank.map(unmatchedTx =>
                         unmatchedTx.__rowNum__ === tx.__rowNum__
-                            ? { ...unmatchedTx, aiGuessedStudent: studentName }
+                            ? { ...unmatchedTx, aiGuessedStudent: studentName, aiGuessedInvoiceId: invoiceId }
                             : unmatchedTx
                     );
                     setReconciliationResult({ ...reconciliationResult, unmatchedBank: updatedUnmatched });
                 }
-                toast({ title: 'AI Suggestion', description: studentName ? `Guessed student: ${studentName}` : 'Could not identify a student name.' });
+
+                if (invoiceId) {
+                    setInvoiceIdToSearch(invoiceId);
+                    await handleSearchInvoice();
+                    form.setValue('amountPaid', tx.Amount);
+                    form.setValue('paymentDate', tx.Date);
+                    form.setValue('notes', tx.Description);
+                    toast({ title: 'AI Match Found!', description: `Form has been pre-filled for ${studentName}. Please verify and record.` });
+                } else {
+                     toast({ title: 'AI Suggestion', description: studentName ? `Guessed student: ${studentName}, but no unpaid invoice was found.` : 'Could not identify a student name.' });
+                }
+
             } catch (error) {
                 console.error("AI parsing failed:", error);
                 toast({ variant: 'destructive', title: 'AI Error', description: 'Could not get suggestion.' });
@@ -528,7 +540,7 @@ export default function PaymentsPage() {
                 </TabsList>
                 <TabsContent value="unmatched-bank">
                     <Card>
-                        <CardHeader><CardTitle>Unmatched from Bank Statement</CardTitle><CardDescription>These transactions appeared on the bank statement but have no corresponding record in the portal. You may need to record these payments manually above.</CardDescription></CardHeader>
+                        <CardHeader><CardTitle>Unmatched from Bank Statement</CardTitle><CardDescription>These transactions appeared on the bank statement but have no corresponding record in the portal. Use "AI Assist" to automatically find the student's invoice and pre-fill the form above.</CardDescription></CardHeader>
                         <CardContent>
                            <Table>
                                 <TableHeader>
