@@ -14,7 +14,7 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '
 import { dbService } from '@/lib/dbService';
 import type { Invoice, Payment } from '@/lib/schema';
 import { useToast } from '@/hooks/use-toast';
-import { AlertCircle, Loader2, Search, CheckCircle, RefreshCw, Eye, Trash2, Upload, Download, FileCheck2 } from 'lucide-react';
+import { AlertCircle, Loader2, Search, CheckCircle, RefreshCw, Eye, Trash2, Upload, Download, FileCheck2, Sparkles } from 'lucide-react';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { recordPayment, deletePayment } from '@/actions/payment-actions';
 import {
@@ -51,6 +51,7 @@ import Link from 'next/link';
 import { useRole } from '@/context/role-context';
 import * as XLSX from 'xlsx';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { aiEngine } from '@/ai';
 
 const paymentSchema = z.object({
   invoiceId: z.string().min(1, 'Invoice ID is required'),
@@ -67,11 +68,13 @@ type BankTransaction = {
   Description: string;
   Amount: number;
   __rowNum__: number;
+  aiGuessedStudent?: string | null;
 };
 
 type MatchedTransaction = {
   bankTx: BankTransaction;
   portalTx: Payment;
+  matchType: 'Exact' | 'AI Assisted';
 };
 
 type ReconciliationResult = {
@@ -246,8 +249,9 @@ export default function PaymentsPage() {
                         }
 
                         return {
-                            ...row,
                             Date: date,
+                            Description: row.Description || '',
+                            Amount: row.Amount,
                             __rowNum__: index + 2,
                         };
                     })
@@ -255,11 +259,7 @@ export default function PaymentsPage() {
 
 
                 if (bankTransactions.length === 0) {
-                    throw new Error("No valid transactions found in the file.");
-                }
-
-                if (!bankTransactions[0].Description) {
-                    throw new Error("Invalid file format. Please ensure columns 'Date', 'Description', and 'Amount' exist.");
+                    throw new Error("No valid transactions found in the file. Ensure 'Date' and 'Amount' columns exist and are populated.");
                 }
 
                 await runReconciliation(bankTransactions);
@@ -295,7 +295,7 @@ export default function PaymentsPage() {
 
         const dates = validBankTxs.map(tx => tx.Date).sort((a, b) => a.getTime() - b.getTime());
         const minDate = dates[0];
-        const maxDate = addDays(dates[dates.length - 1], 1); // Add a day for buffer
+        const maxDate = addDays(dates[dates.length - 1], 1); 
 
         try {
             const portalPayments = await dbService.getDocs<Payment>('payments', [
@@ -308,27 +308,56 @@ export default function PaymentsPage() {
                 unmatchedBank: [],
                 unmatchedPortal: [...portalPayments]
             };
+            
+            const mutableBankTxs = [...validBankTxs];
 
-            for (const bankTx of validBankTxs) {
+            // Pass 1: Exact match on amount and date
+            for (let i = mutableBankTxs.length - 1; i >= 0; i--) {
+                const bankTx = mutableBankTxs[i];
                 let foundMatch = false;
-                for (let i = 0; i < result.unmatchedPortal.length; i++) {
-                    const portalTx = result.unmatchedPortal[i];
+                for (let j = result.unmatchedPortal.length - 1; j >= 0; j--) {
+                    const portalTx = result.unmatchedPortal[j];
                     const portalDate = new Date(portalTx.paymentDate.seconds * 1000);
                     
                     const amountMatches = portalTx.amountPaid === bankTx.Amount;
                     const dateDifference = Math.abs(differenceInDays(bankTx.Date, portalDate));
 
-                    if (amountMatches && dateDifference <= 2) { // Match if same amount within a 2-day window
-                        result.matched.push({ bankTx, portalTx });
-                        result.unmatchedPortal.splice(i, 1); // Remove from unmatched
+                    if (amountMatches && dateDifference <= 2) {
+                        result.matched.push({ bankTx, portalTx, matchType: 'Exact' });
+                        result.unmatchedPortal.splice(j, 1);
+                        mutableBankTxs.splice(i, 1);
                         foundMatch = true;
-                        break; 
+                        break;
                     }
                 }
-                if (!foundMatch) {
-                    result.unmatchedBank.push(bankTx);
-                }
             }
+            
+            // Pass 2: AI-assisted match for remaining transactions
+            const aiPromises = mutableBankTxs.map(async (bankTx) => {
+                try {
+                    const { studentName } = await aiEngine.financial.parseStudentName({ description: bankTx.Description });
+                    bankTx.aiGuessedStudent = studentName;
+
+                    if (studentName) {
+                        for (let j = result.unmatchedPortal.length - 1; j >= 0; j--) {
+                             const portalTx = result.unmatchedPortal[j];
+                             // Check if AI-guessed name is a strong match for portal student name
+                             if (portalTx.studentName.toLowerCase().includes(studentName.toLowerCase())) {
+                                 result.matched.push({ bankTx, portalTx, matchType: 'AI Assisted' });
+                                 result.unmatchedPortal.splice(j, 1);
+                                 return null; // This bank transaction is now matched
+                             }
+                        }
+                    }
+                } catch (error) {
+                    console.error("AI name parsing failed for a transaction:", error);
+                    bankTx.aiGuessedStudent = "AI Error";
+                }
+                return bankTx; // Return if no match was found
+            });
+
+            const remainingBankTxs = (await Promise.all(aiPromises)).filter((tx): tx is BankTransaction => tx !== null);
+            result.unmatchedBank = remainingBankTxs;
 
             setReconciliationResult(result);
             toast({ title: 'Reconciliation Complete', description: 'Review the matched and unmatched transactions below.' });
@@ -506,6 +535,7 @@ export default function PaymentsPage() {
                                     <TableRow>
                                         <TableHead>Bank Date</TableHead>
                                         <TableHead>Description</TableHead>
+                                        <TableHead>AI-Guessed Student</TableHead>
                                         <TableHead>Amount</TableHead>
                                     </TableRow>
                                 </TableHeader>
@@ -514,10 +544,18 @@ export default function PaymentsPage() {
                                         <TableRow key={tx.__rowNum__}>
                                             <TableCell>{format(tx.Date, 'PPP')}</TableCell>
                                             <TableCell>{tx.Description}</TableCell>
+                                            <TableCell>
+                                                {tx.aiGuessedStudent ? (
+                                                <Badge variant="secondary" className="flex items-center gap-1">
+                                                    <Sparkles className="h-3 w-3" />
+                                                    {tx.aiGuessedStudent}
+                                                </Badge>
+                                                ) : 'N/A'}
+                                            </TableCell>
                                             <TableCell className="font-medium">NGN {tx.Amount.toLocaleString()}</TableCell>
                                         </TableRow>
                                     ))}
-                                    {reconciliationResult.unmatchedBank.length === 0 && <TableRow><TableCell colSpan={3} className="h-24 text-center">All bank transactions were matched.</TableCell></TableRow>}
+                                    {reconciliationResult.unmatchedBank.length === 0 && <TableRow><TableCell colSpan={4} className="h-24 text-center">All bank transactions were matched.</TableCell></TableRow>}
                                 </TableBody>
                             </Table>
                         </CardContent>
@@ -533,16 +571,21 @@ export default function PaymentsPage() {
                                         <TableHead>Portal Date</TableHead>
                                         <TableHead>Student Name</TableHead>
                                         <TableHead>Amount</TableHead>
-                                        <TableHead>Bank Date</TableHead>
+                                        <TableHead>Match Type</TableHead>
                                     </TableRow>
                                 </TableHeader>
                                 <TableBody>
-                                    {reconciliationResult.matched.map(({ portalTx, bankTx }) => (
+                                    {reconciliationResult.matched.map(({ portalTx, matchType }) => (
                                         <TableRow key={portalTx.id}>
                                             <TableCell>{format(new Date(portalTx.paymentDate.seconds * 1000), 'PPP')}</TableCell>
                                             <TableCell>{portalTx.studentName}</TableCell>
                                             <TableCell className="font-medium">NGN {portalTx.amountPaid.toLocaleString()}</TableCell>
-                                            <TableCell>{format(bankTx.Date, 'PPP')}</TableCell>
+                                            <TableCell>
+                                                <Badge variant={matchType === 'AI Assisted' ? 'default' : 'secondary'}>
+                                                    {matchType === 'AI Assisted' && <Sparkles className="mr-1 h-3 w-3" />}
+                                                    {matchType}
+                                                </Badge>
+                                            </TableCell>
                                         </TableRow>
                                     ))}
                                      {reconciliationResult.matched.length === 0 && <TableRow><TableCell colSpan={4} className="h-24 text-center">No transactions were automatically matched.</TableCell></TableRow>}
