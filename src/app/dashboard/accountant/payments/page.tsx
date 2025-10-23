@@ -134,8 +134,9 @@ export default function PaymentsPage() {
   }, [fetchRecentPayments]);
 
 
-  const handleSearchInvoice = async () => {
-    if (!invoiceIdToSearch) {
+  const handleSearchInvoice = useCallback(async (id?: string) => {
+    const searchId = id || invoiceIdToSearch;
+    if (!searchId) {
       setSearchError('Please enter an Invoice ID to search.');
       return;
     }
@@ -152,7 +153,7 @@ export default function PaymentsPage() {
 
     try {
       const invoices = await dbService.getDocs<Invoice>('invoices', [
-        { type: 'where', fieldPath: 'invoiceId', opStr: '==', value: invoiceIdToSearch.trim() },
+        { type: 'where', fieldPath: 'invoiceId', opStr: '==', value: searchId.trim() },
         { type: 'limit', limitCount: 1 }
       ]);
       const invoice = invoices[0];
@@ -164,14 +165,14 @@ export default function PaymentsPage() {
             form.setValue('invoiceId', invoice.invoiceId);
         }
       } else {
-        setSearchError(`No invoice found with ID: ${invoiceIdToSearch}`);
+        setSearchError(`No invoice found with ID: ${searchId}`);
       }
     } catch (error: any) {
       setSearchError(error.message || 'An error occurred during search.');
     } finally {
       setIsSearching(false);
     }
-  };
+  }, [invoiceIdToSearch, form]);
 
   const onSubmit = async (values: PaymentFormValues) => {
     if (!user) {
@@ -228,6 +229,7 @@ export default function PaymentsPage() {
                 const data = e.target?.result;
                 const workbook = XLSX.read(data, { type: 'binary', cellDates: true });
                 const sheetName = workbook.SheetNames[0];
+                const worksheet = workbook.Sheets[sheetName];
                 const rawJson: any[] = XLSX.utils.sheet_to_json(worksheet, {
                     raw: false,
                 });
@@ -242,6 +244,7 @@ export default function PaymentsPage() {
                         if (row.Date instanceof Date) {
                             date = row.Date;
                         } else {
+                            // Attempt to parse string dates (common in CSVs)
                             const parsedDate = new Date(row.Date);
                              if (isNaN(parsedDate.getTime())) {
                                 console.warn(`Skipping row ${index + 2} due to invalid date format:`, row.Date);
@@ -364,7 +367,7 @@ export default function PaymentsPage() {
 
                 if (invoiceId) {
                     setInvoiceIdToSearch(invoiceId);
-                    await handleSearchInvoice();
+                    await handleSearchInvoice(invoiceId);
                     form.setValue('amountPaid', tx.Amount);
                     form.setValue('paymentDate', tx.Date);
                     form.setValue('notes', tx.Description);
@@ -386,9 +389,9 @@ export default function PaymentsPage() {
   return (
     <div className="space-y-8">
       <div>
-        <h1 className="font-headline text-3xl font-bold">Payments</h1>
+        <h1 className="font-headline text-3xl font-bold">Payments & Reconciliation</h1>
         <p className="text-muted-foreground">
-          Record and track all fee payments.
+          Record fee payments and reconcile bank statements.
         </p>
       </div>
 
@@ -409,7 +412,7 @@ export default function PaymentsPage() {
                         disabled={isSearching}
                     />
                  </div>
-                 <Button onClick={handleSearchInvoice} disabled={isSearching || !invoiceIdToSearch} className="self-end">
+                 <Button onClick={() => handleSearchInvoice()} disabled={isSearching || !invoiceIdToSearch} className="self-end">
                      {isSearching ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Search className="mr-2 h-4 w-4" />}
                     Search
                  </Button>
