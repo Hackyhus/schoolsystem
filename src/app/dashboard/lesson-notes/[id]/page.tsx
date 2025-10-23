@@ -261,14 +261,16 @@ export default function LessonNoteDetailPage() {
                         <DialogTrigger asChild>
                            <Button variant="outline"><Eye className="mr-2 h-4 w-4" /> View</Button>
                         </DialogTrigger>
-                        <DialogContent className="max-w-4xl h-[90vh]">
-                            <DialogHeader>
+                        <DialogContent className="max-w-4xl h-[90vh] flex flex-col p-0">
+                            <DialogHeader className="p-6 pb-0">
                                 <DialogTitle>{note.title}</DialogTitle>
                                 <DialogDescription>
                                   Viewing document. <a href={note.fileUrl} target="_blank" rel="noopener noreferrer" className="underline">Click here to download</a>.
                                 </DialogDescription>
                             </DialogHeader>
-                            <iframe src={getDocumentViewUrl(note.fileUrl)} className="w-full h-full border-0"></iframe>
+                            <div className="flex-1 overflow-hidden px-6 pb-6">
+                              <iframe src={getDocumentViewUrl(note.fileUrl)} className="w-full h-full border rounded-md"></iframe>
+                            </div>
                         </DialogContent>
                       </Dialog>
                       <Button asChild>
