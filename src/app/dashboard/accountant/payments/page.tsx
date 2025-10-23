@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import { useState, useCallback, useEffect, useRef } from 'react';
@@ -222,10 +223,31 @@ export default function PaymentsPage() {
                 const workbook = XLSX.read(data, { type: 'binary', cellDates: true });
                 const sheetName = workbook.SheetNames[0];
                 const worksheet = workbook.Sheets[sheetName];
-                const bankTransactions: BankTransaction[] = XLSX.utils.sheet_to_json(worksheet, {
-                    raw: false,
-                    dateNF: 'yyyy-mm-dd'
+                const rawJson: any[] = XLSX.utils.sheet_to_json(worksheet, {
+                    raw: false, // Keep dates as strings for manual parsing
                 });
+
+                const bankTransactions: BankTransaction[] = rawJson.map((row, index) => {
+                  // Robust date parsing
+                  let date: Date;
+                  if (row.Date instanceof Date) {
+                    date = row.Date;
+                  } else {
+                    // Try parsing from string (handles formats like MM/DD/YYYY)
+                    date = new Date(row.Date);
+                  }
+
+                  if (isNaN(date.getTime())) {
+                    throw new Error(`Invalid date format in row ${index + 2}: ${row.Date}`);
+                  }
+
+                  return {
+                    ...row,
+                    Date: date,
+                    __rowNum__: index + 2, // For error reporting
+                  };
+                });
+
 
                 if (bankTransactions.length === 0) {
                     throw new Error("No transactions found in the file.");
