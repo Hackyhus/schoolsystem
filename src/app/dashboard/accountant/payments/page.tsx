@@ -2,7 +2,7 @@
 
 'use client';
 
-import { useState, useCallback, useEffect, useRef } from 'react';
+import { useState, useCallback, useEffect, useRef, useTransition } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -12,7 +12,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { dbService } from '@/lib/dbService';
-import type { Invoice, Payment } from '@/lib/schema';
+import type { Invoice, Payment, Student } from '@/lib/schema';
 import { useToast } from '@/hooks/use-toast';
 import { AlertCircle, Loader2, Search, CheckCircle, RefreshCw, Eye, Trash2, Upload, Download, FileCheck2, Sparkles } from 'lucide-react';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
@@ -109,6 +109,8 @@ export default function PaymentsPage() {
     const [fileName, setFileName] = useState<string | null>(null);
     const [reconciliationResult, setReconciliationResult] = useState<ReconciliationResult | null>(null);
     const fileInputRef = useRef<HTMLInputElement>(null);
+    const [isAiParsing, startAiTransition] = useTransition();
+    const [parsingRow, setParsingRow] = useState<number | null>(null);
 
   const fetchRecentPayments = useCallback(async () => {
     setIsLoadingPayments(true);
@@ -232,9 +234,7 @@ export default function PaymentsPage() {
 
                 const bankTransactions: BankTransaction[] = rawJson
                     .map((row, index) => {
-                        // Skip if 'Date' or 'Amount' is missing
                         if (!row.Date || !row.Amount) {
-                            console.warn(`Skipping row ${index + 2} due to missing Date or Amount.`);
                             return null;
                         }
                         
@@ -242,7 +242,6 @@ export default function PaymentsPage() {
                         if (row.Date instanceof Date) {
                             date = row.Date;
                         } else {
-                            // Attempt to parse string dates, this is a common source of issues
                             const parsedDate = new Date(row.Date);
                              if (isNaN(parsedDate.getTime())) {
                                 console.warn(`Skipping row ${index + 2} due to invalid date format:`, row.Date);
@@ -335,33 +334,7 @@ export default function PaymentsPage() {
                 }
             }
             
-            // Pass 2: AI-assisted match for remaining transactions (sequentially)
-            for (const bankTx of mutableBankTxs) {
-                let isMatchedByAI = false;
-                try {
-                    const { studentName } = await aiEngine.financial.parseStudentName({ description: bankTx.Description });
-                    bankTx.aiGuessedStudent = studentName;
-
-                    if (studentName) {
-                        for (let j = result.unmatchedPortal.length - 1; j >= 0; j--) {
-                            const portalTx = result.unmatchedPortal[j];
-                            if (portalTx.studentName.toLowerCase().includes(studentName.toLowerCase())) {
-                                result.matched.push({ bankTx, portalTx, matchType: 'AI Assisted' });
-                                result.unmatchedPortal.splice(j, 1);
-                                isMatchedByAI = true;
-                                break;
-                            }
-                        }
-                    }
-                } catch (error) {
-                    console.error("AI name parsing failed for a transaction:", error);
-                    bankTx.aiGuessedStudent = "AI Error";
-                }
-
-                if (!isMatchedByAI) {
-                    result.unmatchedBank.push(bankTx);
-                }
-            }
+            result.unmatchedBank = mutableBankTxs;
 
             setReconciliationResult(result);
             toast({ title: 'Reconciliation Complete', description: 'Review the matched and unmatched transactions below.' });
@@ -372,6 +345,29 @@ export default function PaymentsPage() {
         } finally {
             setIsReconciling(false);
         }
+    };
+    
+    const handleAiParse = (tx: BankTransaction) => {
+        setParsingRow(tx.__rowNum__);
+        startAiTransition(async () => {
+            try {
+                const { studentName } = await aiEngine.financial.parseStudentName({ description: tx.Description });
+                if (reconciliationResult) {
+                    const updatedUnmatched = reconciliationResult.unmatchedBank.map(unmatchedTx =>
+                        unmatchedTx.__rowNum__ === tx.__rowNum__
+                            ? { ...unmatchedTx, aiGuessedStudent: studentName }
+                            : unmatchedTx
+                    );
+                    setReconciliationResult({ ...reconciliationResult, unmatchedBank: updatedUnmatched });
+                }
+                toast({ title: 'AI Suggestion', description: studentName ? `Guessed student: ${studentName}` : 'Could not identify a student name.' });
+            } catch (error) {
+                console.error("AI parsing failed:", error);
+                toast({ variant: 'destructive', title: 'AI Error', description: 'Could not get suggestion.' });
+            } finally {
+                setParsingRow(null);
+            }
+        });
     };
 
 
@@ -541,6 +537,7 @@ export default function PaymentsPage() {
                                         <TableHead>Description</TableHead>
                                         <TableHead>AI-Guessed Student</TableHead>
                                         <TableHead>Amount</TableHead>
+                                        <TableHead className="text-right">Action</TableHead>
                                     </TableRow>
                                 </TableHeader>
                                 <TableBody>
@@ -557,9 +554,15 @@ export default function PaymentsPage() {
                                                 ) : 'N/A'}
                                             </TableCell>
                                             <TableCell className="font-medium">NGN {tx.Amount.toLocaleString()}</TableCell>
+                                            <TableCell className="text-right">
+                                                <Button size="sm" variant="outline" onClick={() => handleAiParse(tx)} disabled={isAiParsing && parsingRow === tx.__rowNum__}>
+                                                    {isAiParsing && parsingRow === tx.__rowNum__ ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Sparkles className="mr-2 h-4 w-4" />}
+                                                    AI Assist
+                                                </Button>
+                                            </TableCell>
                                         </TableRow>
                                     ))}
-                                    {reconciliationResult.unmatchedBank.length === 0 && <TableRow><TableCell colSpan={4} className="h-24 text-center">All bank transactions were matched.</TableCell></TableRow>}
+                                    {reconciliationResult.unmatchedBank.length === 0 && <TableRow><TableCell colSpan={5} className="h-24 text-center">All bank transactions were matched.</TableCell></TableRow>}
                                 </TableBody>
                             </Table>
                         </CardContent>
