@@ -65,16 +65,16 @@ export default function PayrollPage() {
               { type: 'where', fieldPath: 'status', opStr: '==', value: 'active' }
             ]);
             
-            // Filter for active staff with a salary object where amount is a number.
-            const eligibleStaff = allUsers.filter(
-              (user) => user.salary && typeof user.salary.amount === 'number'
+            // Filter for staff members (i.e., not 'Parent' or 'Student')
+            const allStaff = allUsers.filter(
+              (user) => user.role !== 'Parent' && user.role !== 'Student'
             );
             
             const runsData = await dbService.getDocs<PayrollRun>('payrollRuns', [
                 { type: 'orderBy', fieldPath: 'executedAt', direction: 'desc' }
             ]);
             
-            setStaff(eligibleStaff);
+            setStaff(allStaff);
             setPayrollRuns(runsData);
         } catch (error) {
             console.error('Error fetching payroll data:', error);
@@ -216,9 +216,9 @@ export default function PayrollPage() {
                                     {isLoading ? Array.from({length: 5}).map((_, i) => (
                                         <TableRow key={i}><TableCell><Skeleton className="h-5 w-32"/></TableCell><TableCell><Skeleton className="h-5 w-24 ml-auto"/></TableCell><TableCell><Skeleton className="h-8 w-16 ml-auto"/></TableCell></TableRow>
                                     )) : staff.length > 0 ? staff.map(user => (
-                                        <TableRow key={user.id} className={user.salary?.amount === 0 ? 'text-muted-foreground' : ''}>
+                                        <TableRow key={user.id} className={!user.salary?.amount ? 'text-muted-foreground' : ''}>
                                             <TableCell>{user.name}</TableCell>
-                                            <TableCell className="text-right font-medium">{user.salary?.amount.toLocaleString()}</TableCell>
+                                            <TableCell className="text-right font-medium">{(user.salary?.amount || 0).toLocaleString()}</TableCell>
                                             <TableCell className="text-right">
                                                 <DialogTrigger asChild>
                                                     <Button variant="outline" size="sm" onClick={() => handleEditUser(user)}>
