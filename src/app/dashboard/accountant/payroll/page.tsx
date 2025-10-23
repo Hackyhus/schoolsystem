@@ -1,7 +1,7 @@
 
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useMemo } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Briefcase, Loader2, RefreshCw, AlertCircle, CheckCircle, Edit } from "lucide-react";
@@ -41,6 +41,8 @@ import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { useRole } from '@/context/role-context';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { BankDetailsForm } from '@/components/dashboard/profile/bank-details-form';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Badge } from '@/components/ui/badge';
 
 const MONTHS = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
 const YEARS = [new Date().getFullYear(), new Date().getFullYear() + 1, new Date().getFullYear() - 1];
@@ -67,7 +69,7 @@ export default function PayrollPage() {
             
             // Filter for staff members (i.e., not 'Parent' or 'Student')
             const allStaff = allUsers.filter(
-              (user) => user.role !== 'Parent' && user.role !== 'Student'
+              (user) => user.role !== 'Parent' && user.role !== 'Student' && user.staffId
             );
             
             const runsData = await dbService.getDocs<PayrollRun>('payrollRuns', [
@@ -132,6 +134,47 @@ export default function PayrollPage() {
 
     const staffForPayrollRun = staff.filter(user => user.salary && user.salary.amount > 0);
     const totalSalary = staffForPayrollRun.reduce((acc, user) => acc + (user.salary?.amount || 0), 0);
+    
+    const { teachers, management, supportStaff } = useMemo(() => {
+        return {
+            teachers: staff.filter(s => s.role === 'Teacher'),
+            management: staff.filter(s => ['Admin', 'SLT', 'HeadOfDepartment'].includes(s.role)),
+            supportStaff: staff.filter(s => ['Accountant', 'ExamOfficer'].includes(s.role)),
+        };
+    }, [staff]);
+
+    const renderStaffTable = (staffList: MockUser[]) => (
+         <Table>
+            <TableHeader>
+                <TableRow>
+                    <TableHead>Staff Name</TableHead>
+                    <TableHead>Type</TableHead>
+                    <TableHead className="text-right">Salary (NGN)</TableHead>
+                    <TableHead className="text-right">Action</TableHead>
+                </TableRow>
+            </TableHeader>
+            <TableBody>
+                {isLoading ? Array.from({length: 3}).map((_, i) => (
+                    <TableRow key={i}><TableCell colSpan={4}><Skeleton className="h-8 w-full"/></TableCell></TableRow>
+                )) : staffList.length > 0 ? staffList.map(user => (
+                    <TableRow key={user.id} className={!user.salary?.amount ? 'text-muted-foreground' : ''}>
+                        <TableCell>{user.name}</TableCell>
+                        <TableCell><Badge variant="outline">{user.employmentType || 'N/A'}</Badge></TableCell>
+                        <TableCell className="text-right font-medium">{(user.salary?.amount || 0).toLocaleString()}</TableCell>
+                        <TableCell className="text-right">
+                            <DialogTrigger asChild>
+                                <Button variant="outline" size="sm" onClick={() => handleEditUser(user)}>
+                                    <Edit className="mr-2 h-4 w-4" /> Edit
+                                </Button>
+                            </DialogTrigger>
+                        </TableCell>
+                    </TableRow>
+                )) : (
+                    <TableRow><TableCell colSpan={4} className="h-24 text-center text-muted-foreground">No staff found in this group.</TableCell></TableRow>
+                )}
+            </TableBody>
+        </Table>
+    );
 
     return (
         <Dialog onOpenChange={(isOpen) => !isOpen && setEditingUser(null)}>
@@ -197,52 +240,29 @@ export default function PayrollPage() {
                     </CardContent>
                 </Card>
 
-                <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-                    <Card>
+                <div className="grid grid-cols-1 lg:grid-cols-5 gap-8">
+                    <Card className="lg:col-span-3">
                         <CardHeader>
                             <CardTitle>Salary & Bank Details Management</CardTitle>
-                            <CardDescription>List of all active staff with a configured salary amount.</CardDescription>
+                            <CardDescription>View and edit salaries for all active staff members, grouped by role.</CardDescription>
                         </CardHeader>
                         <CardContent>
-                            <Table>
-                                <TableHeader>
-                                    <TableRow>
-                                        <TableHead>Staff Name</TableHead>
-                                        <TableHead className="text-right">Salary (NGN)</TableHead>
-                                        <TableHead className="text-right">Action</TableHead>
-                                    </TableRow>
-                                </TableHeader>
-                                <TableBody>
-                                    {isLoading ? Array.from({length: 5}).map((_, i) => (
-                                        <TableRow key={i}><TableCell><Skeleton className="h-5 w-32"/></TableCell><TableCell><Skeleton className="h-5 w-24 ml-auto"/></TableCell><TableCell><Skeleton className="h-8 w-16 ml-auto"/></TableCell></TableRow>
-                                    )) : staff.length > 0 ? staff.map(user => (
-                                        <TableRow key={user.id} className={!user.salary?.amount ? 'text-muted-foreground' : ''}>
-                                            <TableCell>{user.name}</TableCell>
-                                            <TableCell className="text-right font-medium">{(user.salary?.amount || 0).toLocaleString()}</TableCell>
-                                            <TableCell className="text-right">
-                                                <DialogTrigger asChild>
-                                                    <Button variant="outline" size="sm" onClick={() => handleEditUser(user)}>
-                                                        <Edit className="mr-2 h-4 w-4" /> Edit
-                                                    </Button>
-                                                </DialogTrigger>
-                                            </TableCell>
-                                        </TableRow>
-                                    )) : (
-                                        <TableRow><TableCell colSpan={3} className="h-24 text-center text-muted-foreground">No active staff found.</TableCell></TableRow>
-                                    )}
-                                    {!isLoading && staffForPayrollRun.length > 0 && (
-                                        <TableRow className="font-bold bg-secondary/50">
-                                            <TableCell>Total (for salaries > 0)</TableCell>
-                                            <TableCell className="text-right">{totalSalary.toLocaleString()}</TableCell>
-                                            <TableCell></TableCell>
-                                        </TableRow>
-                                    )}
-                                </TableBody>
-                            </Table>
+                             <Tabs defaultValue="all">
+                                <TabsList className="grid w-full grid-cols-4">
+                                    <TabsTrigger value="all">All Staff</TabsTrigger>
+                                    <TabsTrigger value="teachers">Teachers</TabsTrigger>
+                                    <TabsTrigger value="management">Management</TabsTrigger>
+                                    <TabsTrigger value="support">Support Staff</TabsTrigger>
+                                </TabsList>
+                                <TabsContent value="all" className="mt-4">{renderStaffTable(staff)}</TabsContent>
+                                <TabsContent value="teachers" className="mt-4">{renderStaffTable(teachers)}</TabsContent>
+                                <TabsContent value="management" className="mt-4">{renderStaffTable(management)}</TabsContent>
+                                <TabsContent value="support" className="mt-4">{renderStaffTable(supportStaff)}</TabsContent>
+                            </Tabs>
                         </CardContent>
                     </Card>
 
-                    <Card>
+                    <Card className="lg:col-span-2">
                         <CardHeader className="flex flex-row items-center justify-between">
                             <div>
                                 <CardTitle>Payroll History</CardTitle>
@@ -261,7 +281,7 @@ export default function PayrollPage() {
                                 </TableHeader>
                                 <TableBody>
                                     {isLoading ? Array.from({length: 5}).map((_, i) => (
-                                        <TableRow key={i}><TableCell><Skeleton className="h-5 w-24"/></TableCell><TableCell><Skeleton className="h-5 w-24"/></TableCell><TableCell><Skeleton className="h-5 w-28"/></TableCell></TableRow>
+                                        <TableRow key={i}><TableCell colSpan={3}><Skeleton className="h-8 w-full"/></TableCell></TableRow>
                                     )) : payrollRuns.length === 0 ? (
                                         <TableRow><TableCell colSpan={3} className="text-center h-24">No payroll has been run yet.</TableCell></TableRow>
                                     ) : payrollRuns.map(run => (
@@ -288,3 +308,5 @@ export default function PayrollPage() {
         </Dialog>
     );
 }
+
+    
