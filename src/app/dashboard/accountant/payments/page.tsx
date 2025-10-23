@@ -224,36 +224,41 @@ export default function PaymentsPage() {
                 const sheetName = workbook.SheetNames[0];
                 const worksheet = workbook.Sheets[sheetName];
                 const rawJson: any[] = XLSX.utils.sheet_to_json(worksheet, {
-                    raw: false, // Keep dates as strings for manual parsing
+                    raw: false,
                 });
 
-                const bankTransactions: BankTransaction[] = rawJson.map((row, index) => {
-                  // Robust date parsing
-                  let date: Date;
-                  if (row.Date instanceof Date) {
-                    date = row.Date;
-                  } else {
-                    // Try parsing from string (handles formats like MM/DD/YYYY)
-                    date = new Date(row.Date);
-                  }
+                const bankTransactions: BankTransaction[] = rawJson
+                    .map((row, index) => {
+                        if (!row.Date || !row.Amount) {
+                            return null;
+                        }
+                        
+                        let date: Date;
+                        if (row.Date instanceof Date) {
+                            date = row.Date;
+                        } else {
+                            date = new Date(row.Date);
+                        }
 
-                  if (isNaN(date.getTime())) {
-                    throw new Error(`Invalid date format in row ${index + 2}: ${row.Date}`);
-                  }
+                        if (isNaN(date.getTime())) {
+                            console.warn(`Skipping row ${index + 2} due to invalid date:`, row.Date);
+                            return null;
+                        }
 
-                  return {
-                    ...row,
-                    Date: date,
-                    __rowNum__: index + 2, // For error reporting
-                  };
-                });
+                        return {
+                            ...row,
+                            Date: date,
+                            __rowNum__: index + 2,
+                        };
+                    })
+                    .filter((tx): tx is BankTransaction => tx !== null);
 
 
                 if (bankTransactions.length === 0) {
-                    throw new Error("No transactions found in the file.");
+                    throw new Error("No valid transactions found in the file.");
                 }
 
-                if (!bankTransactions[0].Date || !bankTransactions[0].Amount) {
+                if (!bankTransactions[0].Description) {
                     throw new Error("Invalid file format. Please ensure columns 'Date', 'Description', and 'Amount' exist.");
                 }
 
