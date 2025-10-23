@@ -2,7 +2,7 @@
 
 'use client';
 
-import { useState, useCallback, useEffect, useRef, useTransition } from 'react';
+import { useState, useCallback, useEffect, useRef } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -14,7 +14,7 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '
 import { dbService } from '@/lib/dbService';
 import type { Invoice, Payment, Student } from '@/lib/schema';
 import { useToast } from '@/hooks/use-toast';
-import { AlertCircle, Loader2, Search, CheckCircle, RefreshCw, Eye, Trash2, Upload, Download, FileCheck2, Sparkles } from 'lucide-react';
+import { AlertCircle, Loader2, Search, CheckCircle, RefreshCw, Eye, Trash2, Upload, Download, FileCheck2 } from 'lucide-react';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { recordPayment, deletePayment } from '@/actions/payment-actions';
 import {
@@ -51,7 +51,7 @@ import Link from 'next/link';
 import { useRole } from '@/context/role-context';
 import * as XLSX from 'xlsx';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { aiEngine } from '@/ai';
+
 
 const paymentSchema = z.object({
   invoiceId: z.string().min(1, 'Invoice ID is required'),
@@ -68,14 +68,12 @@ type BankTransaction = {
   Description: string;
   Amount: number;
   __rowNum__: number;
-  aiGuessedStudent?: string | null;
-  aiGuessedInvoiceId?: string | null;
 };
 
 type MatchedTransaction = {
   bankTx: BankTransaction;
   portalTx: Payment;
-  matchType: 'Exact' | 'AI Assisted';
+  matchType: 'Exact';
 };
 
 type ReconciliationResult = {
@@ -110,8 +108,6 @@ export default function PaymentsPage() {
     const [fileName, setFileName] = useState<string | null>(null);
     const [reconciliationResult, setReconciliationResult] = useState<ReconciliationResult | null>(null);
     const fileInputRef = useRef<HTMLInputElement>(null);
-    const [isAiParsing, startAiTransition] = useTransition();
-    const [parsingRow, setParsingRow] = useState<number | null>(null);
 
   const fetchRecentPayments = useCallback(async () => {
     setIsLoadingPayments(true);
@@ -349,42 +345,6 @@ export default function PaymentsPage() {
             setIsReconciling(false);
         }
     };
-    
-    const handleAiParse = (tx: BankTransaction) => {
-        setParsingRow(tx.__rowNum__);
-        startAiTransition(async () => {
-            try {
-                const { studentName, invoiceId } = await aiEngine.financial.parseStudentName({ description: tx.Description });
-
-                if (reconciliationResult) {
-                    const updatedUnmatched = reconciliationResult.unmatchedBank.map(unmatchedTx =>
-                        unmatchedTx.__rowNum__ === tx.__rowNum__
-                            ? { ...unmatchedTx, aiGuessedStudent: studentName, aiGuessedInvoiceId: invoiceId }
-                            : unmatchedTx
-                    );
-                    setReconciliationResult({ ...reconciliationResult, unmatchedBank: updatedUnmatched });
-                }
-
-                if (invoiceId) {
-                    setInvoiceIdToSearch(invoiceId);
-                    await handleSearchInvoice(invoiceId);
-                    form.setValue('amountPaid', tx.Amount);
-                    form.setValue('paymentDate', tx.Date);
-                    form.setValue('notes', tx.Description);
-                    toast({ title: 'AI Match Found!', description: `Form has been pre-filled for ${studentName}. Please verify and record.` });
-                } else {
-                     toast({ title: 'AI Suggestion', description: studentName ? `Guessed student: ${studentName}, but no unpaid invoice was found.` : 'Could not identify a student name.' });
-                }
-
-            } catch (error) {
-                console.error("AI parsing failed:", error);
-                toast({ variant: 'destructive', title: 'AI Error', description: 'Could not get suggestion.' });
-            } finally {
-                setParsingRow(null);
-            }
-        });
-    };
-
 
   return (
     <div className="space-y-8">
@@ -543,16 +503,14 @@ export default function PaymentsPage() {
                 </TabsList>
                 <TabsContent value="unmatched-bank">
                     <Card>
-                        <CardHeader><CardTitle>Unmatched from Bank Statement</CardTitle><CardDescription>These transactions appeared on the bank statement but have no corresponding record in the portal. Use "AI Assist" to automatically find the student's invoice and pre-fill the form above.</CardDescription></CardHeader>
+                        <CardHeader><CardTitle>Unmatched from Bank Statement</CardTitle><CardDescription>These transactions appeared on the bank statement but have no corresponding record in the portal. You may need to record these payments manually above.</CardDescription></CardHeader>
                         <CardContent>
                            <Table>
                                 <TableHeader>
                                     <TableRow>
                                         <TableHead>Bank Date</TableHead>
                                         <TableHead>Description</TableHead>
-                                        <TableHead>AI-Guessed Student</TableHead>
-                                        <TableHead>Amount</TableHead>
-                                        <TableHead className="text-right">Action</TableHead>
+                                        <TableHead className="text-right">Amount</TableHead>
                                     </TableRow>
                                 </TableHeader>
                                 <TableBody>
@@ -560,24 +518,10 @@ export default function PaymentsPage() {
                                         <TableRow key={tx.__rowNum__}>
                                             <TableCell>{format(tx.Date, 'PPP')}</TableCell>
                                             <TableCell>{tx.Description}</TableCell>
-                                            <TableCell>
-                                                {tx.aiGuessedStudent ? (
-                                                <Badge variant="secondary" className="flex items-center gap-1">
-                                                    <Sparkles className="h-3 w-3" />
-                                                    {tx.aiGuessedStudent}
-                                                </Badge>
-                                                ) : 'N/A'}
-                                            </TableCell>
-                                            <TableCell className="font-medium">NGN {tx.Amount.toLocaleString()}</TableCell>
-                                            <TableCell className="text-right">
-                                                <Button size="sm" variant="outline" onClick={() => handleAiParse(tx)} disabled={isAiParsing && parsingRow === tx.__rowNum__}>
-                                                    {isAiParsing && parsingRow === tx.__rowNum__ ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Sparkles className="mr-2 h-4 w-4" />}
-                                                    AI Assist
-                                                </Button>
-                                            </TableCell>
+                                            <TableCell className="font-medium text-right">NGN {tx.Amount.toLocaleString()}</TableCell>
                                         </TableRow>
                                     ))}
-                                    {reconciliationResult.unmatchedBank.length === 0 && <TableRow><TableCell colSpan={5} className="h-24 text-center">All bank transactions were matched.</TableCell></TableRow>}
+                                    {reconciliationResult.unmatchedBank.length === 0 && <TableRow><TableCell colSpan={3} className="h-24 text-center">All bank transactions were matched.</TableCell></TableRow>}
                                 </TableBody>
                             </Table>
                         </CardContent>
@@ -603,10 +547,7 @@ export default function PaymentsPage() {
                                             <TableCell>{portalTx.studentName}</TableCell>
                                             <TableCell className="font-medium">NGN {portalTx.amountPaid.toLocaleString()}</TableCell>
                                             <TableCell>
-                                                <Badge variant={matchType === 'AI Assisted' ? 'default' : 'secondary'}>
-                                                    {matchType === 'AI Assisted' && <Sparkles className="mr-1 h-3 w-3" />}
-                                                    {matchType}
-                                                </Badge>
+                                                <Badge variant="secondary">{matchType}</Badge>
                                             </TableCell>
                                         </TableRow>
                                     ))}

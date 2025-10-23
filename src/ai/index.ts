@@ -8,7 +8,6 @@ import { summarizeText } from './agents/text/summarizer';
 import { draftCommunication } from './agents/text/drafter';
 import { analyzeFinancials } from './agents/financial/analyst';
 import { categorizeExpense } from './agents/financial/categorizer';
-import { parseStudentNameFromTransaction } from './agents/financial/parser';
 import { generatePerformanceComment } from './agents/academic/performance-comment-generator';
 import { narrateData } from './agents/academic/narrator';
 import { answerSupportQuestion } from './agents/support/support-bot';
@@ -21,7 +20,6 @@ export const aiEngine = {
   financial: {
     analyze: analyzeFinancials,
     categorize: categorizeExpense,
-    parseStudentName: parseStudentNameFromTransaction,
   },
   academic: {
     generateComment: generatePerformanceComment,
