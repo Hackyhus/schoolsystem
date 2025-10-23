@@ -98,14 +98,14 @@ export default function DashboardLayout({
       <div className="font-body h-screen flex flex-col">
         <style jsx global>{`
           @media print {
-            body, html {
-              height: auto;
+            body {
+              -webkit-print-color-adjust: exact;
+              print-color-adjust: exact;
             }
             .print-hidden {
               display: none !important;
             }
             main {
-              width: 100%;
               margin: 0;
               padding: 0 !important;
               min-height: auto;

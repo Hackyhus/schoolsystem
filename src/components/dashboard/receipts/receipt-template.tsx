@@ -18,25 +18,28 @@ export function ReceiptTemplate({ payment, schoolInfo }: ReceiptTemplateProps) {
       <div className="bg-white text-black font-serif">
          <style jsx global>{`
             @media print {
-              .printable-header, .printable-footer {
+              .printable-header-receipt, .printable-footer-receipt {
                 position: fixed;
                 width: 100%;
                 left: 0;
+                padding-left: 2rem;
+                padding-right: 2rem;
+                background-color: white;
               }
-              .printable-header {
+              .printable-header-receipt {
                 top: 0;
               }
-              .printable-footer {
+              .printable-footer-receipt {
                 bottom: 0;
               }
-              .printable-main {
-                padding-top: 180px; /* Adjust based on header height */
-                padding-bottom: 60px; /* Adjust based on footer height */
+              .printable-main-receipt {
+                padding-top: 150px; 
+                padding-bottom: 50px;
               }
             }
         `}</style>
 
-        <header className="printable-header p-8 text-center border-b-4 border-black pb-4">
+        <header className="printable-header-receipt p-8 text-center border-b-4 border-black pb-4">
           {schoolInfo?.logoUrl && (
             <div className="flex justify-center mb-4">
               <Image src={schoolInfo.logoUrl} alt="School Logo" width={250} height={60} className="h-20 w-auto object-contain" />
@@ -46,7 +49,7 @@ export function ReceiptTemplate({ payment, schoolInfo }: ReceiptTemplateProps) {
           <p className="text-sm text-gray-600 mt-1">{schoolInfo?.address}</p>
         </header>
 
-        <main className="printable-main p-8">
+        <main className="printable-main-receipt p-8">
            <div className="text-center mb-6">
               <h2 className="text-3xl font-bold text-black">PAYMENT RECEIPT</h2>
               <p className="text-gray-500">Receipt No: {payment.id}</p>
@@ -81,7 +84,7 @@ export function ReceiptTemplate({ payment, schoolInfo }: ReceiptTemplateProps) {
            </div>
         </main>
 
-        <footer className="printable-footer p-8 text-center text-xs text-gray-500 border-t pt-4">
+        <footer className="printable-footer-receipt p-8 text-center text-xs text-gray-500 border-t pt-4">
             <p>Phone: {schoolInfo?.phone} | Email: {schoolInfo?.email}</p>
         </footer>
       </div>

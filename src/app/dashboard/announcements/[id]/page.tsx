@@ -79,32 +79,30 @@ export default function IndividualAnnouncementPage() {
 
       const pageHeight = pdf.internal.pageSize.getHeight();
       const pageWidth = pdf.internal.pageSize.getWidth();
-      const margin = 0.5; // Half-inch margin
-      const contentWidth = pageWidth - (margin * 2);
       
       const canvas = await html2canvas(contentElement, {
-        scale: 2, // Higher scale for better quality
+        scale: 2,
         useCORS: true,
-        width: contentElement.offsetWidth,
       });
 
       const imgData = canvas.toDataURL('image/png');
-      const imgHeight = (canvas.height * contentWidth) / canvas.width;
-      let heightLeft = imgHeight;
-      let position = margin;
+      const imgProps = pdf.getImageProperties(imgData);
+      const pdfWidth = pageWidth;
+      const pdfHeight = (imgProps.height * pdfWidth) / imgProps.width;
 
-      // Add first page
-      pdf.addImage(imgData, 'PNG', margin, position, contentWidth, imgHeight);
-      heightLeft -= (pageHeight - margin * 2);
+      let heightLeft = pdfHeight;
+      let position = 0;
       
-      // Add new pages if content overflows
+      pdf.addImage(imgData, 'PNG', 0, position, pdfWidth, pdfHeight);
+      heightLeft -= pageHeight;
+      
       while (heightLeft > 0) {
-        position = -heightLeft + margin;
+        position = -heightLeft;
         pdf.addPage();
-        pdf.addImage(imgData, 'PNG', margin, position, contentWidth, imgHeight);
-        heightLeft -= (pageHeight - margin * 2);
+        pdf.addImage(imgData, 'PNG', 0, position, pdfWidth, pdfHeight);
+        heightLeft -= pageHeight;
       }
-
+      
       pdf.save(`Announcement-${announcement.title.replace(/ /g, '-')}.pdf`);
     } catch (error) {
       console.error("Failed to generate PDF", error);

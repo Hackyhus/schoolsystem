@@ -27,25 +27,28 @@ export function AnnouncementTemplate({ announcement, schoolInfo }: AnnouncementT
       <div className="bg-white text-black font-serif">
         <style jsx global>{`
             @media print {
-              .printable-header, .printable-footer {
+              .printable-header-announcement, .printable-footer-announcement {
                 position: fixed;
                 width: 100%;
                 left: 0;
+                padding-left: 2rem;
+                padding-right: 2rem;
+                background-color: white;
               }
-              .printable-header {
+              .printable-header-announcement {
                 top: 0;
               }
-              .printable-footer {
+              .printable-footer-announcement {
                 bottom: 0;
               }
-              .printable-main {
-                padding-top: 180px; /* Adjust based on header height */
-                padding-bottom: 60px; /* Adjust based on footer height */
+              .printable-main-announcement {
+                padding-top: 150px;
+                padding-bottom: 50px;
               }
             }
         `}</style>
         
-        <header className="printable-header p-8 text-center border-b-4 border-black pb-4">
+        <header className="printable-header-announcement p-8 text-center border-b-4 border-black pb-4">
             {schoolInfo?.logoUrl && (
               <div className="flex justify-center mb-4">
                 <Image src={schoolInfo.logoUrl} alt="School Logo" width={250} height={60} className="h-20 w-auto object-contain" />
@@ -55,7 +58,7 @@ export function AnnouncementTemplate({ announcement, schoolInfo }: AnnouncementT
             <p className="text-sm text-gray-600 mt-1">{schoolInfo?.address}</p>
         </header>
 
-        <main className="printable-main p-8">
+        <main className="printable-main-announcement p-8">
           <div className="text-center mb-8">
             <h2 className="text-2xl font-bold uppercase tracking-wider underline">Public Announcement</h2>
           </div>
@@ -80,10 +83,9 @@ export function AnnouncementTemplate({ announcement, schoolInfo }: AnnouncementT
           </div>
         </main>
         
-         <footer className="printable-footer p-8 text-center text-xs text-gray-500 border-t pt-4">
+         <footer className="printable-footer-announcement p-8 text-center text-xs text-gray-500 border-t pt-4">
             <p>Phone: {schoolInfo?.phone} | Email: {schoolInfo?.email}</p>
         </footer>
       </div>
   );
 }
-
